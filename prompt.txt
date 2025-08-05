@@ -1,0 +1,134 @@
+Finish creating this application, as described below...
+
+### **Project: Event Management System**
+
+This document serves as the complete technical specification for developing an event management system. The project will be a web-based, responsive application with two main user interfaces: a public-facing site for event discovery and registration, and a secure admin dashboard for event management.
+
+---
+
+### **1. Technical Stack**
+
+The following technologies must be used for the development of the application:
+* **Backend:** Java 17 with the **Spring Boot** framework. Use **Spring Data JPA** for PostgreSQL access and the **AWS SDK** for DynamoDB and S3 integration.
+* **Frontend:** **React** with modern functional components and hooks. Use a standard responsive CSS framework (e.g., Tailwind CSS) for styling.
+* **Databases:**
+    * **PostgreSQL:** The primary relational database for storing core event, user, and registration data.
+    * **DynamoDB:** For storing the dynamic registration form definitions as JSON documents.
+* **File Storage:** **AWS S3** for storing banner and thumbnail images.
+
+---
+
+### **2. Backend: REST API Specification (Java Spring Boot)**
+
+Develop a **Spring Boot** application that exposes a RESTful API. The API should be well-documented using OpenAPI/Swagger. Implement the following endpoints:
+
+#### **Event Management Endpoints (`/api/events`)**
+| HTTP Method | Path | Description | Request Body | Response Body |
+| :--- | :--- | :--- | :--- | :--- |
+| **POST** | `/` | Creates a new event (in `DRAFT` status). | `EventCreateDto` (See Data Models) | `EventDto` |
+| **GET** | `/` | Lists all published events. Supports query parameters for filtering (`location`, `date_start`, `date_end`, `tags`) and sorting. | None | `List<EventDto>` |
+| **GET** | `/{eventId}` | Retrieves a single event by ID. | None | `EventDto` |
+| **PUT** | `/{eventId}` | Updates an existing event. | `EventUpdateDto` | `EventDto` |
+| **DELETE** | `/{eventId}` | Deletes an event. | None | None |
+| **POST** | `/{eventId}/publish` | Publishes a drafted event. | None | `EventDto` |
+| **POST** | `/{eventId}/clone` | Clones an event, creating a new draft. | None | `EventDto` |
+
+#### **Registration Endpoints (`/api/registrations`)**
+| HTTP Method | Path | Description | Request Body | Response Body |
+| :--- | :--- | :--- | :--- | :--- |
+| **POST** | `/` | Registers a user for a specific event instance. | `RegistrationCreateDto` | `RegistrationDto` |
+| **GET** | `/user/{email}` | Retrieves all registrations for a given user email. | None | `List<RegistrationDto>` |
+| **PUT** | `/{registrationId}/cancel`| Cancels a registration. | None | `RegistrationDto` |
+
+#### **Attendance Endpoints (`/api/attendance`)**
+| HTTP Method | Path | Description | Request Body | Response Body |
+| :--- | :--- | :--- | :--- | :--- |
+| **GET** | `/{eventId}` | Gets a list of all registered attendees for an event. Supports search functionality by name. | None | `List<AttendanceDto>` |
+| **PUT** | `/{registrationId}/checkin` | Checks in an attendee. | None | `AttendanceDto` |
+
+---
+
+### **3. Backend: Data Models & Logic**
+
+#### **PostgreSQL Data Models (JPA Entities)**
+
+* **`Event`:**
+    * `id` (UUID, Primary Key)
+    * `name` (String)
+    * `description` (Text)
+    * `status` (Enum: `DRAFT`, `PUBLISHED`)
+    * `bannerImageUrl` (String)
+    * `thumbnailImageUrl` (String)
+    * `tags` (Array of Strings)
+    * `capacity` (Integer)
+    * `waitlistEnabled` (Boolean)
+* **`EventInstance`:**
+    * `id` (UUID, Primary Key)
+    * `eventId` (Foreign Key to `Event`)
+    * `dateTime` (Timestamp)
+    * `location` (String)
+* **`Registration`:**
+    * `id` (UUID, Primary Key)
+    * `eventInstanceId` (Foreign Key to `EventInstance`)
+    * `userEmail` (String)
+    * `status` (Enum: `REGISTERED`, `CANCELLED`)
+    * `checkedIn` (Boolean, default `false`)
+
+#### **DynamoDB Data Model**
+
+* **Table Name:** `event-form-definitions`
+* **Primary Key:** `eventId` (String, Partition Key)
+* **Attributes:**
+    * `formData` (JSON string, storing the form builder's configuration for the event)
+
+#### **Business Logic Implementation**
+
+1.  **Form Builder Integration:** When an event is created, store the form definition as a JSON object in DynamoDB with the `eventId` as the key.
+2.  **Event Cloning:** When cloning an event, create a new `Event` and `EventInstance` record with a new UUID. Also, copy the JSON form definition from DynamoDB to a new record with the new `eventId`.
+3.  **Email Notifications:** After a successful registration, generate an **ICS file** containing the event instance details. This file must be attached to the confirmation email. The email content should be generated from the event's markdown description.
+4.  **File Uploads:** Implement an API to upload images to an S3 bucket and return the corresponding public URL for storage in the `Event` entity.
+
+---
+
+### **4. Frontend: React Application**
+
+Develop a single-page application (SPA) using React. The application should be fully responsive and utilize the backend REST API.
+
+#### **Core Components & Pages**
+
+* **`HomePage` Component:**
+    * Fetches all published events from the `/api/events` endpoint.
+    * Displays events in an Eventbrite-like grid view with a thumbnail, title, date, and location.
+    * Includes a search bar and filter/sort controls for `location`, `date`, and `tags`.
+* **`EventDetailsPage` Component:**
+    * Fetches a single event from `/api/events/{eventId}`.
+    * Displays the banner image, the markdown-rendered description, and a list of event instances.
+    * Contains a drop-down to select an instance and a "Register" button.
+* **`RegistrationForm` Component:**
+    * Dynamically renders the form based on the JSON form definition fetched from DynamoDB via the backend.
+    * Handles form validation based on the defined rules.
+    * Includes a mandatory checkbox to acknowledge notifications.
+* **`AdminDashboard` Component:**
+    * A secure page for authenticated admins to view all events (drafts and published).
+    * Contains buttons for `Create`, `Edit`, `Publish`, `Clone`, and `Delete` events.
+* **`EventBuilder` Component:**
+    * A component for creating/editing events.
+    * Includes form fields for all `Event` entity properties.
+    * Features a drag-and-drop form builder interface for the registration form.
+* **`AttendancePage` Component:**
+    * Fetches attendees for a specific event from `/api/attendance/{eventId}`.
+    * Displays a list of names with a `checkedIn` status indicator.
+    * Includes a search input to filter the list.
+    * Provides a button next to each name to toggle their check-in status.
+
+---
+
+### **5. Final Instructions**
+
+* All code must be well-commented and include proper error handling.
+* Ensure all API calls from the frontend are asynchronous and handle loading and error states gracefully.
+* The application must be fully responsive, providing a seamless experience on both mobile and desktop devices.
+* For the initial version, the waitlist functionality is not required to be automated. The waitlist flag should be stored, but the promotion logic will be a future enhancement.
+* Implement a robust authentication system for the admin dashboard.
+* The tag input on the frontend should be a comma-separated text field, which the backend will process into an array.
+* The front end will render the markdown from the backend into HTML.
