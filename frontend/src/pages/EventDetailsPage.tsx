@@ -1,12 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import apiClient from '../api/apiClient';
 import RegistrationForm from '../components/RegistrationForm';
 
-const EventDetailsPage = () => {
-    const { id } = useParams();
-    const [event, setEvent] = useState(null);
+interface EventInstance {
+    id: string;
+    dateTime: string;
+    location: string;
+}
+
+interface Event {
+    id: string;
+    name: string;
+    description: string;
+    bannerImageUrl?: string;
+    tags?: string[];
+    instances?: EventInstance[];
+}
+
+const EventDetailsPage: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const [event, setEvent] = useState<Event | null>(null);
     const [selectedInstance, setSelectedInstance] = useState('');
 
     useEffect(() => {
@@ -59,7 +74,7 @@ const EventDetailsPage = () => {
                                             id="instance-select" 
                                             className="form-select" 
                                             value={selectedInstance} 
-                                            onChange={e => setSelectedInstance(e.target.value)}
+                                            onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedInstance(e.target.value)}
                                         >
                                             {event.instances.map(instance => (
                                                 <option key={instance.id} value={instance.id}>
@@ -68,7 +83,7 @@ const EventDetailsPage = () => {
                                             ))}
                                         </select>
                                     </div>
-                                    <RegistrationForm eventId={id} instanceId={selectedInstance} />
+                                    <RegistrationForm eventId={id!} instanceId={selectedInstance} />
                                 </>
                             ) : (
                                 <p>No registration dates available.</p>

@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 
-const AttendancePage = () => {
-    const { id } = useParams();
-    const [attendees, setAttendees] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
+// Interface for attendee data
+interface Attendee {
+    registrationId: string;
+    userName: string;
+    userEmail: string;
+    checkedIn: boolean;
+}
 
-    const fetchAttendees = (name = '') => {
+const AttendancePage: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const [attendees, setAttendees] = useState<Attendee[]>([]);
+    const [searchTerm, setSearchTerm] = useState<string>('');
+
+    const fetchAttendees = (name: string = ''): void => {
         apiClient.get(`/attendance/${id}`, { params: { name } })
             .then(response => {
                 setAttendees(response.data);
@@ -23,7 +31,7 @@ const AttendancePage = () => {
         return () => clearTimeout(delayDebounceFn);
     }, [id, searchTerm]);
 
-    const handleCheckIn = (registrationId) => {
+    const handleCheckIn = (registrationId: string): void => {
         apiClient.put(`/attendance/${registrationId}/checkin`).then(() => {
             fetchAttendees(searchTerm); // Refresh the list with the current search term
         }).catch(error => console.error("Failed to check in attendee", error));
@@ -38,7 +46,7 @@ const AttendancePage = () => {
                     className="form-control"
                     placeholder="Search by name..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 />
             </div>
             <table className="table table-striped">

@@ -1,11 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import apiClient from '../api/apiClient';
 
-const RegistrationForm = ({ eventId, instanceId }) => {
-    const [formDefinition, setFormDefinition] = useState(null);
-    const [formData, setFormData] = useState({});
+interface FormField {
+    name: string;
+    type?: string;
+    label: string;
+    placeholder?: string;
+    required?: boolean;
+    rows?: number;
+    options?: { value: string; label: string }[];
+    checkboxLabel?: string;
+    helpText?: string;
+}
+
+interface FormDefinition {
+    fields: FormField[];
+}
+
+interface RegistrationFormProps {
+    eventId: string;
+    instanceId: string;
+}
+
+interface FormData {
+    [key: string]: string | boolean;
+}
+
+const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId }) => {
+    const [formDefinition, setFormDefinition] = useState<FormDefinition | null>(null);
+    const [formData, setFormData] = useState<FormData>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
@@ -32,15 +57,17 @@ const RegistrationForm = ({ eventId, instanceId }) => {
         }
     }, [eventId]);
 
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const target = e.target as HTMLInputElement;
+        const { name, value, type } = target;
+        const checked = target.checked;
         setFormData(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
         setError(null);
@@ -75,7 +102,7 @@ const RegistrationForm = ({ eventId, instanceId }) => {
         return <div>Loading form...</div>;
     }
 
-    const renderField = (field) => {
+    const renderField = (field: FormField) => {
         switch(field.type) {
             case 'textarea':
                 return (
@@ -85,7 +112,7 @@ const RegistrationForm = ({ eventId, instanceId }) => {
                         name={field.name}
                         placeholder={field.placeholder}
                         required={field.required}
-                        value={formData[field.name] || ''}
+                        value={typeof formData[field.name] === 'string' ? formData[field.name] as string : ''}
                         onChange={handleChange}
                         rows={field.rows || 3}
                     />
@@ -97,7 +124,7 @@ const RegistrationForm = ({ eventId, instanceId }) => {
                         id={field.name}
                         name={field.name}
                         required={field.required}
-                        value={formData[field.name] || ''}
+                        value={typeof formData[field.name] === 'string' ? formData[field.name] as string : ''}
                         onChange={handleChange}
                     >
                         <option value="">{field.placeholder || 'Select an option'}</option>
@@ -156,7 +183,7 @@ const RegistrationForm = ({ eventId, instanceId }) => {
                         name={field.name}
                         placeholder={field.placeholder}
                         required={field.required}
-                        value={formData[field.name] || ''}
+                        value={typeof formData[field.name] === 'string' ? formData[field.name] as string : ''}
                         onChange={handleChange}
                     />
                 );

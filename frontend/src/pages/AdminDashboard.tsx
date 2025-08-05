@@ -2,10 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 
-const AdminDashboard = () => {
-    const [events, setEvents] = useState([]);
+// Interface for event data
+interface Event {
+    id: string;
+    name: string;
+    status: 'DRAFT' | 'PUBLISHED';
+}
 
-    const fetchEvents = () => {
+const AdminDashboard: React.FC = () => {
+    const [events, setEvents] = useState<Event[]>([]);
+
+    const fetchEvents = (): void => {
         apiClient.get('/events', { params: { publishedOnly: false } })
             .then(response => {
                 setEvents(response.data);
@@ -17,19 +24,19 @@ const AdminDashboard = () => {
         fetchEvents();
     }, []);
 
-    const handlePublish = (eventId) => {
+    const handlePublish = (eventId: string): void => {
         apiClient.post(`/events/${eventId}/publish`)
             .then(() => fetchEvents())
             .catch(error => console.error("Failed to publish event", error));
     };
 
-    const handleClone = (eventId) => {
+    const handleClone = (eventId: string): void => {
         apiClient.post(`/events/${eventId}/clone`)
             .then(() => fetchEvents())
             .catch(error => console.error("Failed to clone event", error));
     };
 
-    const handleDelete = (eventId) => {
+    const handleDelete = (eventId: string): void => {
         if (window.confirm('Are you sure you want to delete this event?')) {
             apiClient.delete(`/events/${eventId}`)
                 .then(() => fetchEvents())

@@ -1,11 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 
-const EventBuilder = () => {
-    const { id } = useParams();
+// Interface for event form data
+interface EventData {
+    name: string;
+    description: string;
+    tags: string;
+    capacity: number;
+    waitlistEnabled: boolean;
+    bannerImageUrl: string;
+    thumbnailImageUrl: string;
+    formData: string;
+}
+
+// Interface for API event data (when tags is an array)
+interface ApiEventData extends Omit<EventData, 'tags'> {
+    tags?: string[];
+}
+
+const EventBuilder: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [event, setEvent] = useState({
+    const [event, setEvent] = useState<EventData>({
         name: '',
         description: '',
         tags: '',
@@ -19,7 +36,7 @@ const EventBuilder = () => {
     useEffect(() => {
         if (id) {
             apiClient.get(`/events/${id}`).then(response => {
-                const eventData = response.data;
+                const eventData: ApiEventData = response.data;
                 setEvent({ ...eventData, tags: eventData.tags ? eventData.tags.join(', ') : '' });
             });
             apiClient.get(`/events/${id}/form`).then(response => {
@@ -30,15 +47,17 @@ const EventBuilder = () => {
         }
     }, [id]);
 
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
+        const target = e.target as HTMLInputElement;
+        const { name, value, type } = target;
+        const checked = target.checked;
         setEvent(prevEvent => ({
             ...prevEvent,
             [name]: type === 'checkbox' ? checked : value
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
         e.preventDefault();
 
         // Validate JSON format for formData
@@ -82,7 +101,7 @@ const EventBuilder = () => {
                 </div>
                 <div className="mb-3">
                     <label className="form-label">Description (Markdown supported)</label>
-                    <textarea className="form-control" name="description" value={event.description} onChange={handleChange} rows="5"></textarea>
+                    <textarea className="form-control" name="description" value={event.description} onChange={handleChange} rows={5}></textarea>
                 </div>
                 <div className="row">
                     <div className="col-md-6 mb-3">
@@ -116,7 +135,7 @@ const EventBuilder = () => {
                         className="form-control"
                         id="formData"
                         name="formData"
-                        rows="10"
+                        rows={10}
                         value={event.formData}
                         onChange={handleChange}
                         placeholder='e.g., { "fields": [ { "name": "fullName", "label": "Full Name", "type": "text", "required": true } ] }'

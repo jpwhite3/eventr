@@ -1,10 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 
-const HomePage = () => {
-    const [events, setEvents] = useState([]);
-    const [filters, setFilters] = useState({
+interface EventInstance {
+    dateTime: string;
+    location: string;
+}
+
+interface Event {
+    id: string;
+    name: string;
+    description?: string;
+    thumbnailImageUrl?: string;
+    instances?: EventInstance[];
+    tags?: string[];
+}
+
+interface Filters {
+    location: string;
+    date_start: string;
+    date_end: string;
+    tags: string;
+}
+
+const HomePage: React.FC = () => {
+    const [events, setEvents] = useState<Event[]>([]);
+    const [filters, setFilters] = useState<Filters>({
         location: '',
         date_start: '',
         date_end: '',
@@ -13,7 +34,7 @@ const HomePage = () => {
     const [sort, setSort] = useState('name,asc');
 
     const fetchEvents = () => {
-        const params = {
+        const params: any = {
             sort: sort
         };
         if (filters.location) params.location = filters.location;
@@ -32,7 +53,7 @@ const HomePage = () => {
         fetchEvents();
     }, [sort]);
 
-    const handleFilterChange = (e) => {
+    const handleFilterChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFilters(prevFilters => ({
             ...prevFilters,
@@ -40,7 +61,7 @@ const HomePage = () => {
         }));
     };
 
-    const handleSearch = (e) => {
+    const handleSearch = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         fetchEvents();
     };

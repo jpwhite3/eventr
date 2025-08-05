@@ -53,7 +53,11 @@ object EventSpecification {
             }
             
             if (!tags.isNullOrEmpty()) {
-                predicates.add(root.get<List<String>>("tags").`in`(tags))
+                // Create a separate predicate for each tag and combine them with OR
+                val tagPredicates = tags.map { tag ->
+                    criteriaBuilder.isMember(tag, root.get<List<String>>("tags"))
+                }
+                predicates.add(criteriaBuilder.or(*tagPredicates.toTypedArray()))
             }
             
             criteriaBuilder.and(*predicates.toTypedArray())
