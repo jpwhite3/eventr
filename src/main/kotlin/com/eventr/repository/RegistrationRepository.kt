@@ -15,4 +15,13 @@ interface RegistrationRepository : JpaRepository<Registration, UUID> {
         @Param("eventId") eventId: UUID, 
         @Param("name") name: String?
     ): List<Registration>
+    
+    @Query("SELECT r FROM Registration r JOIN r.eventInstance ei JOIN ei.event e WHERE e.id = :eventId")
+    fun findByEventId(@Param("eventId") eventId: UUID): List<Registration>
+    
+    @Query("SELECT r FROM Registration r WHERE r.userEmail = :userEmail AND r.eventInstance.event.id = :eventId")
+    fun findByUserEmailAndEventId(@Param("userEmail") userEmail: String, @Param("eventId") eventId: UUID): Registration?
+    
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.eventInstance.event.id = :eventId")
+    fun countByEventId(@Param("eventId") eventId: UUID): Long
 }

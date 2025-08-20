@@ -100,7 +100,7 @@ class SessionController(
     }
 
     @PostMapping("/checkin")
-    fun checkInToSession(@RequestBody attendanceDto: SessionAttendanceDto): ResponseEntity<SessionRegistrationDto> {
+    fun checkInToSession(@RequestBody attendanceDto: SessionAttendanceVerificationDto): ResponseEntity<SessionRegistrationDto> {
         return try {
             val registration = sessionService.checkInToSession(attendanceDto)
             ResponseEntity.ok(registration)

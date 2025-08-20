@@ -51,7 +51,7 @@ data class BulkSessionRegistrationDto(
     var notes: String? = null
 )
 
-data class SessionAttendanceDto(
+data class SessionAttendanceVerificationDto(
     var sessionRegistrationId: UUID,
     var verificationMethod: String = "MANUAL",
     var notes: String? = null

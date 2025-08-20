@@ -44,4 +44,11 @@ interface SessionRegistrationRepository : JpaRepository<SessionRegistration, UUI
     fun findConflictingUserSessions(@Param("registrationId") registrationId: UUID,
                                    @Param("startTime") startTime: java.time.LocalDateTime,
                                    @Param("endTime") endTime: java.time.LocalDateTime): List<SessionRegistration>
+    
+    // Additional methods needed by services
+    fun findByRegistrationIdAndSessionId(registrationId: UUID, sessionId: UUID): SessionRegistration?
+    
+    fun countBySessionIdAndStatus(sessionId: UUID, status: SessionRegistrationStatus): Long
+    
+    fun findBySessionIdAndStatusOrderByWaitlistRegisteredAtAsc(sessionId: UUID, status: SessionRegistrationStatus): List<SessionRegistration>
 }

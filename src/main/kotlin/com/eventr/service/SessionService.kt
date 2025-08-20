@@ -200,7 +200,7 @@ class SessionService(
         return convertToDto(saved)
     }
 
-    fun checkInToSession(attendanceDto: SessionAttendanceDto): SessionRegistrationDto {
+    fun checkInToSession(attendanceDto: SessionAttendanceVerificationDto): SessionRegistrationDto {
         val sessionRegistration = sessionRegistrationRepository.findById(attendanceDto.sessionRegistrationId)
             .orElseThrow { IllegalArgumentException("Session registration not found") }
         
