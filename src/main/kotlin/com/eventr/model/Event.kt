@@ -78,5 +78,12 @@ data class Event(
     var agenda: String? = null,
     
     @OneToMany(mappedBy = "event", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var instances: MutableList<EventInstance>? = mutableListOf()
+    var instances: MutableList<EventInstance>? = mutableListOf(),
+    
+    @OneToMany(mappedBy = "event", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var sessions: MutableList<Session>? = mutableListOf(),
+    
+    // Session configuration
+    var isMultiSession: Boolean = false,
+    var allowSessionSelection: Boolean = false
 )

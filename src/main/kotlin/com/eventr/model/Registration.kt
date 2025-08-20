@@ -26,5 +26,8 @@ data class Registration(
     
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "TEXT")
-    var formData: String? = null
+    var formData: String? = null,
+    
+    @OneToMany(mappedBy = "registration", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var sessionRegistrations: MutableList<SessionRegistration>? = mutableListOf()
 )

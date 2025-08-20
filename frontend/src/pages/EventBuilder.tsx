@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 import FormBuilder from '../components/FormBuilder';
 import ImageUpload from '../components/ImageUpload';
+import SessionBuilder from '../components/SessionBuilder';
 
 // Interface for event form data
 interface EventData {
@@ -49,6 +50,10 @@ interface EventData {
     
     // Agenda/Schedule
     agenda: string;
+    
+    // Session configuration
+    isMultiSession: boolean;
+    allowSessionSelection: boolean;
 }
 
 // Interface for API event data (when tags is an array)
@@ -102,7 +107,11 @@ const EventBuilder: React.FC = () => {
         timezone: 'UTC',
         
         // Agenda/Schedule
-        agenda: ''
+        agenda: '',
+        
+        // Session configuration
+        isMultiSession: false,
+        allowSessionSelection: false
     });
 
     useEffect(() => {
@@ -458,6 +467,75 @@ const EventBuilder: React.FC = () => {
                             <label className="form-label">Agenda/Schedule</label>
                             <textarea className="form-control" name="agenda" value={event.agenda} onChange={handleChange} rows={5} placeholder="Provide a detailed agenda or schedule for your event..."></textarea>
                         </div>
+                    </div>
+                </div>
+
+                {/* Session Management */}
+                <div className="card mb-4">
+                    <div className="card-header">
+                        <h3>📅 Session Management</h3>
+                        <p className="card-text mb-0">
+                            <small className="text-muted">
+                                Configure whether this event has multiple sessions that attendees can register for individually.
+                            </small>
+                        </p>
+                    </div>
+                    <div className="card-body">
+                        <div className="row mb-3">
+                            <div className="col-md-6">
+                                <div className="form-check">
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="isMultiSession"
+                                        name="isMultiSession"
+                                        checked={event.isMultiSession}
+                                        onChange={handleChange}
+                                    />
+                                    <label className="form-check-label" htmlFor="isMultiSession">
+                                        <strong>Multi-Session Event</strong>
+                                    </label>
+                                    <div className="form-text">
+                                        Enable if this event has multiple sessions (workshops, breakouts, etc.)
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col-md-6">
+                                <div className="form-check">
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="allowSessionSelection"
+                                        name="allowSessionSelection"
+                                        checked={event.allowSessionSelection}
+                                        onChange={handleChange}
+                                        disabled={!event.isMultiSession}
+                                    />
+                                    <label className="form-check-label" htmlFor="allowSessionSelection">
+                                        <strong>Allow Session Selection</strong>
+                                    </label>
+                                    <div className="form-text">
+                                        Let attendees choose which sessions to attend during registration
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {event.isMultiSession && (
+                            <div className="mt-4">
+                                <SessionBuilder 
+                                    eventId={id || 'new'} 
+                                    onSessionsChange={(sessions) => {
+                                        // Update isMultiSession based on number of sessions
+                                        const hasMultipleSessions = sessions.length > 0;
+                                        setEvent(prev => ({ 
+                                            ...prev, 
+                                            isMultiSession: hasMultipleSessions 
+                                        }));
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
 
