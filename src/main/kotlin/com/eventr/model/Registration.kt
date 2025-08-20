@@ -25,6 +25,6 @@ data class Registration(
     var checkedIn: Boolean = false,
     
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
+    @Column(columnDefinition = "TEXT")
     var formData: String? = null
 )
