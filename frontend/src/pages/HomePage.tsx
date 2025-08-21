@@ -1,5 +1,6 @@
 import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import apiClient from '../api/apiClient';
 
 interface EventInstance {
@@ -276,6 +277,22 @@ const HomePage: React.FC = () => {
                                                     'Location TBD'
                                             }
                                         </p>
+                                        {event.description && (
+                                            <div className="card-text text-muted small mb-2" style={{ 
+                                                maxHeight: '60px', 
+                                                overflow: 'hidden',
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 3,
+                                                WebkitBoxOrient: 'vertical'
+                                            }}>
+                                                <ReactMarkdown>
+                                                    {event.description.length > 120 
+                                                        ? event.description.substring(0, 120) + '...' 
+                                                        : event.description
+                                                    }
+                                                </ReactMarkdown>
+                                            </div>
+                                        )}
                                         <div className="mt-auto">
                                             <div className="d-flex justify-content-between align-items-center mb-2">
                                                 <span className="badge bg-success">

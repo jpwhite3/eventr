@@ -727,7 +727,7 @@ const WaitlistManagementModal: React.FC<{
                                 <table className="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th width="50">
+                                            <th style={{width: "50px"}}>
                                                 <input 
                                                     type="checkbox" 
                                                     className="form-check-input"

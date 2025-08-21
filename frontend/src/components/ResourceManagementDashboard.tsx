@@ -448,8 +448,10 @@ const ResourceManagementDashboard: React.FC<ResourceManagementDashboardProps> = 
                                                 <div>
                                                     <strong>{resource.name}</strong>
                                                     {resource.description && (
-                                                        <br />
-                                                        <small className="text-muted">{resource.description}</small>
+                                                        <>
+                                                            <br />
+                                                            <small className="text-muted">{resource.description}</small>
+                                                        </>
                                                     )}
                                                     {resource.requiresApproval && (
                                                         <span className="badge bg-warning ms-2">Requires Approval</span>

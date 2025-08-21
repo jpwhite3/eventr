@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import apiClient from '../api/apiClient';
 import FormBuilder from '../components/FormBuilder';
 import ImageUpload from '../components/ImageUpload';
@@ -64,6 +65,7 @@ interface ApiEventData extends Omit<EventData, 'tags'> {
 const EventBuilder: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const [showMarkdownPreview, setShowMarkdownPreview] = useState<boolean>(false);
     const [event, setEvent] = useState<EventData>({
         name: '',
         description: '',
@@ -199,8 +201,62 @@ const EventBuilder: React.FC = () => {
                             </div>
                         </div>
                         <div className="mb-3">
-                            <label className="form-label">Description</label>
-                            <textarea className="form-control" name="description" value={event.description} onChange={handleChange} rows={5} placeholder="Tell attendees what to expect at your event..."></textarea>
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                <label className="form-label mb-0">Description</label>
+                                <div className="btn-group" role="group">
+                                    <input
+                                        type="radio"
+                                        className="btn-check"
+                                        name="descriptionView"
+                                        id="write"
+                                        checked={!showMarkdownPreview}
+                                        onChange={() => setShowMarkdownPreview(false)}
+                                    />
+                                    <label className="btn btn-outline-secondary btn-sm" htmlFor="write">Write</label>
+                                    <input
+                                        type="radio"
+                                        className="btn-check"
+                                        name="descriptionView"
+                                        id="preview"
+                                        checked={showMarkdownPreview}
+                                        onChange={() => setShowMarkdownPreview(true)}
+                                    />
+                                    <label className="btn btn-outline-secondary btn-sm" htmlFor="preview">Preview</label>
+                                </div>
+                            </div>
+                            
+                            {!showMarkdownPreview ? (
+                                <div>
+                                    <textarea 
+                                        className="form-control" 
+                                        name="description" 
+                                        value={event.description} 
+                                        onChange={handleChange} 
+                                        rows={8} 
+                                        placeholder="Tell attendees what to expect at your event... 
+
+You can use markdown formatting:
+- **bold text**
+- *italic text*  
+- ## Headings
+- [links](https://example.com)
+- Lists and more!"
+                                    />
+                                    <small className="form-text text-muted">
+                                        Markdown is supported. Use **bold**, *italic*, ## headings, [links](url), and more!
+                                    </small>
+                                </div>
+                            ) : (
+                                <div className="border rounded p-3" style={{ minHeight: '200px', backgroundColor: '#f8f9fa' }}>
+                                    {event.description.trim() ? (
+                                        <ReactMarkdown>{event.description}</ReactMarkdown>
+                                    ) : (
+                                        <div className="text-muted fst-italic">
+                                            Preview will appear here as you type in the Write tab...
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         <div className="row">
                             <div className="col-md-6 mb-3">
