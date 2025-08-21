@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 
@@ -15,13 +15,13 @@ const AttendancePage: React.FC = () => {
     const [attendees, setAttendees] = useState<Attendee[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
 
-    const fetchAttendees = (name: string = ''): void => {
+    const fetchAttendees = useCallback((name: string = ''): void => {
         apiClient.get(`/attendance/${id}`, { params: { name } })
             .then(response => {
                 setAttendees(response.data);
             })
             .catch(error => console.error("Failed to fetch attendees", error));
-    };
+    }, [id]);
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -29,7 +29,7 @@ const AttendancePage: React.FC = () => {
         }, 300);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [id, searchTerm]);
+    }, [fetchAttendees, searchTerm]);
 
     const handleCheckIn = (registrationId: string): void => {
         apiClient.put(`/attendance/${registrationId}/checkin`).then(() => {

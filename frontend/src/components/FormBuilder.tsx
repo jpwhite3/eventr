@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 
 interface FormField {
     id: string;
@@ -25,7 +25,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ initialFields, onChange }) =>
     const [fields, setFields] = useState<FormField[]>(initialFields);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-    const fieldTypes = [
+    const fieldTypes = useMemo(() => [
         { value: 'text', label: 'Text Input', icon: '📝' },
         { value: 'email', label: 'Email', icon: '📧' },
         { value: 'phone', label: 'Phone Number', icon: '📞' },
@@ -36,7 +36,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ initialFields, onChange }) =>
         { value: 'radio', label: 'Multiple Choice', icon: '🔘' },
         { value: 'checkbox', label: 'Checkboxes', icon: '☑️' },
         { value: 'file', label: 'File Upload', icon: '📎' },
-    ];
+    ], []);
 
     const generateId = () => `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -64,7 +64,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ initialFields, onChange }) =>
         const updatedFields = [...fields, newField];
         setFields(updatedFields);
         onChange(updatedFields);
-    }, [fields, onChange]);
+    }, [fields, onChange, fieldTypes]);
 
     const updateField = useCallback((index: number, updates: Partial<FormField>) => {
         const updatedFields = fields.map((field, i) => 

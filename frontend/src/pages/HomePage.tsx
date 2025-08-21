@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
+import React, { useState, useEffect, FormEvent, ChangeEvent, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import apiClient from '../api/apiClient';
@@ -61,7 +61,7 @@ const HomePage: React.FC = () => {
         { name: 'Other', icon: '📋' }
     ];
 
-    const fetchEvents = () => {
+    const fetchEvents = useCallback(() => {
         const params: any = {};
         if (filters.city) params.city = filters.city;
         if (filters.category && filters.category !== 'All') params.category = filters.category.toUpperCase().replace(/\s+/g, '_').replace('&', '');
@@ -75,11 +75,11 @@ const HomePage: React.FC = () => {
         }).catch(error => {
             console.error("There was an error fetching the events!", error);
         });
-    };
+    }, [filters]);
 
     useEffect(() => {
         fetchEvents();
-    }, []);
+    }, [fetchEvents]);
 
     const handleFilterChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;

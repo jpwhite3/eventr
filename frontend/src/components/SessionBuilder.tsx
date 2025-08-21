@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import apiClient from '../api/apiClient';
 
 interface Session {
@@ -82,24 +82,24 @@ const SessionBuilder: React.FC<SessionBuilderProps> = ({ eventId, onSessionsChan
         tags: []
     });
 
-    useEffect(() => {
-        fetchSessions();
-    }, [eventId]);
-
-    useEffect(() => {
-        if (onSessionsChange) {
-            onSessionsChange(sessions);
-        }
-    }, [sessions, onSessionsChange]);
-
-    const fetchSessions = async () => {
+    const fetchSessions = useCallback(async () => {
         try {
             const response = await apiClient.get(`/sessions/event/${eventId}`);
             setSessions(response.data);
         } catch (error) {
             console.error('Failed to fetch sessions:', error);
         }
-    };
+    }, [eventId]);
+
+    useEffect(() => {
+        fetchSessions();
+    }, [fetchSessions]);
+
+    useEffect(() => {
+        if (onSessionsChange) {
+            onSessionsChange(sessions);
+        }
+    }, [sessions, onSessionsChange]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
