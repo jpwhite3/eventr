@@ -1,44 +1,58 @@
-# Eventr - Event Management System
+# 🎯 Eventr - Corporate Event Management System
 
-A Java Spring Boot and React application for managing events and registrations.
+[![CI/CD Pipeline](https://github.com/YOUR_USERNAME/eventr/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/YOUR_USERNAME/eventr/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Java](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.java.net/projects/jdk/21/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.2-green.svg)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue.svg)](https://www.typescriptlang.org/)
 
-## System Requirements
+A comprehensive, full-stack event management platform designed for corporate environments. Built with Spring Boot, React, and TypeScript, Eventr provides seamless event creation, registration, and management capabilities with modern features like markdown support, multi-session events, and advanced analytics.
 
-- Java 21 (LTS)
-- Maven 3.9.6+
-- Node.js 18+
-- npm 10+
-- Docker and Docker Compose
+## ✨ Features
 
-## Project Structure
+### 🎪 Event Management
+- **Event Creation**: Rich event builder with image uploads and markdown-enabled descriptions
+- **Multi-Session Support**: Create complex events with multiple sessions and prerequisites
+- **Event Types**: Support for in-person, virtual, and hybrid events
+- **Advanced Analytics**: Real-time attendance tracking and comprehensive reporting
+- **Capacity Management**: Waitlist functionality and session capacity controls
 
-- `/src/main/java` - Java backend code
-- `/src/main/resources` - Configuration files
-- `/src/test` - Test files
-- `/frontend` - React frontend application
+### 👥 User Experience
+- **Easy Registration**: Streamlined registration process with custom forms
+- **QR Code Check-in**: Mobile-friendly check-in process
+- **Bulk Operations**: Efficient bulk check-in and user management
+- **Offline Support**: Offline check-in capabilities for events
+- **Markdown Support**: Rich text formatting for event descriptions
 
-## Development Setup
+### 🏗️ Technical Features
+- **Responsive Design**: Mobile-first UI with Bootstrap 5
+- **RESTful API**: Well-documented Spring Boot backend
+- **File Storage**: AWS S3 integration for image and document storage
+- **Email Integration**: Automated email notifications
+- **Security**: Role-based access control and secure authentication
 
-### 1. Configure Environment
+## 🚀 Quick Start
 
-The project is configured to use:
-- Java 21 (LTS)
-- Spring Boot 3.3.2
-- Lombok 1.18.34
-- PostgreSQL database (via Testcontainers or Docker Compose)
-- AWS S3 for file storage (via Testcontainers or LocalStack)
+### Prerequisites
 
-### 2. Development Options
+- **Java 21** (LTS)
+- **Maven 3.9.6+**
+- **Node.js 18+**
+- **npm 10+**
+- **Docker & Docker Compose**
 
-#### Option 1: Using Docker Compose (Recommended)
-
-This option starts PostgreSQL, LocalStack (for AWS services), and MailHog (for email testing) in Docker containers:
+### 🐳 Docker Setup (Recommended)
 
 ```bash
-# Start all services
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/eventr.git
+cd eventr
+
+# Start all services with Docker Compose
 docker-compose up -d
 
-# Make the initialization script executable
+# Initialize AWS services (LocalStack)
 chmod +x localstack-init/init-aws.sh
 
 # Start the backend
@@ -46,63 +60,111 @@ chmod +x localstack-init/init-aws.sh
 
 # In another terminal, start the frontend
 cd frontend
+npm install
 npm start
 ```
 
-#### Option 2: Using Testcontainers with start-dev.sh Script (Recommended)
+### 🛠️ Local Development Setup
 
-This option uses Testcontainers to automatically manage PostgreSQL and LocalStack services, providing a consistent environment between development and testing:
-
-For Unix/Mac users:
 ```bash
-# Make the script executable
+# Option 1: Use development script (Unix/Mac)
 chmod +x start-dev.sh
-
-# Start the development environment with Testcontainers
 ./start-dev.sh
-```
 
-For Windows users:
-```cmd
-# Start the development environment with Testcontainers
+# Option 2: Use development script (Windows)
 start-dev.bat
+
+# Option 3: Manual setup with Maven profiles
+./mvnw spring-boot:run -Pdev  # Starts both backend and frontend
 ```
 
-Benefits of using Testcontainers in development:
-- No need to manually configure Docker Compose services
-- Consistent environment between development and testing
-- Automatic cleanup of containers when the application stops
-- Isolated database and AWS services for each development session
+### 📱 Access the Application
 
-#### Option 3: Using Maven Profiles
+- **Frontend**: http://localhost:3001
+- **Backend API**: http://localhost:8080/api
+- **API Documentation**: http://localhost:8080/swagger-ui.html
+- **H2 Console** (dev): http://localhost:8080/h2-console
+- **MailHog UI**: http://localhost:8025
+- **LocalStack Dashboard**: http://localhost:4566
 
-The project includes several Maven profiles for different development tasks:
+## 📚 Documentation
 
-```bash
-# Run tests with Testcontainers
-./mvnw test -Ptest
+### 🏗️ Architecture
 
-# Start the backend server
-./mvnw spring-boot:run -Pbackend
-
-# Start the frontend server
-./mvnw -Pfrontend
-
-# Start both backend and frontend
-./mvnw spring-boot:run -Pdev
+```
+eventr/
+├── src/main/kotlin/com/eventr/     # Backend (Spring Boot + Kotlin)
+│   ├── controller/                 # REST API controllers
+│   ├── service/                   # Business logic layer
+│   ├── model/                     # Data models
+│   ├── repository/                # Data access layer
+│   └── config/                    # Configuration classes
+├── frontend/                      # Frontend (React + TypeScript)
+│   ├── src/components/           # Reusable UI components
+│   ├── src/pages/               # Page components
+│   ├── src/api/                 # API client
+│   └── public/                  # Static assets
+├── src/test/                     # Backend tests
+└── docker-compose.yml           # Local development services
 ```
 
-### 3. Accessing Services
+### 🔧 Key Technologies
 
-- Backend API: http://localhost:8080/api
-- Frontend: http://localhost:3000
-- H2 Console (dev mode): http://localhost:8080/h2-console
-- MailHog UI: http://localhost:8025
-- LocalStack (AWS): http://localhost:4566
+**Backend:**
+- Spring Boot 3.3.2
+- Kotlin
+- JPA/Hibernate
+- PostgreSQL
+- AWS S3 (via LocalStack for dev)
+- Maven
 
-## Testing
+**Frontend:**
+- React 18.2.0
+- TypeScript 5.9.2
+- Bootstrap 5
+- React Router
+- Axios
+- React Markdown
 
-### Running Tests
+**Development:**
+- Docker & Docker Compose
+- Testcontainers
+- LocalStack (AWS simulation)
+- MailHog (email testing)
+
+### 🎨 UI Components
+
+The application includes several reusable components:
+
+- **Event Builder**: Rich form with markdown preview
+- **Advanced Analytics Dashboard**: Real-time charts and metrics
+- **QR Scanner**: Mobile-optimized check-in interface
+- **Form Builder**: Dynamic form creation for registrations
+- **Session Builder**: Multi-session event configuration
+- **Bulk Operations**: Batch user management tools
+
+### 📊 API Endpoints
+
+Key API endpoints include:
+
+```
+GET    /api/events              # List events
+POST   /api/events              # Create event
+GET    /api/events/{id}         # Get event details
+PUT    /api/events/{id}         # Update event
+DELETE /api/events/{id}         # Delete event
+
+GET    /api/registrations       # List registrations
+POST   /api/registrations       # Register for event
+
+POST   /api/check-in/{id}       # Check in attendee
+GET    /api/attendance/{id}     # Get attendance data
+
+GET    /api/sessions            # List sessions
+POST   /api/sessions            # Create session
+```
+
+## 🧪 Testing
 
 ```bash
 # Run all tests
@@ -110,40 +172,96 @@ The project includes several Maven profiles for different development tasks:
 
 # Run tests with Testcontainers
 ./mvnw test -Ptest
+
+# Frontend tests
+cd frontend
+npm test
+
+# Run with coverage
+npm test -- --coverage
 ```
 
-### Test Environment
+### Test Strategy
 
-Tests use:
-- Testcontainers for PostgreSQL database
-- Testcontainers for LocalStack (AWS services)
-- JUnit 5 and Spring Boot Test
+- **Backend**: JUnit 5 + Spring Boot Test + Testcontainers
+- **Frontend**: Jest + React Testing Library
+- **Integration**: Testcontainers for database and AWS services
+- **E2E**: Planned Cypress integration
 
-## Building for Production
+## 🏗️ Building for Production
 
 ```bash
-# Build the backend
+# Build backend
 ./mvnw clean package -DskipTests
 
-# Build the frontend
+# Build frontend
 cd frontend
 npm run build
+
+# Build Docker image
+docker build -t eventr:latest .
 ```
 
-## Troubleshooting
+## 🤝 Contributing
 
-### Common Issues
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-1. **AWS Configuration Error**: If you see errors related to AWS configuration, check:
-   - The region is set correctly in application.properties
-   - LocalStack is running (for development)
-   - AWS credentials are configured properly
+### Quick Contribution Steps
 
-2. **Database Connection Issues**: Ensure:
-   - PostgreSQL is running (or use H2 for development)
-   - Database credentials are correct in application.properties
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests (`./mvnw test && cd frontend && npm test`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
-3. **Test Failures**: If tests fail:
-   - Check that Docker is running (required for Testcontainers)
-   - Ensure test configuration is correct
-# eventr
+### Development Guidelines
+
+- Follow existing code style and conventions
+- Write tests for new features
+- Update documentation as needed
+- Use meaningful commit messages
+- Keep PRs focused and atomic
+
+## 📈 Roadmap
+
+### Near Term (v1.1)
+- [ ] Mobile app (React Native)
+- [ ] Advanced reporting dashboard
+- [ ] Calendar integrations
+- [ ] SSO/LDAP authentication
+
+### Future (v2.0)
+- [ ] Multi-tenant architecture
+- [ ] API rate limiting
+- [ ] Advanced notification system
+- [ ] Integration marketplace
+
+## 🔐 Security
+
+Security is a top priority. Please review our [Security Policy](SECURITY.md) for reporting vulnerabilities.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Documentation**: Check our [docs](docs/)
+- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/eventr/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/eventr/discussions)
+
+## 🙏 Acknowledgments
+
+- Spring Boot team for the excellent framework
+- React community for the amazing ecosystem
+- All contributors who make this project possible
+
+---
+
+<div align="center">
+  <b>Built with ❤️ for the open source community</b>
+  <br>
+  <sub>Made by <a href="https://github.com/YOUR_USERNAME">YOUR_NAME</a> and <a href="https://github.com/YOUR_USERNAME/eventr/contributors">contributors</a></sub>
+</div>

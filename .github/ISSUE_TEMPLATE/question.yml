@@ -1,0 +1,85 @@
+name: ❓ Question
+description: Ask a question about the project
+title: "[QUESTION] "
+labels: ["question", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your question! ❓
+        
+        Please check the documentation and search existing issues first.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I have read the documentation
+          required: true
+        - label: I have searched existing issues and discussions
+          required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What is your question about?
+      options:
+        - Setup and Installation
+        - Configuration
+        - Usage
+        - API
+        - Development
+        - Deployment
+        - Troubleshooting
+        - Architecture
+        - Contributing
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: Please describe your question in detail...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What are you trying to accomplish?
+      placeholder: Provide context about what you're trying to do...
+
+  - type: textarea
+    id: attempted-solutions
+    attributes:
+      label: What have you tried?
+      description: What have you already attempted to solve this?
+      placeholder: Describe any solutions you've already tried...
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (if relevant)
+      description: |
+        Please provide details about your environment if relevant:
+      value: |
+        - OS: [e.g. Windows 10, macOS 12.0, Ubuntu 20.04]
+        - Browser: [e.g. Chrome 96, Firefox 95, Safari 15]
+        - Node.js version: [e.g. 18.12.0]
+        - Java version: [e.g. OpenJDK 21]
+        - Docker version: [e.g. 20.10.21]
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other information that might be helpful
+      placeholder: Screenshots, logs, error messages, etc.
