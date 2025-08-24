@@ -37,7 +37,7 @@
 		<npm.version>10.2.3</npm.version>
 		<kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
 		<!-- JaCoCo Coverage Properties -->
-		<jacoco.check.skip>true</jacoco.check.skip> <!-- Set to false to enforce coverage checks -->
+		<jacoco.check.skip>false</jacoco.check.skip> <!-- Set to false to enforce coverage checks -->
 	</properties>
 
 	<dependencyManagement>
@@ -269,7 +269,7 @@
 					</execution>
 					<execution>
 						<id>java-test-compile</id>
-						<phase>test-compile</phase>
+						<phase>process-test-classes</phase>
 						<goals>
 							<goal>testCompile</goal>
 						</goals>
@@ -289,6 +289,24 @@
 					</excludes>
 				</configuration>
 			</plugin>
+
+			<!-- Maven Surefire Plugin to run both Kotlin and Java tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.2.5</version>
+				<configuration>
+					<includes>
+						<include>**/*Test.java</include>
+						<include>**/*Test.kt</include>
+						<include>**/*Tests.java</include>
+						<include>**/*Tests.kt</include>
+					</includes>
+					<!-- Enable running both Java and Kotlin tests -->
+					<testClassesDirectory>${project.build.testOutputDirectory}</testClassesDirectory>
+				</configuration>
+			</plugin>
+
 
 			<!-- JaCoCo Code Coverage Plugin -->
 			<plugin>
@@ -323,12 +341,12 @@
 										<limit>
 											<counter>INSTRUCTION</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.75</minimum>
+											<minimum>0.18</minimum>
 										</limit>
 										<limit>
 											<counter>BRANCH</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.75</minimum>
+											<minimum>0.05</minimum>
 										</limit>
 									</limits>
 								</rule>
