@@ -1,6 +1,6 @@
 # 🎯 Eventr - Corporate Event Management System
 
-[![CI/CD Pipeline](https://github.com/YOUR_USERNAME/eventr/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/YOUR_USERNAME/eventr/actions)
+[![CI/CD Pipeline](https://github.com/jpwhite3/eventr/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/jpwhite3/eventr/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.java.net/projects/jdk/21/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.2-green.svg)](https://spring.io/projects/spring-boot)
@@ -12,6 +12,7 @@ A comprehensive, full-stack event management platform designed for corporate env
 ## ✨ Features
 
 ### 🎪 Event Management
+
 - **Event Creation**: Rich event builder with image uploads and markdown-enabled descriptions
 - **Multi-Session Support**: Create complex events with multiple sessions and prerequisites
 - **Event Types**: Support for in-person, virtual, and hybrid events
@@ -19,6 +20,7 @@ A comprehensive, full-stack event management platform designed for corporate env
 - **Capacity Management**: Waitlist functionality and session capacity controls
 
 ### 👥 User Experience
+
 - **Easy Registration**: Streamlined registration process with custom forms
 - **QR Code Check-in**: Mobile-friendly check-in process
 - **Bulk Operations**: Efficient bulk check-in and user management
@@ -26,11 +28,14 @@ A comprehensive, full-stack event management platform designed for corporate env
 - **Markdown Support**: Rich text formatting for event descriptions
 
 ### 🏗️ Technical Features
+
 - **Responsive Design**: Mobile-first UI with Bootstrap 5
 - **RESTful API**: Well-documented Spring Boot backend
 - **File Storage**: AWS S3 integration for image and document storage
 - **Email Integration**: Automated email notifications
 - **Security**: Role-based access control and secure authentication
+- **Webhook System**: Event-driven integrations with external systems
+- **SOLID Architecture**: Clean, testable code following SOLID principles
 
 ## 🚀 Quick Start
 
@@ -46,7 +51,7 @@ A comprehensive, full-stack event management platform designed for corporate env
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/eventr.git
+git clone https://github.com/jpwhite3/eventr.git
 cd eventr
 
 # Start all services with Docker Compose
@@ -62,19 +67,28 @@ chmod +x localstack-init/init-aws.sh
 cd frontend
 npm install
 npm start
+
+# Optional: Start webhook test client for local development
+cd webhook-client
+npm install
+npm start
 ```
 
 ### 🛠️ Local Development Setup
 
 ```bash
-# Option 1: Use development script (Unix/Mac)
+# Option 1: Full development environment with webhook testing (Recommended)
+chmod +x start-dev-with-webhooks.sh
+./start-dev-with-webhooks.sh
+
+# Option 2: Basic development script (Unix/Mac)
 chmod +x start-dev.sh
 ./start-dev.sh
 
-# Option 2: Use development script (Windows)
+# Option 3: Use development script (Windows)
 start-dev.bat
 
-# Option 3: Manual setup with Maven profiles
+# Option 4: Manual setup with Maven profiles
 ./mvnw spring-boot:run -Pdev  # Starts both backend and frontend
 ```
 
@@ -86,8 +100,17 @@ start-dev.bat
 - **H2 Console** (dev): http://localhost:8080/h2-console
 - **MailHog UI**: http://localhost:8025
 - **LocalStack Dashboard**: http://localhost:4566
+- **Webhook Test Client**: http://localhost:3002
 
 ## 📚 Documentation
+
+📖 **[Complete Documentation](docs/README.md)** - Comprehensive guides for developers and integrators
+
+### Quick Links
+- **[API Documentation](docs/api.md)** - Complete REST API reference
+- **[Webhook Integration](docs/webhooks.md)** - Event-driven integration guide  
+- **[Local Development](docs/local-development.md)** - Development environment setup
+- **[Architecture Guide](docs/architecture.md)** - System design and patterns
 
 ### 🏗️ Architecture
 
@@ -111,6 +134,7 @@ eventr/
 ### 🔧 Key Technologies
 
 **Backend:**
+
 - Spring Boot 3.3.2
 - Kotlin
 - JPA/Hibernate
@@ -119,6 +143,7 @@ eventr/
 - Maven
 
 **Frontend:**
+
 - React 18.2.0
 - TypeScript 5.9.2
 - Bootstrap 5
@@ -127,6 +152,7 @@ eventr/
 - React Markdown
 
 **Development:**
+
 - Docker & Docker Compose
 - Testcontainers
 - LocalStack (AWS simulation)
@@ -147,6 +173,7 @@ The application includes several reusable components:
 
 Key API endpoints include:
 
+**Events & Registration:**
 ```
 GET    /api/events              # List events
 POST   /api/events              # Create event
@@ -163,6 +190,19 @@ GET    /api/attendance/{id}     # Get attendance data
 GET    /api/sessions            # List sessions
 POST   /api/sessions            # Create session
 ```
+
+**Webhooks:**
+```
+GET    /api/webhooks            # List webhooks
+POST   /api/webhooks            # Create webhook
+GET    /api/webhooks/{id}       # Get webhook details
+PUT    /api/webhooks/{id}       # Update webhook
+DELETE /api/webhooks/{id}       # Delete webhook
+POST   /api/webhooks/{id}/test  # Test webhook delivery
+PUT    /api/webhooks/{id}/secret # Regenerate webhook secret
+```
+
+See our [API Documentation](docs/api.md) for complete endpoint details.
 
 ## 🧪 Testing
 
@@ -227,12 +267,14 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ## 📈 Roadmap
 
 ### Near Term (v1.1)
+
 - [ ] Mobile app (React Native)
 - [ ] Advanced reporting dashboard
 - [ ] Calendar integrations
 - [ ] SSO/LDAP authentication
 
 ### Future (v2.0)
+
 - [ ] Multi-tenant architecture
 - [ ] API rate limiting
 - [ ] Advanced notification system
@@ -249,8 +291,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 - **Documentation**: Check our [docs](docs/)
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/eventr/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/eventr/discussions)
+- **Issues**: [GitHub Issues](https://github.com/jpwhite3/eventr/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/jpwhite3/eventr/discussions)
 
 ## 🙏 Acknowledgments
 
@@ -263,5 +305,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <div align="center">
   <b>Built with ❤️ for the open source community</b>
   <br>
-  <sub>Made by <a href="https://github.com/YOUR_USERNAME">YOUR_NAME</a> and <a href="https://github.com/YOUR_USERNAME/eventr/contributors">contributors</a></sub>
+  <sub>Made by <a href="https://github.com/jpwhite3">YOUR_NAME</a> and <a href="https://github.com/jpwhite3/eventr/contributors">contributors</a></sub>
 </div>

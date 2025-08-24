@@ -2,11 +2,11 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   release:
-    types: [ published ]
+    types: [published]
 
 env:
   JAVA_VERSION: '21'
@@ -18,7 +18,7 @@ jobs:
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -51,13 +51,10 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Run backend tests
-        run: ./mvnw ${{ env.MAVEN_ARGS }} test
+      - name: Run backend tests with coverage
+        run: ./mvnw ${{ env.MAVEN_ARGS }} clean test jacoco:report -Djacoco.check.skip=true
         env:
           SPRING_PROFILES_ACTIVE: test
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/eventr_test
-          SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: test
 
       - name: Generate test report
         uses: dorny/test-reporter@v1

@@ -38,6 +38,21 @@ services:
       - "1025:1025" # SMTP server
       - "8025:8025" # Web UI
 
+  # Redis for caching and session storage
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres-data:
   localstack-data:
+  redis-data:

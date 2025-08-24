@@ -90,7 +90,7 @@ interface ScheduleConflictRepository : JpaRepository<ScheduleConflict, UUID> {
     
     // Resolution time analysis
     @Query("""
-        SELECT AVG(EXTRACT(EPOCH FROM (sc.resolvedAt - sc.detectedAt))/3600) 
+        SELECT AVG(CAST((EXTRACT(EPOCH FROM sc.resolvedAt) - EXTRACT(EPOCH FROM sc.detectedAt)) / 3600 AS DOUBLE)) 
         FROM ScheduleConflict sc 
         WHERE sc.resolvedAt IS NOT NULL 
         AND sc.detectedAt >= :startDate

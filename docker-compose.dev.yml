@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Extend base services
+  postgres:
+    extends:
+      file: docker-compose.yml
+      service: postgres
+    environment:
+      POSTGRES_DB: eventr_dev
+      POSTGRES_USER: eventr_user
+      POSTGRES_PASSWORD: eventr_pass
+
+  localstack:
+    extends:
+      file: docker-compose.yml
+      service: localstack
+
+  mailhog:
+    extends:
+      file: docker-compose.yml
+      service: mailhog
+
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+
+  # Webhook test client for development
+  webhook-client:
+    build:
+      context: ./webhook-client
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - EVENTR_WEBHOOK_SECRET=dev-secret-key
+      - NODE_ENV=development
+    volumes:
+      - ./webhook-client:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: eventr-dev

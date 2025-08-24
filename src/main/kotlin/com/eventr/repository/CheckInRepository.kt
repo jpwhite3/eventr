@@ -53,8 +53,8 @@ interface CheckInRepository : JpaRepository<CheckIn, UUID> {
     @Query("SELECT c.method, COUNT(c) FROM CheckIn c WHERE c.registration.eventInstance.event.id = :eventId GROUP BY c.method")
     fun getCheckInMethodStats(@Param("eventId") eventId: UUID): List<Array<Any>>
     
-    @Query("SELECT HOUR(c.checkedInAt), COUNT(c) FROM CheckIn c WHERE c.registration.eventInstance.event.id = :eventId " +
-           "AND DATE(c.checkedInAt) = CURRENT_DATE GROUP BY HOUR(c.checkedInAt)")
+    @Query("SELECT EXTRACT(HOUR FROM c.checkedInAt), COUNT(c) FROM CheckIn c WHERE c.registration.eventInstance.event.id = :eventId " +
+           "AND CAST(c.checkedInAt AS DATE) = CURRENT_DATE GROUP BY EXTRACT(HOUR FROM c.checkedInAt)")
     fun getTodayHourlyCheckInStats(@Param("eventId") eventId: UUID): List<Array<Any>>
     
     // Sync-related queries for offline support

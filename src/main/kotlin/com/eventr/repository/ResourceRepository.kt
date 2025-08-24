@@ -32,12 +32,12 @@ interface ResourceRepository : JpaRepository<Resource, UUID> {
         WHERE r.type = :type 
         AND r.isBookable = true 
         AND r.isActive = true
-        AND r.status = 'AVAILABLE'
+        AND r.status = com.eventr.model.ResourceStatus.AVAILABLE
         AND r.id NOT IN (
             SELECT sr.resource.id FROM SessionResource sr 
             WHERE sr.bookingStart <= :endTime 
             AND sr.bookingEnd >= :startTime
-            AND sr.status NOT IN ('CANCELLED', 'COMPLETED')
+            AND sr.status NOT IN (com.eventr.model.ResourceBookingStatus.CANCELLED, com.eventr.model.ResourceBookingStatus.COMPLETED)
         )
     """)
     fun findAvailableResourcesByType(
@@ -50,14 +50,14 @@ interface ResourceRepository : JpaRepository<Resource, UUID> {
         SELECT r FROM Resource r 
         WHERE r.isBookable = true 
         AND r.isActive = true
-        AND r.status = 'AVAILABLE'
+        AND r.status = com.eventr.model.ResourceStatus.AVAILABLE
         AND (:location IS NULL OR r.location = :location)
         AND (:minCapacity IS NULL OR r.capacity >= :minCapacity)
         AND r.id NOT IN (
             SELECT sr.resource.id FROM SessionResource sr 
             WHERE sr.bookingStart <= :endTime 
             AND sr.bookingEnd >= :startTime
-            AND sr.status NOT IN ('CANCELLED', 'COMPLETED')
+            AND sr.status NOT IN (com.eventr.model.ResourceBookingStatus.CANCELLED, com.eventr.model.ResourceBookingStatus.COMPLETED)
         )
     """)
     fun findAvailableResources(
@@ -116,7 +116,7 @@ interface SessionResourceRepository : JpaRepository<SessionResource, UUID> {
         WHERE sr.resource.id = :resourceId 
         AND sr.bookingStart < :endTime 
         AND sr.bookingEnd > :startTime
-        AND sr.status NOT IN ('CANCELLED', 'COMPLETED')
+        AND sr.status NOT IN (com.eventr.model.ResourceBookingStatus.CANCELLED, com.eventr.model.ResourceBookingStatus.COMPLETED)
     """)
     fun findConflictingBookings(
         @Param("resourceId") resourceId: UUID,
@@ -130,7 +130,7 @@ interface SessionResourceRepository : JpaRepository<SessionResource, UUID> {
         AND sr.quantityAllocated > 0
         AND sr.bookingStart < :endTime 
         AND sr.bookingEnd > :startTime
-        AND sr.status NOT IN ('CANCELLED', 'COMPLETED')
+        AND sr.status NOT IN (com.eventr.model.ResourceBookingStatus.CANCELLED, com.eventr.model.ResourceBookingStatus.COMPLETED)
     """)
     fun findResourceUsageDuringPeriod(
         @Param("resourceId") resourceId: UUID,

@@ -17,7 +17,8 @@ class S3Service(private val s3Client: S3Client) {
             .key(key)
             .build()
         
-        s3Client.putObject(request, RequestBody.fromInputStream(inputStream, -1))
+        val bytes = inputStream.readAllBytes()
+        s3Client.putObject(request, RequestBody.fromBytes(bytes))
         
         return s3Client.utilities().getUrl { builder -> 
             builder.bucket(bucketName).key(key) 
