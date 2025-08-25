@@ -1,6 +1,7 @@
 package com.eventr.controller
 
 import com.eventr.dto.*
+import com.eventr.model.*
 import com.eventr.service.CapacityManagementService
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.BeforeEach
@@ -87,6 +88,7 @@ class CapacityManagementControllerTest {
     fun shouldUpdateSessionCapacitySuccessfully() {
         // Given
         val updateDto = CapacityUpdateDto(
+            sessionId = sessionId,
             maximumCapacity = 150,
             minimumCapacity = 30,
             reason = "Venue change"
@@ -116,7 +118,7 @@ class CapacityManagementControllerTest {
     @DisplayName("Should return not found when updating non-existent session capacity")
     fun shouldReturnNotFoundWhenUpdatingNonExistentSessionCapacity() {
         // Given
-        val updateDto = CapacityUpdateDto(maximumCapacity = 150)
+        val updateDto = CapacityUpdateDto(sessionId = sessionId, maximumCapacity = 150)
         
         whenever(capacityManagementService.updateSessionCapacity(sessionId, updateDto))
             .thenThrow(IllegalArgumentException("Session capacity not found"))
@@ -286,6 +288,7 @@ class CapacityManagementControllerTest {
                 suggestedCapacity = 70,
                 optimizationType = "INCREASE",
                 reason = "High waitlist demand",
+                potentialImpact = "20 more attendees can be accommodated",
                 priority = "HIGH"
             )
         )

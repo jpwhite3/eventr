@@ -1,0 +1,182 @@
+[
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440001",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440001",
+    "userEmail": "john.doe@email.com",
+    "userName": "John Doe",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"company\":\"Tech Solutions Inc\",\"jobTitle\":\"Software Engineer\",\"experience\":\"5-10 years\",\"interests\":[\"AI\",\"Cloud Computing\"],\"dietaryRestrictions\":\"Vegetarian\",\"accessibilityNeeds\":\"None\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440002",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440001",
+    "userEmail": "jane.smith@company.com",
+    "userName": "Jane Smith",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"company\":\"DataCorp\",\"jobTitle\":\"Data Scientist\",\"experience\":\"3-5 years\",\"interests\":[\"Machine Learning\",\"Data Analytics\"],\"dietaryRestrictions\":\"None\",\"accessibilityNeeds\":\"None\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440003",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440001",
+    "userEmail": "mike.johnson@startup.io",
+    "userName": "Mike Johnson",
+    "status": "REGISTERED",
+    "checkedIn": false,
+    "formData": "{\"company\":\"StartupXYZ\",\"jobTitle\":\"CTO\",\"experience\":\"10+ years\",\"interests\":[\"Startup Scaling\",\"Technology Leadership\"],\"dietaryRestrictions\":\"Gluten-free\",\"accessibilityNeeds\":\"None\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440004",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440001",
+    "userEmail": "sarah.wilson@consulting.com",
+    "userName": "Sarah Wilson",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"company\":\"Wilson Consulting\",\"jobTitle\":\"Technology Consultant\",\"experience\":\"7-10 years\",\"interests\":[\"Digital Transformation\",\"AI Strategy\"],\"dietaryRestrictions\":\"None\",\"accessibilityNeeds\":\"Wheelchair accessible seating\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440005",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440001",
+    "userEmail": "alex.chen@bigtech.com",
+    "userName": "Alex Chen",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"company\":\"BigTech Corp\",\"jobTitle\":\"Senior Developer\",\"experience\":\"5-7 years\",\"interests\":[\"Cloud Architecture\",\"DevOps\"],\"dietaryRestrictions\":\"None\",\"accessibilityNeeds\":\"None\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440006",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440004",
+    "userEmail": "marketing.guru@email.com",
+    "userName": "Emily Davis",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"company\":\"Marketing Experts LLC\",\"businessType\":\"Agency\",\"experience\":\"3-5 years\",\"interests\":[\"SEO\",\"Content Marketing\"],\"goals\":[\"Increase organic traffic\",\"Improve conversion rates\"]}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440007",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440004",
+    "userEmail": "business.owner@shop.com",
+    "userName": "Robert Taylor",
+    "status": "REGISTERED",
+    "checkedIn": false,
+    "formData": "{\"company\":\"Taylor's Online Shop\",\"businessType\":\"E-commerce\",\"experience\":\"1-3 years\",\"interests\":[\"Social Media Marketing\",\"Email Marketing\"],\"goals\":[\"Build brand awareness\",\"Increase sales\"]}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440008",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440004",
+    "userEmail": "digital.marketer@agency.com",
+    "userName": "Lisa Anderson",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"company\":\"Digital First Agency\",\"businessType\":\"Agency\",\"experience\":\"5-7 years\",\"interests\":[\"Analytics\",\"Performance Marketing\"],\"goals\":[\"ROI optimization\",\"Advanced analytics\"]}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440009",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440007",
+    "userEmail": "wellness.enthusiast@email.com",
+    "userName": "Maria Rodriguez",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"occupation\":\"Yoga Instructor\",\"interests\":[\"Mental Health\",\"Mindfulness\"],\"goals\":[\"Personal growth\",\"Help others\"],\"experience\":\"Regular meditation practice\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440010",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440007",
+    "userEmail": "health.coach@wellness.com",
+    "userName": "David Thompson",
+    "status": "REGISTERED",
+    "checkedIn": false,
+    "formData": "{\"occupation\":\"Health Coach\",\"interests\":[\"Nutrition\",\"Fitness\"],\"goals\":[\"Professional development\",\"Client support\"],\"experience\":\"Certified health coach\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440011",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440007",
+    "userEmail": "busy.parent@email.com",
+    "userName": "Jennifer Lee",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"occupation\":\"Working Parent\",\"interests\":[\"Work-life balance\",\"Stress management\"],\"goals\":[\"Better self-care\",\"Family wellness\"],\"experience\":\"Beginner to wellness practices\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440012",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440010",
+    "userEmail": "startup.founder@venture.com",
+    "userName": "Michael Chang",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"company\":\"AI Venture Labs\",\"stage\":\"Seed\",\"industry\":\"Artificial Intelligence\",\"fundingGoal\":\"$2M\",\"previousExperience\":\"Serial entrepreneur\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440013",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440010",
+    "userEmail": "investor@vc.fund",
+    "userName": "Patricia Williams",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"firm\":\"Innovation VC Fund\",\"role\":\"Partner\",\"focusAreas\":[\"SaaS\",\"HealthTech\",\"FinTech\"],\"investmentRange\":\"$1M-$10M\",\"experience\":\"15+ years in VC\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440014",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440010",
+    "userEmail": "entrepreneur@startup.com",
+    "userName": "Kevin Park",
+    "status": "REGISTERED",
+    "checkedIn": false,
+    "formData": "{\"company\":\"GreenTech Solutions\",\"stage\":\"Pre-seed\",\"industry\":\"Clean Energy\",\"fundingGoal\":\"$500K\",\"previousExperience\":\"First-time founder\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440015",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440011",
+    "userEmail": "jazz.lover@music.com",
+    "userName": "Amanda Foster",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"musicPreference\":\"Traditional Jazz\",\"attendingWith\":\"Partner\",\"interests\":[\"Live music\",\"Outdoor events\"],\"foodPreference\":\"Vegetarian options\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440016",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440011",
+    "userEmail": "music.fan@email.com",
+    "userName": "Carlos Rodriguez",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"musicPreference\":\"Contemporary Jazz\",\"attendingWith\":\"Friends\",\"interests\":[\"Live music\",\"Food trucks\"],\"foodPreference\":\"No restrictions\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440017",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440012",
+    "userEmail": "volunteer@community.org",
+    "userName": "Rachel Green",
+    "status": "REGISTERED",
+    "checkedIn": true,
+    "formData": "{\"volunteerExperience\":\"Regular volunteer at food bank\",\"availability\":\"Full day\",\"skills\":[\"Organization\",\"Customer service\"],\"transportationNeeded\":false}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440018",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440012",
+    "userEmail": "helper@email.com",
+    "userName": "Thomas Wilson",
+    "status": "REGISTERED",
+    "checkedIn": false,
+    "formData": "{\"volunteerExperience\":\"First-time volunteer\",\"availability\":\"Morning only\",\"skills\":[\"Heavy lifting\",\"Sorting\"],\"transportationNeeded\":true}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440019",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440001",
+    "userEmail": "cancelled.user@email.com",
+    "userName": "Cancelled User",
+    "status": "CANCELLED",
+    "checkedIn": false,
+    "formData": "{\"company\":\"Former Company\",\"jobTitle\":\"Former Role\",\"experience\":\"N/A\",\"cancellationReason\":\"Schedule conflict\"}"
+  },
+  {
+    "id": "880e8400-e29b-41d4-a716-446655440020",
+    "eventInstanceId": "660e8400-e29b-41d4-a716-446655440004",
+    "userEmail": "late.registrant@email.com",
+    "userName": "Late Registrant",
+    "status": "REGISTERED",
+    "checkedIn": false,
+    "formData": "{\"company\":\"Last Minute Inc\",\"businessType\":\"Consulting\",\"experience\":\"2-3 years\",\"interests\":[\"Digital Marketing\"],\"goals\":[\"Learn new strategies\"]}"
+  }
+]

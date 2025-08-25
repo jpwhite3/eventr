@@ -79,37 +79,6 @@ data class CheckInStatsDto(
     var checkInsByMethod: Map<CheckInMethod, Int> = emptyMap()
 )
 
-data class AttendanceReportDto(
-    var eventId: UUID,
-    var eventName: String,
-    var totalSessions: Int = 0,
-    var totalRegistrations: Int = 0,
-    var totalAttendees: Int = 0,
-    var overallAttendanceRate: Double = 0.0,
-    var sessionAttendance: List<SessionAttendanceDto> = emptyList(),
-    var attendeeDetails: List<AttendeeAttendanceDto> = emptyList(),
-    var generatedAt: LocalDateTime = LocalDateTime.now()
-)
-
-data class SessionAttendanceDto(
-    var sessionId: UUID,
-    var sessionTitle: String,
-    var sessionStartTime: LocalDateTime,
-    var expectedAttendees: Int = 0,
-    var actualAttendees: Int = 0,
-    var attendanceRate: Double = 0.0,
-    var noShows: Int = 0
-)
-
-data class AttendeeAttendanceDto(
-    var registrationId: UUID,
-    var userName: String,
-    var userEmail: String,
-    var totalSessions: Int = 0,
-    var attendedSessions: Int = 0,
-    var attendanceRate: Double = 0.0,
-    var missedSessions: List<String> = emptyList()
-)
 
 data class QRCodeResponseDto(
     var qrCodeBase64: String,

@@ -192,7 +192,7 @@ class PrerequisiteValidationServiceTest {
         
         whenever(sessionRepository.findByEventIdAndIsActiveTrue(eventId)).thenReturn(listOf(session1, session2))
         whenever(sessionDependencyRepository.detectCircularDependencies(any())).thenReturn(
-            listOf(listOf(session1.id.toString(), session2.id.toString()))
+            listOf(arrayOf(session1.id.toString(), session2.id.toString()))
         )
         whenever(sessionRepository.findById(session1.id!!)).thenReturn(Optional.of(session1))
         whenever(sessionRepository.findById(session2.id!!)).thenReturn(Optional.of(session2))
@@ -246,12 +246,12 @@ class PrerequisiteValidationServiceTest {
         val intermediateSession = createSession(UUID.randomUUID(), "Intermediate Session")
         
         val pathResults = listOf(
-            listOf("path_id", fromSessionId.toString()),
-            listOf("path_id", intermediateSession.id.toString()),
-            listOf("path_id", toSessionId.toString())
+            arrayOf("path_id", fromSessionId.toString()),
+            arrayOf("path_id", intermediateSession.id.toString()),
+            arrayOf("path_id", toSessionId.toString())
         )
         
-        whenever(sessionDependencyRepository.findDependencyPath(fromSessionId, toSessionId)).thenReturn(pathResults)
+        whenever(sessionDependencyRepository.findDependencyPath(fromSessionId, toSessionId)).thenReturn(pathResults as List<Array<Any>>)
         whenever(sessionRepository.findById(fromSessionId)).thenReturn(Optional.of(createSession(fromSessionId, "From Session")))
         whenever(sessionRepository.findById(intermediateSession.id!!)).thenReturn(Optional.of(intermediateSession))
         whenever(sessionRepository.findById(toSessionId)).thenReturn(Optional.of(createSession(toSessionId, "To Session")))
@@ -298,8 +298,9 @@ class PrerequisiteValidationServiceTest {
         val session = createSession(sessionId, "Main Session")
         val prerequisiteSession = createSession(prerequisiteSessionId, "Prerequisite Session")
         
-        return SessionPrerequisite().apply {
-            this.id = UUID.randomUUID()
+        return SessionPrerequisite(
+            id = UUID.randomUUID()
+        ).apply {
             this.session = session
             this.prerequisiteSession = prerequisiteSession
             this.type = type
@@ -310,21 +311,22 @@ class PrerequisiteValidationServiceTest {
     }
 
     private fun createSession(id: UUID, title: String): Session {
-        return Session().apply {
-            this.id = id
-            this.title = title
-            this.isActive = true
-        }
+        return Session(
+            id = id,
+            title = title,
+            isActive = true
+        )
     }
 
     private fun createCheckIn(registrationId: UUID, sessionId: UUID, type: CheckInType): CheckIn {
-        val registration = Registration().apply { 
-            this.id = registrationId 
-        }
+        val registration = Registration(
+            id = registrationId
+        )
         val session = createSession(sessionId, "Test Session")
         
-        return CheckIn().apply {
-            this.id = UUID.randomUUID()
+        return CheckIn(
+            id = UUID.randomUUID()
+        ).apply {
             this.registration = registration
             this.session = session
             this.type = type
@@ -337,13 +339,14 @@ class PrerequisiteValidationServiceTest {
         sessionId: UUID, 
         status: SessionRegistrationStatus
     ): SessionRegistration {
-        val registration = Registration().apply { 
-            this.id = registrationId 
-        }
+        val registration = Registration(
+            id = registrationId
+        )
         val session = createSession(sessionId, "Test Session")
         
-        return SessionRegistration().apply {
-            this.id = UUID.randomUUID()
+        return SessionRegistration(
+            id = UUID.randomUUID()
+        ).apply {
             this.registration = registration
             this.session = session
             this.status = status
@@ -357,8 +360,9 @@ class PrerequisiteValidationServiceTest {
     ): SessionDependency {
         val dependentSession = createSession(dependentSessionId, "Dependent Session")
         
-        return SessionDependency().apply {
-            this.id = UUID.randomUUID()
+        return SessionDependency(
+            id = UUID.randomUUID()
+        ).apply {
             this.parentSession = parentSession
             this.dependentSession = dependentSession
             this.dependencyType = type

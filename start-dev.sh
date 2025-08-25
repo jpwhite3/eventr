@@ -25,6 +25,11 @@ cleanup() {
         docker rm $TESTCONTAINER_IDS 2>/dev/null || true
     fi
     
+    # Kill any test processes that might still be running
+    echo "Stopping any running test processes..."
+    pkill -f "test" 2>/dev/null || true
+    pkill -f "mvn.*test" 2>/dev/null || true
+    
     echo "Cleanup complete."
     exit 0
 }
@@ -42,9 +47,9 @@ else
     docker run -d --name eventr-mailhog -p 1025:1025 -p 8025:8025 mailhog/mailhog
 fi
 
-# Start backend server in the background with dev profile
-echo "Starting backend server with Testcontainers..."
-./mvnw spring-boot:run -Pbackend -Dspring.profiles.active=dev &
+# Start backend server in the background with dev profile (skip tests)
+echo "Starting backend server with dev profile (skipping tests)..."
+./mvnw spring-boot:run -Pbackend -Dspring.profiles.active=dev -DskipTests &
 BACKEND_PID=$!
 
 # Wait for backend to start

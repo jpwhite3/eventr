@@ -1,6 +1,7 @@
 package com.eventr.controller
 
 import com.eventr.dto.*
+import com.eventr.model.*
 import com.eventr.service.CheckInService
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.BeforeEach
@@ -47,13 +48,13 @@ class CheckInControllerTest {
         // Given
         val qrCheckInDto = QRCheckInDto(
             qrCode = "test-qr-code",
-            scannerInfo = "test-scanner"
+            deviceId = "test-device",
+            checkedInBy = "test-scanner"
         )
         
         val checkInDto = CheckInDto(
             id = UUID.randomUUID(),
             registrationId = registrationId,
-            eventId = eventId,
             sessionId = sessionId,
             checkedInAt = LocalDateTime.now(),
             type = CheckInType.SESSION
@@ -128,9 +129,10 @@ class CheckInControllerTest {
     fun shouldPerformBulkCheckInSuccessfully() {
         // Given
         val bulkCheckInDto = BulkCheckInDto(
-            sessionId = sessionId,
             registrationIds = listOf(registrationId),
-            type = CheckInType.SESSION
+            sessionId = sessionId,
+            type = CheckInType.SESSION,
+            checkedInBy = "test-user"
         )
         
         val checkInResults = listOf(
@@ -161,11 +163,11 @@ class CheckInControllerTest {
     fun shouldGetEventCheckInStatsSuccessfully() {
         // Given
         val statsDto = CheckInStatsDto(
-            eventId = eventId,
             totalRegistrations = 100,
-            totalCheckIns = 85,
-            checkInRate = 85.0,
-            sessionStats = emptyList()
+            totalCheckedIn = 85,
+            eventCheckedIn = 70,
+            sessionCheckedIn = 15,
+            checkInRate = 85.0
         )
         
         whenever(checkInService.getEventCheckInStats(eventId)).thenReturn(statsDto)
@@ -212,13 +214,11 @@ class CheckInControllerTest {
         // Given
         val reportDto = AttendanceReportDto(
             eventId = eventId,
-            reportGeneratedAt = LocalDateTime.now(),
-            summary = AttendanceSummaryDto(
-                totalRegistrations = 100,
-                totalAttendees = 85,
-                overallAttendanceRate = 85.0
-            ),
-            sessionReports = emptyList()
+            eventName = "Test Event",
+            totalRegistrations = 100,
+            totalAttendees = 85,
+            overallAttendanceRate = 85.0,
+            sessionAttendance = emptyList()
         )
         
         whenever(checkInService.getAttendanceReport(eventId)).thenReturn(reportDto)
@@ -239,10 +239,10 @@ class CheckInControllerTest {
         // Given
         val offlineCheckIns = listOf(
             OfflineCheckInDto(
-                tempId = "temp-1",
                 registrationId = registrationId,
                 sessionId = sessionId,
                 type = CheckInType.SESSION,
+                method = CheckInMethod.MANUAL,
                 checkedInAt = LocalDateTime.now()
             )
         )
@@ -276,9 +276,11 @@ class CheckInControllerTest {
         // Given
         val userId = "user123"
         val qrCodeResponse = QRCodeResponseDto(
-            qrCode = "test-qr-code",
             qrCodeBase64 = "base64-encoded-image",
-            expiresAt = LocalDateTime.now().plusHours(1)
+            qrCodeUrl = "https://example.com/qr",
+            expiresAt = LocalDateTime.now().plusHours(1),
+            type = "event",
+            identifier = eventId.toString()
         )
         
         whenever(checkInService.generateEventQRCode(eventId, userId)).thenReturn(qrCodeResponse)
@@ -298,9 +300,11 @@ class CheckInControllerTest {
         // Given
         val userId = "user123"
         val qrCodeResponse = QRCodeResponseDto(
-            qrCode = "session-qr-code",
             qrCodeBase64 = "base64-session-image",
-            expiresAt = LocalDateTime.now().plusHours(1)
+            qrCodeUrl = "https://example.com/session-qr",
+            expiresAt = LocalDateTime.now().plusHours(1),
+            type = "session",
+            identifier = sessionId.toString()
         )
         
         whenever(checkInService.generateSessionQRCode(sessionId, userId)).thenReturn(qrCodeResponse)
@@ -319,9 +323,11 @@ class CheckInControllerTest {
     fun shouldGenerateStaffEventQRSuccessfully() {
         // Given
         val qrCodeResponse = QRCodeResponseDto(
-            qrCode = "staff-event-qr",
             qrCodeBase64 = "base64-staff-image",
-            expiresAt = LocalDateTime.now().plusHours(8)
+            qrCodeUrl = "https://example.com/staff-qr",
+            expiresAt = LocalDateTime.now().plusHours(8),
+            type = "staff-event",
+            identifier = eventId.toString()
         )
         
         whenever(checkInService.generateStaffQRCode(eventId)).thenReturn(qrCodeResponse)
@@ -342,9 +348,10 @@ class CheckInControllerTest {
         val userId = "user123"
         val userName = "John Doe"
         val badgeResponse = QRCodeResponseDto(
-            qrCode = "badge-qr-code",
             qrCodeBase64 = "base64-badge-image",
-            additionalInfo = mapOf("userName" to userName)
+            qrCodeUrl = "https://example.com/badge-qr",
+            type = "badge",
+            identifier = eventId.toString()
         )
         
         whenever(checkInService.generateAttendeeBadge(eventId, userId, userName)).thenReturn(badgeResponse)
@@ -368,8 +375,10 @@ class CheckInControllerTest {
         val userName = "John Doe"
         val base64Image = Base64.getEncoder().encodeToString("fake-image-data".toByteArray())
         val badgeResponse = QRCodeResponseDto(
-            qrCode = "badge-qr-code",
-            qrCodeBase64 = base64Image
+            qrCodeBase64 = base64Image,
+            qrCodeUrl = "https://example.com/badge-qr",
+            type = "badge",
+            identifier = eventId.toString()
         )
         
         whenever(checkInService.generateAttendeeBadge(eventId, userId, userName)).thenReturn(badgeResponse)
@@ -390,8 +399,10 @@ class CheckInControllerTest {
         // Given
         val base64Image = Base64.getEncoder().encodeToString("fake-staff-qr-data".toByteArray())
         val qrCodeResponse = QRCodeResponseDto(
-            qrCode = "staff-qr-code",
-            qrCodeBase64 = base64Image
+            qrCodeBase64 = base64Image,
+            qrCodeUrl = "https://example.com/staff-qr",
+            type = "staff",
+            identifier = eventId.toString()
         )
         
         whenever(checkInService.generateStaffQRCode(eventId)).thenReturn(qrCodeResponse)

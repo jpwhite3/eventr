@@ -1,0 +1,74 @@
+[
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440001",
+    "eventId": "550e8400-e29b-41d4-a716-446655440001",
+    "dateTime": "2024-12-15T09:00:00",
+    "location": "Main Auditorium, San Francisco Convention Center"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440002",
+    "eventId": "550e8400-e29b-41d4-a716-446655440001",
+    "dateTime": "2024-12-16T09:00:00",
+    "location": "Workshop Hall B, San Francisco Convention Center"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440003",
+    "eventId": "550e8400-e29b-41d4-a716-446655440001",
+    "dateTime": "2024-12-17T09:00:00",
+    "location": "Exhibition Hall, San Francisco Convention Center"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440004",
+    "eventId": "550e8400-e29b-41d4-a716-446655440002",
+    "dateTime": "2024-11-20T09:00:00",
+    "location": "Training Room 1, Digital Hub"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440005",
+    "eventId": "550e8400-e29b-41d4-a716-446655440002",
+    "dateTime": "2024-11-21T09:00:00",
+    "location": "Training Room 2, Digital Hub"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440006",
+    "eventId": "550e8400-e29b-41d4-a716-446655440002",
+    "dateTime": "2024-11-22T09:00:00",
+    "location": "Main Conference Room, Digital Hub"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440007",
+    "eventId": "550e8400-e29b-41d4-a716-446655440003",
+    "dateTime": "2024-10-28T10:00:00",
+    "location": "Virtual - Microsoft Teams"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440008",
+    "eventId": "550e8400-e29b-41d4-a716-446655440003",
+    "dateTime": "2024-10-29T10:00:00",
+    "location": "Virtual - Microsoft Teams"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440009",
+    "eventId": "550e8400-e29b-41d4-a716-446655440003",
+    "dateTime": "2024-10-30T10:00:00",
+    "location": "Virtual - Microsoft Teams"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440010",
+    "eventId": "550e8400-e29b-41d4-a716-446655440004",
+    "dateTime": "2024-12-05T18:00:00",
+    "location": "Innovation Theater, Innovation Center"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440011",
+    "eventId": "550e8400-e29b-41d4-a716-446655440005",
+    "dateTime": "2024-11-15T19:00:00",
+    "location": "Main Stage, Central Park Amphitheater"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440012",
+    "eventId": "550e8400-e29b-41d4-a716-446655440006",
+    "dateTime": "2024-11-25T08:00:00",
+    "location": "Main Hall, Denver Community Center"
+  }
+]

@@ -10,6 +10,14 @@ import '@coreui/coreui/dist/css/coreui.min.css';
 // FontAwesome styles
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+// FontAwesome library setup
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { fas } from '@fortawesome/free-solid-svg-icons';
+import { far } from '@fortawesome/free-regular-svg-icons';
+
+// Add all icons to the library so they can be used throughout the app
+library.add(fas, far);
+
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
   <React.StrictMode>

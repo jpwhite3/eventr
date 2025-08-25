@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/files")
-@CrossOrigin(origins = ["http://localhost:3000"])
+@CrossOrigin(origins = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"])
 class FileUploadController(
     @Autowired private val fileUploadService: FileUploadService
 ) {

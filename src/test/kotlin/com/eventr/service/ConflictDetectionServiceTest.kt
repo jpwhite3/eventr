@@ -15,8 +15,10 @@ import java.util.*
 @DisplayName("ConflictDetectionService Tests")
 class ConflictDetectionServiceTest {
 
-    private lateinit var conflictDetectionRepository: ConflictDetectionRepository
+    private lateinit var scheduleConflictRepository: ScheduleConflictRepository
+    private lateinit var conflictResolutionRepository: ConflictResolutionRepository
     private lateinit var sessionRepository: SessionRepository
+    private lateinit var sessionResourceRepository: SessionResourceRepository
     private lateinit var sessionRegistrationRepository: SessionRegistrationRepository
     private lateinit var resourceRepository: ResourceRepository
     private lateinit var registrationRepository: RegistrationRepository
@@ -24,15 +26,19 @@ class ConflictDetectionServiceTest {
 
     @BeforeEach
     fun setUp() {
-        conflictDetectionRepository = mock()
+        scheduleConflictRepository = mock()
+        conflictResolutionRepository = mock()
         sessionRepository = mock()
+        sessionResourceRepository = mock()
         sessionRegistrationRepository = mock()
         resourceRepository = mock()
         registrationRepository = mock()
         
         conflictDetectionService = ConflictDetectionService(
-            conflictDetectionRepository = conflictDetectionRepository,
+            scheduleConflictRepository = scheduleConflictRepository,
+            conflictResolutionRepository = conflictResolutionRepository,
             sessionRepository = sessionRepository,
+            sessionResourceRepository = sessionResourceRepository,
             sessionRegistrationRepository = sessionRegistrationRepository,
             resourceRepository = resourceRepository,
             registrationRepository = registrationRepository
@@ -157,7 +163,7 @@ class ConflictDetectionServiceTest {
     fun shouldDetectUserConflicts() {
         // Given
         val eventId = UUID.randomUUID()
-        whenever(registrationRepository.findByEventId(eventId)).thenReturn(java.util.ArrayList<Registration>())
+        whenever(registrationRepository.findByEventId(eventId)).thenReturn(emptyList<Registration>() as java.util.List<Registration>)
 
         // When
         val conflicts = conflictDetectionService.detectUserConflicts(eventId)
@@ -215,8 +221,9 @@ class ConflictDetectionServiceTest {
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): Session {
-        return Session().apply {
-            this.id = id
+        return Session(
+            id = id
+        ).apply {
             this.title = title
             this.startTime = startTime
             this.endTime = endTime

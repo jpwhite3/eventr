@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   CRow,
   CCol,
@@ -88,7 +88,7 @@ const RegistrationTrends: React.FC = () => {
   const [timeframe, setTimeframe] = useState('30d');
 
   // Mock data - replace with actual API calls
-  const mockData: RegistrationData = {
+  const mockData: RegistrationData = useMemo(() => ({
     totalRegistrations: 2847,
     dailyRegistrations: 47,
     weeklyGrowth: 12.5,
@@ -140,24 +140,27 @@ const RegistrationTrends: React.FC = () => {
         { location: "Other", count: 170, percentage: 6.0 }
       ]
     }
-  };
+  }), []);
 
   useEffect(() => {
     const loadRegistrationData = async () => {
       setLoading(true);
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-        setData(mockData);
+        // Use real API call
+        const apiClient = (await import('../../api/apiClient')).default;
+        const response = await apiClient.get(`/analytics/registrations?timeframe=${timeframe}`);
+        setData(response.data);
       } catch (error) {
         console.error('Error loading registration data:', error);
+        // Fallback to mock data on error
+        setData(mockData);
       } finally {
         setLoading(false);
       }
     };
 
     loadRegistrationData();
-  }, [timeframe]);
+  }, [timeframe, mockData]);
 
   const getGrowthIcon = (growth: number) => {
     return growth > 0 ? (

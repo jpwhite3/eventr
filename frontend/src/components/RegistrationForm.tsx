@@ -20,13 +20,14 @@ interface FormDefinition {
 interface RegistrationFormProps {
     eventId: string;
     instanceId: string;
+    onSuccess?: (registrationData: any) => void;
 }
 
 interface FormData {
     [key: string]: string | boolean;
 }
 
-const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId }) => {
+const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId, onSuccess }) => {
     const [formDefinition, setFormDefinition] = useState<FormDefinition | null>(null);
     const [formData, setFormData] = useState<FormData>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,6 +85,13 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId
             .then(response => {
                 setSuccess(true);
                 setFormData({});
+                if (onSuccess) {
+                    onSuccess({
+                        id: response.data.id,
+                        userName: submissionData.userName,
+                        userEmail: submissionData.userEmail
+                    });
+                }
             })
             .catch(err => {
                 setError('Registration failed. Please try again.');

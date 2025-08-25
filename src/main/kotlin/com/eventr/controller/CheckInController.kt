@@ -2,6 +2,7 @@ package com.eventr.controller
 
 import com.eventr.dto.*
 import com.eventr.service.CheckInService
+import com.eventr.service.WebSocketEventService
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -9,15 +10,28 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
+@CrossOrigin(origins = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"])
 @RequestMapping("/api/checkin")
 class CheckInController(
-    private val checkInService: CheckInService
+    private val checkInService: CheckInService,
+    private val webSocketEventService: WebSocketEventService
 ) {
 
     @PostMapping("/qr")
     fun checkInWithQR(@RequestBody qrCheckInDto: QRCheckInDto): ResponseEntity<CheckInDto> {
         return try {
             val result = checkInService.checkInWithQR(qrCheckInDto)
+            
+            // Broadcast real-time check-in update
+            qrCheckInDto.eventId?.let { eventIdValue ->
+                webSocketEventService.broadcastCheckInUpdate(
+                    eventIdValue,
+                    result.userName ?: "Unknown",
+                    result.userEmail ?: "",
+                    "CHECKED_IN"
+                )
+            }
+            
             ResponseEntity.ok(result)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().build()

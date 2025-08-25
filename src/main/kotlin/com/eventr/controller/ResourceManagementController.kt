@@ -9,10 +9,26 @@ import java.util.*
 
 @RestController
 @RequestMapping("/api/resources")
-@CrossOrigin(origins = ["http://localhost:3000"])
+@CrossOrigin(origins = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"])
 class ResourceManagementController(
     private val resourceManagementService: ResourceManagementService
 ) {
+
+    @GetMapping
+    fun getAllResources(): ResponseEntity<List<ResourceDto>> {
+        val resources = resourceManagementService.getAllResources()
+        return ResponseEntity.ok(resources)
+    }
+
+    @GetMapping("/{resourceId}")
+    fun getResource(@PathVariable resourceId: UUID): ResponseEntity<ResourceDto> {
+        return try {
+            val resource = resourceManagementService.getResourceById(resourceId)
+            ResponseEntity.ok(resource)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.notFound().build()
+        }
+    }
 
     @PostMapping
     fun createResource(@RequestBody createDto: ResourceCreateDto): ResponseEntity<ResourceDto> {

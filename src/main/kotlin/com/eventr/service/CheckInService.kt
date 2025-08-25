@@ -228,13 +228,13 @@ class CheckInService(
             val actualAttendees = checkInRepository.countUniqueAttendeesBySessionId(session.id!!).toInt()
             
             SessionAttendanceDto(
-                sessionId = session.id!!,
+                sessionId = session.id!!.toString(),
                 sessionTitle = session.title,
-                sessionStartTime = session.startTime!!,
-                expectedAttendees = expectedAttendees,
-                actualAttendees = actualAttendees,
+                eventName = event.name ?: "Unknown Event",
+                registrations = expectedAttendees,
+                checkedIn = actualAttendees,
                 attendanceRate = if (expectedAttendees > 0) (actualAttendees.toDouble() / expectedAttendees.toDouble() * 100) else 0.0,
-                noShows = maxOf(0, expectedAttendees - actualAttendees)
+                startTime = session.startTime?.toString()
             )
         }
         

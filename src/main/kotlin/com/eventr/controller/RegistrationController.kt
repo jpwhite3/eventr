@@ -7,16 +7,19 @@ import com.eventr.model.RegistrationStatus
 import com.eventr.repository.EventInstanceRepository
 import com.eventr.repository.RegistrationRepository
 import com.eventr.service.EmailService
+import com.eventr.service.WebSocketEventService
 import org.springframework.beans.BeanUtils
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
 
 @RestController
+@CrossOrigin(origins = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"])
 @RequestMapping("/api/registrations")
 class RegistrationController(
     private val registrationRepository: RegistrationRepository,
     private val eventInstanceRepository: EventInstanceRepository,
-    private val emailService: EmailService
+    private val emailService: EmailService,
+    private val webSocketEventService: WebSocketEventService
 ) {
 
     @PostMapping
@@ -42,6 +45,19 @@ class RegistrationController(
             System.err.println("Failed to send confirmation email: ${e.message}")
         }
         
+        // Broadcast real-time registration update
+        eventInstance.event?.id?.let { eventId ->
+            webSocketEventService.broadcastRegistrationUpdate(
+                eventId, 
+                "NEW", 
+                mapOf(
+                    "registrationId" to savedRegistration.id.toString(),
+                    "userName" to (savedRegistration.userName ?: "Anonymous"),
+                    "userEmail" to (savedRegistration.userEmail ?: "")
+                )
+            )
+        }
+        
         return RegistrationDto().apply {
             BeanUtils.copyProperties(savedRegistration, this)
             eventInstanceId = savedRegistration.eventInstance?.id
@@ -59,10 +75,34 @@ class RegistrationController(
     }
     
     @PutMapping("/{registrationId}/cancel")
-    fun cancelRegistration(@PathVariable registrationId: UUID): RegistrationDto {
+    fun cancelRegistration(
+        @PathVariable registrationId: UUID,
+        @RequestParam(required = false) reason: String = ""
+    ): RegistrationDto {
         val registration = registrationRepository.findById(registrationId).orElseThrow()
         registration.status = RegistrationStatus.CANCELLED
         val cancelledRegistration = registrationRepository.save(registration)
+        
+        // Send cancellation email notification
+        try {
+            emailService.sendCancellationNotification(cancelledRegistration, reason)
+        } catch (e: Exception) {
+            // Log the exception, but don't block the cancellation process
+            System.err.println("Failed to send cancellation email: ${e.message}")
+        }
+        
+        // Broadcast real-time cancellation update
+        cancelledRegistration.eventInstance?.event?.id?.let { eventId ->
+            webSocketEventService.broadcastRegistrationUpdate(
+                eventId, 
+                "CANCELLED", 
+                mapOf(
+                    "registrationId" to cancelledRegistration.id.toString(),
+                    "userName" to (cancelledRegistration.userName ?: "Anonymous"),
+                    "reason" to reason
+                )
+            )
+        }
         
         return RegistrationDto().apply {
             BeanUtils.copyProperties(cancelledRegistration, this)

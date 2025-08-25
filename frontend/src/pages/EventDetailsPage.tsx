@@ -1,8 +1,8 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import apiClient from '../api/apiClient';
-import RegistrationForm from '../components/RegistrationForm';
+import RealTimeStats from '../components/RealTimeStats';
 
 interface EventInstance {
     id: string;
@@ -43,6 +43,7 @@ interface Event {
 
 const EventDetailsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [event, setEvent] = useState<Event | null>(null);
     const [selectedInstance, setSelectedInstance] = useState('');
     const [showFullDescription, setShowFullDescription] = useState(false);
@@ -86,7 +87,7 @@ const EventDetailsPage: React.FC = () => {
     };
 
     const getRegistrationInfo = () => {
-        const info = [];
+        const info: string[] = [];
         if (event.requiresApproval) info.push('Approval Required');
         if (event.maxRegistrations && event.maxRegistrations > 0) {
             info.push(`${event.maxRegistrations} spots available`);
@@ -100,6 +101,56 @@ const EventDetailsPage: React.FC = () => {
     };
 
     const eventDate = formatEventDate(event.startDateTime);
+
+    const handleRegisterClick = () => {
+        if (selectedInstance) {
+            navigate(`/events/${id}/register/${selectedInstance}`);
+        } else {
+            navigate(`/events/${id}/register`);
+        }
+    };
+
+    const handleAddToCalendar = () => {
+        const calendarUrl = `http://localhost:8080/api/calendar/event/${id}.ics`;
+        
+        // Create a temporary link element and trigger download
+        const link = document.createElement('a');
+        link.href = calendarUrl;
+        link.download = `event-${event.name?.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.ics`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleShareEvent = () => {
+        // TODO: Implement share functionality
+        if (navigator.share) {
+            navigator.share({
+                title: event.name,
+                text: event.description,
+                url: window.location.href,
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Event link copied to clipboard!');
+        }
+    };
+
+    const handleContactOrganizer = () => {
+        if (event.organizerEmail) {
+            window.location.href = `mailto:${event.organizerEmail}?subject=Question about ${event.name}`;
+        } else {
+            alert('Organizer contact information not available.');
+        }
+    };
+
+    const handleGetDirections = () => {
+        const address = getFullAddress();
+        if (address) {
+            const encodedAddress = encodeURIComponent(address);
+            window.open(`https://www.google.com/maps/search/${encodedAddress}`, '_blank');
+        }
+    };
 
     return (
         <div className="bg-light min-vh-100">
@@ -197,7 +248,10 @@ const EventDetailsPage: React.FC = () => {
                                                 <p className="h5 mb-2">{event.venueName || 'Venue TBD'}</p>
                                                 <p className="text-muted mb-2">{getFullAddress() || 'Address TBD'}</p>
                                                 {getFullAddress() && (
-                                                    <button className="btn btn-outline-primary btn-sm">
+                                                    <button 
+                                                        className="btn btn-outline-primary btn-sm"
+                                                        onClick={handleGetDirections}
+                                                    >
                                                         Get directions
                                                     </button>
                                                 )}
@@ -277,6 +331,11 @@ const EventDetailsPage: React.FC = () => {
                     </div>
 
                     <div className="col-lg-4">
+                        {/* Real-time Stats */}
+                        <div className="mb-4">
+                            <RealTimeStats eventId={id!} />
+                        </div>
+
                         {/* Registration Card */}
                         <div className="card mb-4 sticky-top" style={{ top: '20px' }}>
                             <div className="card-header bg-primary text-white">
@@ -293,18 +352,27 @@ const EventDetailsPage: React.FC = () => {
                                         ))}
                                     </div>
                                     
-                                    <button className="btn btn-success btn-lg w-100 mb-3">
+                                    <button 
+                                        className="btn btn-success btn-lg w-100 mb-3"
+                                        onClick={handleRegisterClick}
+                                    >
                                         🎯 Register Now
                                     </button>
                                     
                                     <div className="row g-2">
                                         <div className="col-6">
-                                            <button className="btn btn-outline-primary btn-sm w-100">
+                                            <button 
+                                                className="btn btn-outline-primary btn-sm w-100"
+                                                onClick={handleAddToCalendar}
+                                            >
                                                 📅 Add to Calendar
                                             </button>
                                         </div>
                                         <div className="col-6">
-                                            <button className="btn btn-outline-secondary btn-sm w-100">
+                                            <button 
+                                                className="btn btn-outline-secondary btn-sm w-100"
+                                                onClick={handleShareEvent}
+                                            >
                                                 📤 Share Event
                                             </button>
                                         </div>
@@ -327,8 +395,6 @@ const EventDetailsPage: React.FC = () => {
                                         </select>
                                     </div>
                                 )}
-
-                                <RegistrationForm eventId={id!} instanceId={selectedInstance} />
                             </div>
                         </div>
 
@@ -354,7 +420,10 @@ const EventDetailsPage: React.FC = () => {
                                                 Visit Website
                                             </a>
                                         )}
-                                        <button className="btn btn-outline-secondary btn-sm">
+                                        <button 
+                                            className="btn btn-outline-secondary btn-sm"
+                                            onClick={handleContactOrganizer}
+                                        >
                                             Contact Organizer
                                         </button>
                                     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   CRow,
   CCol,
@@ -29,18 +29,15 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUserCheck,
   faUserTimes,
   faClipboardCheck,
   faClock,
-  faCalendarCheck,
   faPercentage,
-  faSync,
-  faArrowUp,
-  faArrowDown
+  faSync
 } from '@fortawesome/free-solid-svg-icons';
 
 // Register ChartJS components
@@ -108,7 +105,7 @@ const AttendanceAnalytics: React.FC = () => {
   const [timeframe, setTimeframe] = useState('30d');
 
   // Mock data - replace with actual API calls
-  const mockData: AttendanceData = {
+  const mockData: AttendanceData = useMemo(() => ({
     totalAttendees: 2347,
     totalRegistered: 2847,
     attendanceRate: 82.4,
@@ -175,39 +172,33 @@ const AttendanceAnalytics: React.FC = () => {
       earlyDepartures: 178,
       stayedFullEvent: 1998
     }
-  };
+  }), []);
 
   useEffect(() => {
     const loadAttendanceData = async () => {
       setLoading(true);
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-        setData(mockData);
+        // Use real API call
+        const apiClient = (await import('../../api/apiClient')).default;
+        const response = await apiClient.get(`/analytics/attendance?timeframe=${timeframe}`);
+        setData(response.data);
       } catch (error) {
         console.error('Error loading attendance data:', error);
+        // Fallback to mock data on error
+        setData(mockData);
       } finally {
         setLoading(false);
       }
     };
 
     loadAttendanceData();
-  }, [timeframe]);
+  }, [timeframe, mockData]);
 
   const getAttendanceBadge = (rate: number) => {
     if (rate >= 90) return <CBadge color="success">Excellent</CBadge>;
     if (rate >= 80) return <CBadge color="primary">Good</CBadge>;
     if (rate >= 70) return <CBadge color="warning">Fair</CBadge>;
     return <CBadge color="danger">Poor</CBadge>;
-  };
-
-  const getTrendIcon = (current: number, previous: number) => {
-    const trend = current - previous;
-    return trend > 0 ? (
-      <FontAwesomeIcon icon={faArrowUp} className="text-success" />
-    ) : (
-      <FontAwesomeIcon icon={faArrowDown} className="text-danger" />
-    );
   };
 
   // Chart configurations

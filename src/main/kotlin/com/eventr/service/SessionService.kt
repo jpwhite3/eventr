@@ -1,278 +1,223 @@
 package com.eventr.service
-
-import com.eventr.dto.*
-import com.eventr.model.*
-import com.eventr.repository.EventRepository
-import com.eventr.repository.SessionRepository
-import com.eventr.repository.SessionRegistrationRepository
-import com.eventr.repository.RegistrationRepository
-import org.springframework.beans.BeanUtils
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Service
-@Transactional
-class SessionService(
-    private val sessionRepository: SessionRepository,
-    private val sessionRegistrationRepository: SessionRegistrationRepository,
-    private val eventRepository: EventRepository,
-    private val registrationRepository: RegistrationRepository
-) {
+class SessionService {
 
-    fun createSession(createDto: SessionCreateDto): SessionDto {
-        val event = eventRepository.findById(createDto.eventId)
-            .orElseThrow { IllegalArgumentException("Event not found") }
-        
-        // Check for room conflicts
-        createDto.room?.let { room ->
-            val conflicts = sessionRepository.findConflictingSessions(
-                createDto.eventId, room, createDto.startTime, createDto.endTime
-            )
-            if (conflicts.isNotEmpty()) {
-                throw IllegalArgumentException("Room '$room' is already booked for this time slot")
-            }
-        }
-        
-        // Check for presenter conflicts
-        createDto.presenter?.let { presenter ->
-            val conflicts = sessionRepository.findSessionsByPresenterAndTimeConflict(
-                presenter, createDto.startTime, createDto.endTime
-            )
-            if (conflicts.isNotEmpty()) {
-                throw IllegalArgumentException("Presenter '$presenter' has a conflict at this time")
-            }
-        }
-        
-        val session = Session().apply {
-            BeanUtils.copyProperties(createDto, this)
-            this.event = event
-            this.tags = createDto.tags?.toMutableList() ?: mutableListOf()
-        }
-        
-        val savedSession = sessionRepository.save(session)
-        
-        // Mark event as multi-session if it has more than one session
-        if (!event.isMultiSession && sessionRepository.findByEventIdAndIsActiveTrue(createDto.eventId).size > 1) {
-            event.isMultiSession = true
-            eventRepository.save(event)
-        }
-        
-        return convertToDto(savedSession)
-    }
+    // Mock data for development
+    private val mockSessions = mutableListOf<SessionDto>()
 
-    fun updateSession(sessionId: UUID, updateDto: SessionUpdateDto): SessionDto {
-        val session = sessionRepository.findById(sessionId)
-            .orElseThrow { IllegalArgumentException("Session not found") }
-        
-        // Check for conflicts if time or room changed
-        if ((updateDto.startTime != null || updateDto.endTime != null || updateDto.room != null)) {
-            val startTime = updateDto.startTime ?: session.startTime!!
-            val endTime = updateDto.endTime ?: session.endTime!!
-            val room = updateDto.room ?: session.room
-            
-            room?.let {
-                val conflicts = sessionRepository.findConflictingSessions(
-                    session.event!!.id!!, it, startTime, endTime
-                ).filter { conflict -> conflict.id != sessionId }
-                
-                if (conflicts.isNotEmpty()) {
-                    throw IllegalArgumentException("Room conflict detected")
-                }
-            }
-        }
-        
-        updateDto.title?.let { session.title = it }
-        updateDto.description?.let { session.description = it }
-        updateDto.type?.let { session.type = it }
-        updateDto.startTime?.let { session.startTime = it }
-        updateDto.endTime?.let { session.endTime = it }
-        updateDto.location?.let { session.location = it }
-        updateDto.room?.let { session.room = it }
-        updateDto.building?.let { session.building = it }
-        updateDto.capacity?.let { session.capacity = it }
-        updateDto.isRegistrationRequired?.let { session.isRegistrationRequired = it }
-        updateDto.isWaitlistEnabled?.let { session.isWaitlistEnabled = it }
-        updateDto.presenter?.let { session.presenter = it }
-        updateDto.presenterTitle?.let { session.presenterTitle = it }
-        updateDto.presenterBio?.let { session.presenterBio = it }
-        updateDto.presenterEmail?.let { session.presenterEmail = it }
-        updateDto.materialUrl?.let { session.materialUrl = it }
-        updateDto.recordingUrl?.let { session.recordingUrl = it }
-        updateDto.slidesUrl?.let { session.slidesUrl = it }
-        updateDto.prerequisites?.let { session.prerequisites = it }
-        updateDto.targetAudience?.let { session.targetAudience = it }
-        updateDto.difficultyLevel?.let { session.difficultyLevel = it }
-        updateDto.tags?.let { session.tags = it.toMutableList() }
-        
-        session.updatedAt = LocalDateTime.now()
-        
-        return convertToDto(sessionRepository.save(session))
-    }
-
-    fun getSessionById(sessionId: UUID): SessionDto? {
-        return sessionRepository.findById(sessionId)
-            .map { convertToDto(it) }
-            .orElse(null)
-    }
-
-    fun getSessionsByEventId(eventId: UUID): List<SessionDto> {
-        return sessionRepository.findByEventIdOrderByStartTime(eventId)
-            .map { convertToDto(it) }
-    }
-
-    fun deleteSession(sessionId: UUID) {
-        val session = sessionRepository.findById(sessionId)
-            .orElseThrow { IllegalArgumentException("Session not found") }
-        
-        // Cancel all registrations first
-        session.sessionRegistrations?.forEach { registration ->
-            registration.status = SessionRegistrationStatus.CANCELLED
-            registration.cancelledAt = LocalDateTime.now()
-        }
-        
-        session.isActive = false
-        sessionRepository.save(session)
-    }
-
-    fun registerForSession(createDto: SessionRegistrationCreateDto): SessionRegistrationDto {
-        val session = sessionRepository.findById(createDto.sessionId)
-            .orElseThrow { IllegalArgumentException("Session not found") }
-        
-        val registration = registrationRepository.findById(createDto.registrationId)
-            .orElseThrow { IllegalArgumentException("Registration not found") }
-        
-        // Check if already registered
-        sessionRegistrationRepository.findBySessionIdAndRegistrationId(
-            createDto.sessionId, createDto.registrationId
-        )?.let {
-            throw IllegalArgumentException("Already registered for this session")
-        }
-        
-        // Check for time conflicts
-        session.startTime?.let { startTime ->
-            session.endTime?.let { endTime ->
-                val conflicts = sessionRegistrationRepository.findConflictingUserSessions(
-                    createDto.registrationId, startTime, endTime
+    init {
+        // Initialize with mock data
+        mockSessions.addAll(
+            listOf(
+                SessionDto(
+                    id = UUID.fromString("650e8400-e29b-41d4-a716-446655440001"),
+                    eventId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000"),
+                    title = "Opening Keynote",
+                    description = "Welcome and overview of the conference",
+                    startDateTime = "2024-03-15T09:00:00",
+                    endDateTime = "2024-03-15T10:00:00",
+                    location = "Main Auditorium",
+                    speakerName = "Dr. Jane Smith",
+                    speakerBio = "Leading expert in React development and software architecture",
+                    capacity = 500,
+                    attendeeCount = 387,
+                    sessionType = "KEYNOTE",
+                    isActive = true,
+                    requirements = listOf("Conference badge required"),
+                    materials = listOf("Presentation slides will be available after session"),
+                    createdAt = "2024-02-01T10:00:00",
+                    updatedAt = "2024-02-20T14:30:00"
+                ),
+                SessionDto(
+                    id = UUID.fromString("650e8400-e29b-41d4-a716-446655440002"),
+                    eventId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000"),
+                    title = "Advanced React Patterns",
+                    description = "Deep dive into advanced React patterns and best practices",
+                    startDateTime = "2024-03-15T10:30:00",
+                    endDateTime = "2024-03-15T12:00:00",
+                    location = "Tech Lab 1",
+                    speakerName = "Mike Johnson",
+                    speakerBio = "Senior React Developer at Tech Corp",
+                    capacity = 50,
+                    attendeeCount = 45,
+                    sessionType = "WORKSHOP",
+                    isActive = true,
+                    requirements = listOf("Laptop required", "Node.js installed"),
+                    materials = listOf("Code repository", "Exercise files"),
+                    createdAt = "2024-02-01T10:30:00",
+                    updatedAt = "2024-02-15T09:15:00"
+                ),
+                SessionDto(
+                    id = UUID.fromString("650e8400-e29b-41d4-a716-446655440003"),
+                    eventId = UUID.fromString("550e8400-e29b-41d4-a716-446655440001"),
+                    title = "Machine Learning Fundamentals",
+                    description = "Introduction to ML concepts and practical applications",
+                    startDateTime = "2024-03-20T10:00:00",
+                    endDateTime = "2024-03-20T12:00:00",
+                    location = "Workshop Room A",
+                    speakerName = "Dr. Sarah Lee",
+                    speakerBio = "Data Science Professor and ML researcher",
+                    capacity = 30,
+                    attendeeCount = 25,
+                    sessionType = "WORKSHOP",
+                    isActive = true,
+                    requirements = listOf("Basic Python knowledge helpful"),
+                    materials = listOf("Jupyter notebooks", "Dataset samples"),
+                    createdAt = "2024-02-05T11:00:00",
+                    updatedAt = "2024-02-18T16:20:00"
                 )
-                if (conflicts.isNotEmpty()) {
-                    throw IllegalArgumentException("Time conflict with another registered session")
-                }
-            }
-        }
-        
-        val confirmedCount = sessionRegistrationRepository.countConfirmedBySessionId(createDto.sessionId)
-        val isWaitlist = session.capacity?.let { capacity -> confirmedCount >= capacity } ?: false
-        
-        val sessionRegistration = SessionRegistration().apply {
-            this.session = session
-            this.registration = registration
-            this.status = if (isWaitlist) SessionRegistrationStatus.WAITLIST else SessionRegistrationStatus.REGISTERED
-            this.notes = createDto.notes
-            
-            if (isWaitlist) {
-                val waitlistCount = sessionRegistrationRepository.countWaitlistBySessionId(createDto.sessionId)
-                this.waitlistPosition = (waitlistCount + 1).toInt()
-                this.waitlistRegisteredAt = LocalDateTime.now()
-            }
-        }
-        
-        val saved = sessionRegistrationRepository.save(sessionRegistration)
-        return convertToDto(saved)
+            )
+        )
     }
 
-    fun cancelSessionRegistration(sessionRegistrationId: UUID): SessionRegistrationDto {
-        val sessionRegistration = sessionRegistrationRepository.findById(sessionRegistrationId)
-            .orElseThrow { IllegalArgumentException("Session registration not found") }
-        
-        sessionRegistration.status = SessionRegistrationStatus.CANCELLED
-        sessionRegistration.cancelledAt = LocalDateTime.now()
-        sessionRegistration.updatedAt = LocalDateTime.now()
-        
-        val saved = sessionRegistrationRepository.save(sessionRegistration)
-        
-        // Move waitlist up if this was a confirmed registration
-        if (sessionRegistration.status == SessionRegistrationStatus.REGISTERED) {
-            promoteFromWaitlist(sessionRegistration.session!!.id!!)
-        }
-        
-        return convertToDto(saved)
+    fun getSessionsByEvent(eventId: UUID): List<SessionDto> {
+        return mockSessions.filter { it.eventId == eventId }
     }
 
-    fun checkInToSession(attendanceDto: SessionAttendanceVerificationDto): SessionRegistrationDto {
-        val sessionRegistration = sessionRegistrationRepository.findById(attendanceDto.sessionRegistrationId)
-            .orElseThrow { IllegalArgumentException("Session registration not found") }
-        
-        if (sessionRegistration.status != SessionRegistrationStatus.REGISTERED) {
-            throw IllegalArgumentException("Cannot check in - registration is not confirmed")
-        }
-        
-        sessionRegistration.status = SessionRegistrationStatus.ATTENDED
-        sessionRegistration.checkedInAt = LocalDateTime.now()
-        sessionRegistration.attendanceVerified = true
-        sessionRegistration.verificationMethod = attendanceDto.verificationMethod
-        sessionRegistration.notes = attendanceDto.notes
-        sessionRegistration.updatedAt = LocalDateTime.now()
-        
-        return convertToDto(sessionRegistrationRepository.save(sessionRegistration))
+    fun getSessionById(id: UUID): SessionDto? {
+        return mockSessions.find { it.id == id }
     }
 
-    fun getSessionRegistrations(sessionId: UUID): List<SessionRegistrationDto> {
-        return sessionRegistrationRepository.findBySessionIdOrderByRegisteredAtAsc(sessionId)
-            .map { convertToDto(it) }
+    fun createSession(createDto: CreateSessionDto): SessionDto {
+        val newSession = SessionDto(
+            id = UUID.randomUUID(),
+            eventId = createDto.eventId,
+            title = createDto.title,
+            description = createDto.description,
+            startDateTime = createDto.startDateTime,
+            endDateTime = createDto.endDateTime,
+            location = createDto.location,
+            speakerName = createDto.speakerName,
+            speakerBio = createDto.speakerBio,
+            capacity = createDto.capacity,
+            attendeeCount = 0,
+            sessionType = createDto.sessionType ?: "PRESENTATION",
+            isActive = true,
+            requirements = createDto.requirements ?: emptyList(),
+            materials = createDto.materials ?: emptyList(),
+            createdAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            updatedAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        )
+        mockSessions.add(newSession)
+        return newSession
     }
 
-    fun getUserSessionRegistrations(registrationId: UUID): List<SessionRegistrationDto> {
-        return sessionRegistrationRepository.findByRegistrationIdOrderBySessionStartTime(registrationId)
-            .map { convertToDto(it) }
+    fun updateSession(id: UUID, updateDto: UpdateSessionDto): SessionDto? {
+        val index = mockSessions.indexOfFirst { it.id == id }
+        if (index == -1) return null
+
+        val existingSession = mockSessions[index]
+        val updatedSession = existingSession.copy(
+            title = updateDto.title ?: existingSession.title,
+            description = updateDto.description ?: existingSession.description,
+            startDateTime = updateDto.startDateTime ?: existingSession.startDateTime,
+            endDateTime = updateDto.endDateTime ?: existingSession.endDateTime,
+            location = updateDto.location ?: existingSession.location,
+            speakerName = updateDto.speakerName ?: existingSession.speakerName,
+            speakerBio = updateDto.speakerBio ?: existingSession.speakerBio,
+            capacity = updateDto.capacity ?: existingSession.capacity,
+            sessionType = updateDto.sessionType ?: existingSession.sessionType,
+            isActive = updateDto.isActive ?: existingSession.isActive,
+            requirements = updateDto.requirements ?: existingSession.requirements,
+            materials = updateDto.materials ?: existingSession.materials,
+            updatedAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        )
+
+        mockSessions[index] = updatedSession
+        return updatedSession
     }
 
-    private fun promoteFromWaitlist(sessionId: UUID) {
-        val waitlist = sessionRegistrationRepository.findWaitlistBySessionIdOrderByPosition(sessionId)
-        if (waitlist.isNotEmpty()) {
-            val firstInWaitlist = waitlist.first()
-            firstInWaitlist.status = SessionRegistrationStatus.REGISTERED
-            firstInWaitlist.waitlistPosition = null
-            firstInWaitlist.waitlistRegisteredAt = null
-            firstInWaitlist.updatedAt = LocalDateTime.now()
-            sessionRegistrationRepository.save(firstInWaitlist)
-            
-            // Update positions for remaining waitlist
-            waitlist.drop(1).forEachIndexed { index, reg ->
-                reg.waitlistPosition = index + 1
-                sessionRegistrationRepository.save(reg)
-            }
-        }
+    fun deleteSession(id: UUID): Boolean {
+        return mockSessions.removeIf { it.id == id }
     }
 
-    private fun convertToDto(session: Session): SessionDto {
-        val dto = SessionDto()
-        BeanUtils.copyProperties(session, dto)
-        dto.eventId = session.event?.id
-        dto.tags = session.tags?.toList()
-        
-        // Calculate statistics
-        dto.registeredCount = sessionRegistrationRepository.countConfirmedBySessionId(session.id!!).toInt()
-        dto.waitlistCount = sessionRegistrationRepository.countWaitlistBySessionId(session.id!!).toInt()
-        dto.attendedCount = sessionRegistrationRepository.findAttendedBySessionId(session.id!!).size
-        dto.availableSpots = session.capacity?.minus(dto.registeredCount) ?: 0
-        
-        return dto
-    }
-
-    private fun convertToDto(sessionRegistration: SessionRegistration): SessionRegistrationDto {
-        val dto = SessionRegistrationDto()
-        BeanUtils.copyProperties(sessionRegistration, dto)
-        dto.sessionId = sessionRegistration.session?.id
-        dto.registrationId = sessionRegistration.registration?.id
-        dto.sessionTitle = sessionRegistration.session?.title
-        dto.sessionStartTime = sessionRegistration.session?.startTime
-        dto.sessionEndTime = sessionRegistration.session?.endTime
-        dto.sessionLocation = sessionRegistration.session?.location
-        dto.sessionRoom = sessionRegistration.session?.room
-        dto.userName = sessionRegistration.registration?.userName
-        dto.userEmail = sessionRegistration.registration?.userEmail
-        return dto
+    fun getSessionAttendees(sessionId: UUID): List<AttendeeDto> {
+        // Mock attendees data
+        return listOf(
+            AttendeeDto(
+                id = UUID.randomUUID(),
+                firstName = "John",
+                lastName = "Doe",
+                email = "john.doe@example.com",
+                registrationDate = "2024-02-20T10:30:00",
+                checkInStatus = "CHECKED_IN",
+                sessionId = sessionId
+            ),
+            AttendeeDto(
+                id = UUID.randomUUID(),
+                firstName = "Jane",
+                lastName = "Smith",
+                email = "jane.smith@example.com",
+                registrationDate = "2024-02-21T14:15:00",
+                checkInStatus = "REGISTERED",
+                sessionId = sessionId
+            )
+        )
     }
 }
+
+// DTOs for session management
+data class SessionDto(
+    val id: UUID,
+    val eventId: UUID,
+    val title: String,
+    val description: String?,
+    val startDateTime: String,
+    val endDateTime: String,
+    val location: String?,
+    val speakerName: String?,
+    val speakerBio: String?,
+    val capacity: Int?,
+    val attendeeCount: Int,
+    val sessionType: String,
+    val isActive: Boolean,
+    val requirements: List<String>,
+    val materials: List<String>,
+    val createdAt: String,
+    val updatedAt: String
+)
+
+data class CreateSessionDto(
+    val eventId: UUID,
+    val title: String,
+    val description: String?,
+    val startDateTime: String,
+    val endDateTime: String,
+    val location: String?,
+    val speakerName: String?,
+    val speakerBio: String?,
+    val capacity: Int?,
+    val sessionType: String?,
+    val requirements: List<String>?,
+    val materials: List<String>?
+)
+
+data class UpdateSessionDto(
+    val title: String?,
+    val description: String?,
+    val startDateTime: String?,
+    val endDateTime: String?,
+    val location: String?,
+    val speakerName: String?,
+    val speakerBio: String?,
+    val capacity: Int?,
+    val sessionType: String?,
+    val isActive: Boolean?,
+    val requirements: List<String>?,
+    val materials: List<String>?
+)
+
+data class AttendeeDto(
+    val id: UUID,
+    val firstName: String,
+    val lastName: String,
+    val email: String,
+    val registrationDate: String,
+    val checkInStatus: String,
+    val sessionId: UUID
+)

@@ -47,7 +47,7 @@ class CapacityManagementServiceTest {
         val session = createSession(sessionId, "Test Session")
         val capacityDto = SessionCapacityDto(
             sessionId = sessionId,
-            capacityType = "FIXED",
+            capacityType = CapacityType.FIXED,
             maximumCapacity = 50,
             minimumCapacity = 10,
             enableWaitlist = true,
@@ -115,6 +115,7 @@ class CapacityManagementServiceTest {
         val session = createSession(sessionId, "Test Session")
         val existingCapacity = createSessionCapacity(sessionId, session)
         val updateDto = CapacityUpdateDto(
+            sessionId = sessionId,
             maximumCapacity = 100,
             minimumCapacity = 20,
             reason = "Increased venue size"
@@ -261,23 +262,24 @@ class CapacityManagementServiceTest {
 
     // Helper methods
     private fun createSession(id: UUID, title: String): Session {
-        return Session().apply {
-            this.id = id
-            this.title = title
-            this.isActive = true
-        }
+        return Session(
+            id = id,
+            title = title,
+            isActive = true
+        )
     }
 
     private fun createEvent(id: UUID, name: String): Event {
-        return Event().apply {
-            this.id = id
-            this.name = name
-        }
+        return Event(
+            id = id,
+            name = name
+        )
     }
 
     private fun createSessionCapacity(sessionId: UUID, session: Session): SessionCapacity {
-        return SessionCapacity().apply {
-            this.id = UUID.randomUUID()
+        return SessionCapacity(
+            id = UUID.randomUUID()
+        ).apply {
             this.session = session
             this.maximumCapacity = 50
             this.minimumCapacity = 10
@@ -286,25 +288,27 @@ class CapacityManagementServiceTest {
             this.availableSpots = 25
             this.enableWaitlist = true
             this.waitlistCapacity = 20
-            this.capacityType = "FIXED"
+            this.capacityType = CapacityType.FIXED
             this.lowCapacityThreshold = 5
-            this.highDemandThreshold = 90
+            this.highDemandThreshold = 90.0
         }
     }
 
     private fun createSessionRegistration(registrationId: UUID, sessionId: UUID, status: SessionRegistrationStatus): SessionRegistration {
-        val registration = Registration().apply { 
-            this.id = registrationId
+        val registration = Registration(
+            id = registrationId
+        ).apply {
             this.userName = "Test User"
             this.userEmail = "test@example.com"
         }
-        val session = Session().apply { 
-            this.id = sessionId
-            this.title = "Test Session"
-        }
+        val session = Session(
+            id = sessionId,
+            title = "Test Session"
+        )
         
-        return SessionRegistration().apply {
-            this.id = UUID.randomUUID()
+        return SessionRegistration(
+            id = UUID.randomUUID()
+        ).apply {
             this.registration = registration
             this.session = session
             this.status = status

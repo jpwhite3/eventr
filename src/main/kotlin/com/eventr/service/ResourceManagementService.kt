@@ -19,6 +19,87 @@ class ResourceManagementService(
     private val sessionRepository: SessionRepository
 ) {
 
+    fun getAllResources(): List<ResourceDto> {
+        return resourceRepository.findAll().map { resource ->
+            ResourceDto(
+                id = resource.id,
+                name = resource.name,
+                description = resource.description,
+                type = resource.type,
+                status = resource.status,
+                capacity = resource.capacity,
+                location = resource.location,
+                floor = resource.floor,
+                building = resource.building,
+                specifications = resource.specifications,
+                serialNumber = resource.serialNumber,
+                model = resource.model,
+                manufacturer = resource.manufacturer,
+                isBookable = resource.isBookable,
+                requiresApproval = resource.requiresApproval,
+                bookingLeadTimeHours = resource.bookingLeadTimeHours,
+                maxBookingDurationHours = resource.maxBookingDurationHours,
+                hourlyRate = resource.hourlyRate,
+                dailyRate = resource.dailyRate,
+                setupCost = resource.setupCost,
+                cleanupCost = resource.cleanupCost,
+                lastMaintenanceDate = resource.lastMaintenanceDate,
+                nextMaintenanceDate = resource.nextMaintenanceDate,
+                maintenanceNotes = resource.maintenanceNotes,
+                contactPerson = resource.contactPerson,
+                contactEmail = resource.contactEmail,
+                contactPhone = resource.contactPhone,
+                departmentOwner = resource.departmentOwner,
+                totalUsageHours = resource.totalUsageHours,
+                usageThisMonth = resource.usageThisMonth,
+                lastUsedAt = resource.lastUsedAt,
+                tags = resource.tags?.split(",")?.map { it.trim() } ?: emptyList(),
+                category = resource.category
+            )
+        }
+    }
+
+    fun getResourceById(resourceId: UUID): ResourceDto {
+        val resource = resourceRepository.findById(resourceId)
+            .orElseThrow { IllegalArgumentException("Resource not found with id: $resourceId") }
+        
+        return ResourceDto(
+            id = resource.id,
+            name = resource.name,
+            description = resource.description,
+            type = resource.type,
+            status = resource.status,
+            capacity = resource.capacity,
+            location = resource.location,
+            floor = resource.floor,
+            building = resource.building,
+            specifications = resource.specifications,
+            serialNumber = resource.serialNumber,
+            model = resource.model,
+            manufacturer = resource.manufacturer,
+            isBookable = resource.isBookable,
+            requiresApproval = resource.requiresApproval,
+            bookingLeadTimeHours = resource.bookingLeadTimeHours,
+            maxBookingDurationHours = resource.maxBookingDurationHours,
+            hourlyRate = resource.hourlyRate,
+            dailyRate = resource.dailyRate,
+            setupCost = resource.setupCost,
+            cleanupCost = resource.cleanupCost,
+            lastMaintenanceDate = resource.lastMaintenanceDate,
+            nextMaintenanceDate = resource.nextMaintenanceDate,
+            maintenanceNotes = resource.maintenanceNotes,
+            contactPerson = resource.contactPerson,
+            contactEmail = resource.contactEmail,
+            contactPhone = resource.contactPhone,
+            departmentOwner = resource.departmentOwner,
+            totalUsageHours = resource.totalUsageHours,
+            usageThisMonth = resource.usageThisMonth,
+            lastUsedAt = resource.lastUsedAt,
+            tags = resource.tags?.split(",")?.map { it.trim() } ?: emptyList(),
+            category = resource.category
+        )
+    }
+
     fun createResource(createDto: ResourceCreateDto): ResourceDto {
         val resource = Resource(
             name = createDto.name,

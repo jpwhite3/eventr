@@ -71,8 +71,9 @@ class EmailServiceTest {
     @DisplayName("Should handle registration with null event instance")
     fun shouldHandleRegistrationWithNullEventInstance() {
         // Given
-        val registration = Registration().apply {
+        val registration = Registration(
             id = UUID.randomUUID()
+        ).apply {
             userEmail = "john@example.com"
             userName = "John Doe"
             eventInstance = null
@@ -92,12 +93,12 @@ class EmailServiceTest {
     @DisplayName("Should handle event instance with null datetime")
     fun shouldHandleEventInstanceWithNullDatetime() {
         // Given
-        val event = createEvent("Tech Conference 2024")
-        val eventInstance = EventInstance().apply {
-            id = UUID.randomUUID()
-            event = event
+        val testEvent = createEvent("Tech Conference 2024")
+        val eventInstance = EventInstance(
+            id = UUID.randomUUID(),
+            event = testEvent,
             dateTime = null
-        }
+        )
         val registration = createRegistration("john@example.com", "John Doe", eventInstance)
 
         // When
@@ -114,8 +115,9 @@ class EmailServiceTest {
     @DisplayName("Should handle event instance with null event")
     fun shouldHandleEventInstanceWithNullEvent() {
         // Given
-        val eventInstance = EventInstance().apply {
+        val eventInstance = EventInstance(
             id = UUID.randomUUID()
+        ).apply {
             dateTime = LocalDateTime.of(2024, 12, 15, 10, 0)
             event = null
         }
@@ -151,24 +153,27 @@ class EmailServiceTest {
 
     // Helper methods
     private fun createEvent(name: String): Event {
-        return Event().apply {
-            this.id = UUID.randomUUID()
+        return Event(
+            id = UUID.randomUUID()
+        ).apply {
             this.name = name
             this.description = "A great event"
         }
     }
 
     private fun createEventInstance(event: Event, dateTime: LocalDateTime): EventInstance {
-        return EventInstance().apply {
-            this.id = UUID.randomUUID()
+        return EventInstance(
+            id = UUID.randomUUID()
+        ).apply {
             this.event = event
             this.dateTime = dateTime
         }
     }
 
     private fun createRegistration(email: String?, userName: String, eventInstance: EventInstance): Registration {
-        return Registration().apply {
-            this.id = UUID.randomUUID()
+        return Registration(
+            id = UUID.randomUUID()
+        ).apply {
             this.userEmail = email
             this.userName = userName
             this.eventInstance = eventInstance

@@ -1,0 +1,219 @@
+[
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440001",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440001",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440001",
+    "status": "ATTENDED",
+    "registeredAt": "2024-12-01T10:00:00",
+    "checkedInAt": "2024-12-15T08:45:00",
+    "attendanceVerified": true,
+    "verificationMethod": "QR_CODE",
+    "rating": 5,
+    "feedback": "Excellent keynote! Very insightful presentation on AI trends."
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440002",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440001",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440002",
+    "status": "ATTENDED",
+    "registeredAt": "2024-11-28T15:30:00",
+    "checkedInAt": "2024-12-15T08:50:00",
+    "attendanceVerified": true,
+    "verificationMethod": "QR_CODE",
+    "rating": 4,
+    "feedback": "Great presentation, would love more technical details."
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440003",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440001",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440003",
+    "status": "NO_SHOW",
+    "registeredAt": "2024-12-05T09:15:00",
+    "attendanceVerified": false
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440004",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440002",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440001",
+    "status": "ATTENDED",
+    "registeredAt": "2024-12-01T10:00:00",
+    "checkedInAt": "2024-12-15T10:55:00",
+    "attendanceVerified": true,
+    "verificationMethod": "MANUAL",
+    "rating": 5,
+    "feedback": "Hands-on workshop was perfect. Learned a lot about cloud architecture."
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440005",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440002",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440005",
+    "status": "ATTENDED",
+    "registeredAt": "2024-12-03T14:20:00",
+    "checkedInAt": "2024-12-15T10:58:00",
+    "attendanceVerified": true,
+    "verificationMethod": "QR_CODE",
+    "rating": 4,
+    "feedback": "Good workshop, but could use more beginner-friendly examples."
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440006",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440003",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440004",
+    "status": "ATTENDED",
+    "registeredAt": "2024-12-02T11:45:00",
+    "checkedInAt": "2024-12-15T13:55:00",
+    "attendanceVerified": true,
+    "verificationMethod": "QR_CODE",
+    "rating": 5,
+    "feedback": "Critical information about AI security. Very relevant for our organization."
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440007",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440004",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440001",
+    "status": "ATTENDED",
+    "registeredAt": "2024-12-01T10:00:00",
+    "checkedInAt": "2024-12-15T17:35:00",
+    "attendanceVerified": true,
+    "verificationMethod": "MANUAL"
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440008",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440004",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440002",
+    "status": "ATTENDED",
+    "registeredAt": "2024-11-28T15:30:00",
+    "checkedInAt": "2024-12-15T17:40:00",
+    "attendanceVerified": true,
+    "verificationMethod": "MANUAL"
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440009",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440005",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440006",
+    "status": "ATTENDED",
+    "registeredAt": "2024-11-15T12:00:00",
+    "checkedInAt": "2024-11-20T08:55:00",
+    "attendanceVerified": true,
+    "verificationMethod": "QR_CODE",
+    "rating": 5,
+    "feedback": "Perfect introduction to SEO. Exactly what I needed for my business."
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440010",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440005",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440007",
+    "status": "NO_SHOW",
+    "registeredAt": "2024-11-18T16:30:00",
+    "attendanceVerified": false
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440011",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440006",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440008",
+    "status": "ATTENDED",
+    "registeredAt": "2024-11-16T10:15:00",
+    "checkedInAt": "2024-11-21T09:58:00",
+    "attendanceVerified": true,
+    "verificationMethod": "QR_CODE",
+    "rating": 4,
+    "feedback": "Good content, but would like more interactive elements."
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440012",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440007",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440009",
+    "status": "ATTENDED",
+    "registeredAt": "2024-10-20T14:45:00",
+    "checkedInAt": "2024-10-28T09:58:00",
+    "attendanceVerified": true,
+    "verificationMethod": "VIRTUAL_CHECKIN",
+    "rating": 5,
+    "feedback": "Life-changing presentation. Thank you for addressing such important topics."
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440013",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440008",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440010",
+    "status": "ATTENDED",
+    "registeredAt": "2024-10-22T11:20:00",
+    "checkedInAt": "2024-10-29T10:55:00",
+    "attendanceVerified": true,
+    "verificationMethod": "VIRTUAL_CHECKIN",
+    "rating": 4,
+    "feedback": "Very practical advice. Will implement these nutrition strategies with my clients."
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440014",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440009",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440011",
+    "status": "ATTENDED",
+    "registeredAt": "2024-10-25T13:30:00",
+    "checkedInAt": "2024-10-30T12:58:00",
+    "attendanceVerified": true,
+    "verificationMethod": "VIRTUAL_CHECKIN",
+    "rating": 5,
+    "feedback": "Perfect for busy parents! Easy exercises I can do at home."
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440015",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440010",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440012",
+    "status": "ATTENDED",
+    "registeredAt": "2024-11-25T16:00:00",
+    "checkedInAt": "2024-12-05T18:55:00",
+    "attendanceVerified": true,
+    "verificationMethod": "MANUAL",
+    "rating": 4,
+    "feedback": "Great networking opportunity, learned a lot from other entrepreneurs."
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440016",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440010",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440013",
+    "status": "ATTENDED",
+    "registeredAt": "2024-11-20T09:30:00",
+    "checkedInAt": "2024-12-05T18:50:00",
+    "attendanceVerified": true,
+    "verificationMethod": "MANUAL"
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440017",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440002",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440004",
+    "status": "WAITLIST",
+    "registeredAt": "2024-12-10T14:30:00",
+    "waitlistPosition": 1,
+    "waitlistRegisteredAt": "2024-12-10T14:30:00"
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440018",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440008",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440011",
+    "status": "CANCELLED",
+    "registeredAt": "2024-10-15T10:00:00",
+    "cancelledAt": "2024-10-27T15:45:00",
+    "notes": "Schedule conflict - child's school event"
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440019",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440005",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440008",
+    "status": "WAITLIST",
+    "registeredAt": "2024-11-19T17:45:00",
+    "waitlistPosition": 2,
+    "waitlistRegisteredAt": "2024-11-19T17:45:00"
+  },
+  {
+    "id": "990e8400-e29b-41d4-a716-446655440020",
+    "sessionId": "770e8400-e29b-41d4-a716-446655440001",
+    "registrationId": "880e8400-e29b-41d4-a716-446655440004",
+    "status": "ATTENDED",
+    "registeredAt": "2024-12-04T13:15:00",
+    "checkedInAt": "2024-12-15T08:47:00",
+    "attendanceVerified": true,
+    "verificationMethod": "MANUAL",
+    "rating": 5,
+    "feedback": "Outstanding keynote. Dr. Chen is an excellent speaker."
+  }
+]

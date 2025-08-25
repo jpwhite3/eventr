@@ -35,6 +35,12 @@ interface Filters {
     tags: string;
     startDate: string;
     endDate: string;
+    searchQuery: string;
+    radius: number;
+    latitude?: number;
+    longitude?: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 const HomePage: React.FC = () => {
@@ -45,9 +51,16 @@ const HomePage: React.FC = () => {
         eventType: '',
         tags: '',
         startDate: '',
-        endDate: ''
+        endDate: '',
+        searchQuery: '',
+        radius: 25,
+        sortBy: 'startDateTime',
+        sortOrder: 'asc'
     });
     const [selectedCity] = useState('Browse All Cities');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
+    const [locationPermission, setLocationPermission] = useState<string>('prompt'); // 'granted', 'denied', 'prompt'
 
     const categories = [
         { name: 'All', icon: '🎯' },
@@ -61,21 +74,99 @@ const HomePage: React.FC = () => {
         { name: 'Other', icon: '📋' }
     ];
 
+    // Get user location
+    const requestLocation = useCallback(() => {
+        if (!navigator.geolocation) {
+            setLocationPermission('denied');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                setUserLocation({ latitude, longitude });
+                setLocationPermission('granted');
+                setFilters(prev => ({ ...prev, latitude, longitude }));
+            },
+            (error) => {
+                console.error('Geolocation error:', error);
+                setLocationPermission('denied');
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+        );
+    }, []);
+
     const fetchEvents = useCallback(() => {
         const params: any = {};
+        
+        // Basic filters
         if (filters.city) params.city = filters.city;
-        if (filters.category && filters.category !== 'All') params.category = filters.category.toUpperCase().replace(/\s+/g, '_').replace('&', '');
+        if (filters.category && filters.category !== 'All') {
+            params.category = filters.category.toUpperCase().replace(/\s+/g, '_').replace('&', '');
+        }
         if (filters.eventType) params.eventType = filters.eventType;
         if (filters.tags) params.tags = filters.tags.split(',').map(tag => tag.trim()).join(',');
         if (filters.startDate) params.startDate = filters.startDate;
         if (filters.endDate) params.endDate = filters.endDate;
+        
+        // Search query
+        if (filters.searchQuery) params.q = filters.searchQuery;
+        
+        // Location-based search
+        if (filters.latitude && filters.longitude) {
+            params.latitude = filters.latitude;
+            params.longitude = filters.longitude;
+            params.radius = filters.radius;
+        }
+        
+        // Sorting
+        if (filters.sortBy) params.sortBy = filters.sortBy;
+        if (filters.sortOrder) params.sortOrder = filters.sortOrder;
 
         apiClient.get('/events', { params }).then(response => {
-            setEvents(response.data);
+            let eventData = response.data;
+            
+            // Client-side sorting if needed
+            eventData = sortEvents(eventData, filters.sortBy, filters.sortOrder);
+            
+            setEvents(eventData);
         }).catch(error => {
             console.error("There was an error fetching the events!", error);
         });
     }, [filters]);
+
+    const sortEvents = (eventList: Event[], sortBy: string, sortOrder: string) => {
+        return [...eventList].sort((a, b) => {
+            let aValue, bValue;
+            
+            switch (sortBy) {
+                case 'name':
+                    aValue = a.name.toLowerCase();
+                    bValue = b.name.toLowerCase();
+                    break;
+                case 'startDateTime':
+                    aValue = a.startDateTime ? new Date(a.startDateTime).getTime() : 0;
+                    bValue = b.startDateTime ? new Date(b.startDateTime).getTime() : 0;
+                    break;
+                case 'city':
+                    aValue = a.city?.toLowerCase() || '';
+                    bValue = b.city?.toLowerCase() || '';
+                    break;
+                case 'category':
+                    aValue = a.category?.toLowerCase() || '';
+                    bValue = b.category?.toLowerCase() || '';
+                    break;
+                default:
+                    return 0;
+            }
+            
+            if (sortOrder === 'desc') {
+                return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+            } else {
+                return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+            }
+        });
+    };
 
     useEffect(() => {
         fetchEvents();
@@ -130,8 +221,8 @@ const HomePage: React.FC = () => {
                                             type="text"
                                             className="form-control form-control-lg"
                                             placeholder="Search events..."
-                                            name="tags"
-                                            value={filters.tags}
+                                            name="searchQuery"
+                                            value={filters.searchQuery}
                                             onChange={handleFilterChange}
                                         />
                                     </div>
@@ -190,12 +281,23 @@ const HomePage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Additional Filters */}
+                {/* Advanced Filters */}
                 <div className="row mb-4">
                     <div className="col-md-12">
                         <div className="card">
+                            <div className="card-header d-flex justify-content-between align-items-center">
+                                <h6 className="mb-0">🔍 Search Filters</h6>
+                                <button 
+                                    type="button" 
+                                    className="btn btn-outline-secondary btn-sm"
+                                    onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                                >
+                                    {showAdvancedFilters ? '↑ Less Filters' : '↓ More Filters'}
+                                </button>
+                            </div>
                             <div className="card-body">
-                                <div className="row g-3">
+                                {/* Basic Filters - Always Visible */}
+                                <div className="row g-3 mb-3">
                                     <div className="col-md-3">
                                         <label className="form-label">Event Type</label>
                                         <select className="form-select" name="eventType" value={filters.eventType} onChange={handleFilterChange}>
@@ -226,11 +328,117 @@ const HomePage: React.FC = () => {
                                         />
                                     </div>
                                     <div className="col-md-3 d-flex align-items-end">
-                                        <button type="button" onClick={fetchEvents} className="btn btn-outline-primary w-100">
-                                            Apply Filters
+                                        <button type="button" onClick={fetchEvents} className="btn btn-primary w-100">
+                                            🔍 Apply Filters
                                         </button>
                                     </div>
                                 </div>
+
+                                {/* Advanced Filters - Collapsible */}
+                                {showAdvancedFilters && (
+                                    <div className="border-top pt-3">
+                                        <div className="row g-3 mb-3">
+                                            <div className="col-md-6">
+                                                <label className="form-label">Tags (comma-separated)</label>
+                                                <input
+                                                    type="text"
+                                                    className="form-control"
+                                                    name="tags"
+                                                    placeholder="e.g., networking, workshop, conference"
+                                                    value={filters.tags}
+                                                    onChange={handleFilterChange}
+                                                />
+                                            </div>
+                                            <div className="col-md-3">
+                                                <label className="form-label">Sort By</label>
+                                                <select className="form-select" name="sortBy" value={filters.sortBy} onChange={handleFilterChange}>
+                                                    <option value="startDateTime">Date</option>
+                                                    <option value="name">Name</option>
+                                                    <option value="city">City</option>
+                                                    <option value="category">Category</option>
+                                                </select>
+                                            </div>
+                                            <div className="col-md-3">
+                                                <label className="form-label">Sort Order</label>
+                                                <select className="form-select" name="sortOrder" value={filters.sortOrder} onChange={handleFilterChange}>
+                                                    <option value="asc">Ascending</option>
+                                                    <option value="desc">Descending</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {/* Location-based Search */}
+                                        <div className="row g-3">
+                                            <div className="col-md-6">
+                                                <label className="form-label d-flex align-items-center gap-2">
+                                                    📍 Location-based Search
+                                                    {locationPermission === 'granted' && (
+                                                        <span className="badge bg-success">🟢 Location enabled</span>
+                                                    )}
+                                                </label>
+                                                {locationPermission === 'prompt' && (
+                                                    <button 
+                                                        type="button" 
+                                                        className="btn btn-outline-primary btn-sm mb-2"
+                                                        onClick={requestLocation}
+                                                    >
+                                                        📍 Enable Location
+                                                    </button>
+                                                )}
+                                                {locationPermission === 'granted' && userLocation && (
+                                                    <div className="small text-success">
+                                                        📍 Using your location ({userLocation.latitude.toFixed(2)}, {userLocation.longitude.toFixed(2)})
+                                                    </div>
+                                                )}
+                                                {locationPermission === 'denied' && (
+                                                    <div className="small text-muted">
+                                                        Location access denied. Use city filter instead.
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {locationPermission === 'granted' && (
+                                                <div className="col-md-6">
+                                                    <label className="form-label">Search Radius (miles)</label>
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <input
+                                                            type="range"
+                                                            className="form-range flex-grow-1"
+                                                            name="radius"
+                                                            min="1"
+                                                            max="100"
+                                                            value={filters.radius}
+                                                            onChange={handleFilterChange}
+                                                        />
+                                                        <span className="badge bg-secondary">{filters.radius} mi</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="d-flex gap-2 mt-3">
+                                            <button 
+                                                type="button" 
+                                                className="btn btn-outline-danger btn-sm"
+                                                onClick={() => {
+                                                    setFilters({
+                                                        city: '',
+                                                        category: '',
+                                                        eventType: '',
+                                                        tags: '',
+                                                        startDate: '',
+                                                        endDate: '',
+                                                        searchQuery: '',
+                                                        radius: 25,
+                                                        sortBy: 'startDateTime',
+                                                        sortOrder: 'asc'
+                                                    });
+                                                }}
+                                            >
+                                                🗑️ Clear All Filters
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -304,9 +512,9 @@ const HomePage: React.FC = () => {
                                                     </small>
                                                 )}
                                             </div>
-                                            <button className="btn btn-primary btn-sm w-100">
-                                                Register Now
-                                            </button>
+                                            <span className="btn btn-primary btn-sm w-100">
+                                                View Details
+                                            </span>
                                         </div>
                                         {event.tags && event.tags.length > 0 && (
                                             <div className="mt-2">
@@ -340,7 +548,11 @@ const HomePage: React.FC = () => {
                                     eventType: '',
                                     tags: '',
                                     startDate: '',
-                                    endDate: ''
+                                    endDate: '',
+                                    searchQuery: '',
+                                    radius: 25,
+                                    sortBy: 'date',
+                                    sortOrder: 'asc'
                                 });
                                 fetchEvents();
                             }}

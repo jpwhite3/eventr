@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   CRow,
   CCol,
   CCard,
   CCardBody,
   CCardHeader,
-  CWidgetStatsA,
   CWidgetStatsF,
   CProgress,
   CTable,
@@ -46,9 +45,7 @@ import {
   faArrowDown,
   faDownload,
   faSync,
-  faFilter
 } from '@fortawesome/free-solid-svg-icons';
-import apiClient from '../../api/apiClient';
 
 // Register ChartJS components
 ChartJS.register(
@@ -102,14 +99,28 @@ const ExecutiveDashboard: React.FC = () => {
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [timeframe]);
+  const loadExecutiveMetrics = async (): Promise<ExecutiveMetrics> => {
+    const apiClient = (await import('../../api/apiClient')).default;
+    const response = await apiClient.get(`/analytics/executive?timeframe=${timeframe}`);
+    return response.data;
+  };
 
-  const loadDashboardData = async () => {
+  const loadTopEvents = async (): Promise<EventSummary[]> => {
+    const apiClient = (await import('../../api/apiClient')).default;
+    const response = await apiClient.get('/analytics/executive/events?limit=5');
+    return response.data;
+  };
+
+  const loadChartData = async (): Promise<ChartData> => {
+    const apiClient = (await import('../../api/apiClient')).default;
+    const response = await apiClient.get(`/analytics/executive/charts?timeframe=${timeframe}`);
+    return response.data;
+  };
+
+  const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      // In a real app, these would be separate API calls
+      // Use real API endpoints
       const [metricsResponse, eventsResponse, chartsResponse] = await Promise.all([
         loadExecutiveMetrics(),
         loadTopEvents(),
@@ -125,93 +136,13 @@ const ExecutiveDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeframe]);
 
-  // Mock data functions - replace with actual API calls
-  const loadExecutiveMetrics = async (): Promise<ExecutiveMetrics> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return {
-      totalEvents: 127,
-      totalRegistrations: 3456,
-      totalRevenue: 245670,
-      attendanceRate: 87.3,
-      activeEvents: 12,
-      upcomingEvents: 18,
-      completedEvents: 97,
-      avgEventCapacity: 85.2,
-      registrationTrend: 12.4,
-      revenueTrend: 8.7
-    };
-  };
+  useEffect(() => {
+    loadDashboardData();
+  }, [timeframe, loadDashboardData]);
 
-  const loadTopEvents = async (): Promise<EventSummary[]> => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return [
-      {
-        id: '1',
-        title: 'Annual Tech Conference 2024',
-        registrations: 487,
-        capacity: 500,
-        attendanceRate: 92.1,
-        revenue: 48700,
-        status: 'active',
-        startDate: '2024-03-15'
-      },
-      {
-        id: '2',
-        title: 'Product Launch Webinar',
-        registrations: 1234,
-        capacity: 1500,
-        attendanceRate: 89.4,
-        revenue: 0,
-        status: 'completed',
-        startDate: '2024-02-20'
-      },
-      {
-        id: '3',
-        title: 'Leadership Summit',
-        registrations: 156,
-        capacity: 200,
-        attendanceRate: 95.2,
-        revenue: 31200,
-        status: 'upcoming',
-        startDate: '2024-04-10'
-      },
-      {
-        id: '4',
-        title: 'Customer Success Workshop',
-        registrations: 89,
-        capacity: 100,
-        attendanceRate: 88.7,
-        revenue: 8900,
-        status: 'active',
-        startDate: '2024-03-25'
-      },
-      {
-        id: '5',
-        title: 'Industry Networking Event',
-        registrations: 234,
-        capacity: 300,
-        attendanceRate: 76.8,
-        revenue: 23400,
-        status: 'completed',
-        startDate: '2024-01-30'
-      }
-    ];
-  };
-
-  const loadChartData = async (): Promise<ChartData> => {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'];
-    return {
-      labels,
-      registrationData: [145, 189, 234, 278, 345, 423],
-      revenueData: [12500, 15600, 18900, 23400, 28900, 34500],
-      attendanceData: [87, 89, 85, 91, 88, 93]
-    };
-  };
 
   const registrationTrendData = chartData ? {
     labels: chartData.labels,
