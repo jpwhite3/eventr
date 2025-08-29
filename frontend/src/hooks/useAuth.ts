@@ -138,19 +138,19 @@ export const useAuth = () => {
   // Helper functions
   const hasRole = useCallback((role: string): boolean => {
     return authService.hasRole(role);
-  }, [state.user]);
+  }, []);
 
   const hasAnyRole = useCallback((roles: string[]): boolean => {
     return authService.hasAnyRole(roles);
-  }, [state.user]);
+  }, []);
 
   const isAdmin = useCallback((): boolean => {
     return authService.isAdmin();
-  }, [state.user]);
+  }, []);
 
   const isOrganizer = useCallback((): boolean => {
     return authService.isOrganizer();
-  }, [state.user]);
+  }, []);
 
   // Listen for auth state changes (in case auth service is used elsewhere)
   useEffect(() => {

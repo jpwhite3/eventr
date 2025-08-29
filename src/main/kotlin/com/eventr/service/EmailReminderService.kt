@@ -5,6 +5,7 @@ import com.eventr.repository.RegistrationRepository
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.ZonedDateTime
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
 @Service
@@ -29,14 +30,14 @@ class EmailReminderService(
         // Find events starting in exactly N days
         val upcomingEvents = eventRepository.findAll().filter { event ->
             event.startDateTime?.let { startDateTime ->
-                val eventStart = ZonedDateTime.parse(startDateTime)
+                val eventStart = startDateTime.atZone(ZoneId.systemDefault())
                 val daysDifference = ChronoUnit.DAYS.between(now.toLocalDate(), eventStart.toLocalDate())
                 daysDifference == daysAhead.toLong()
             } ?: false
         }
         
         upcomingEvents.forEach { event ->
-            val registrations = registrationRepository.findByEventInstanceEventId(event.id!!)
+            val registrations = registrationRepository.findByEventId(event.id!!)
             
             registrations.forEach { registration ->
                 try {
@@ -55,7 +56,7 @@ class EmailReminderService(
             IllegalArgumentException("Event not found")
         }
         
-        val registrations = registrationRepository.findByEventInstanceEventId(eventId)
+        val registrations = registrationRepository.findByEventId(eventId)
         
         registrations.forEach { registration ->
             try {
@@ -72,10 +73,10 @@ class EmailReminderService(
             IllegalArgumentException("Event not found")
         }
         
-        val registrations = registrationRepository.findByEventInstanceEventId(eventId)
+        val registrations = registrationRepository.findByEventId(eventId)
         
         try {
-            emailService.sendEventUpdate(event, updateMessage, registrations)
+            emailService.sendEventUpdate(event, updateMessage, registrations.toList())
         } catch (e: Exception) {
             println("Failed to send event update notifications: ${e.message}")
             throw e

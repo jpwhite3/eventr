@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@CrossOrigin(origins = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"])
 @RequestMapping("/api/checkin")
 class CheckInController(
     private val checkInService: CheckInService,
@@ -23,9 +22,10 @@ class CheckInController(
             val result = checkInService.checkInWithQR(qrCheckInDto)
             
             // Broadcast real-time check-in update
-            qrCheckInDto.eventId?.let { eventIdValue ->
+            result.registrationId?.let { registrationId ->
+                // Use the registration's event for broadcasting updates
                 webSocketEventService.broadcastCheckInUpdate(
-                    eventIdValue,
+                    registrationId,
                     result.userName ?: "Unknown",
                     result.userEmail ?: "",
                     "CHECKED_IN"

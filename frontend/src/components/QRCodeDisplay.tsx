@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import apiClient from '../api/apiClient';
 
 interface QRCodeDisplayProps {
@@ -19,7 +19,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ eventId, registrationId, 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const generateQRCode = async () => {
+    const generateQRCode = useCallback(async () => {
         setLoading(true);
         setError(null);
         
@@ -34,7 +34,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ eventId, registrationId, 
         } finally {
             setLoading(false);
         }
-    };
+    }, [eventId, registrationId, userName]);
 
     const downloadQRCode = async () => {
         try {
@@ -61,7 +61,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ eventId, registrationId, 
         if (eventId && registrationId && userName) {
             generateQRCode();
         }
-    }, [eventId, registrationId, userName]);
+    }, [eventId, registrationId, userName, generateQRCode]);
 
     if (loading) {
         return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -6,12 +6,10 @@ import {
   faCalendarAlt,
   faMapMarkerAlt,
   faClock,
-  faUsers,
   faCheckCircle,
   faTimesCircle,
   faSpinner,
   faEye,
-  faFilter,
   faDownload,
   faSearch
 } from '@fortawesome/free-solid-svg-icons';
@@ -36,13 +34,53 @@ interface Registration {
 }
 
 const RegistrationHistoryPage: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [filteredRegistrations, setFilteredRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [dateFilter, setDateFilter] = useState('ALL');
+
+  const applyFilters = useCallback(() => {
+    let filtered = registrations;
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(reg =>
+        reg.event.title.toLowerCase().includes(query) ||
+        reg.event.location.toLowerCase().includes(query) ||
+        reg.event.description.toLowerCase().includes(query)
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== 'ALL') {
+      filtered = filtered.filter(reg => reg.status === statusFilter);
+    }
+
+    // Date filter
+    if (dateFilter !== 'ALL') {
+      const now = new Date();
+      filtered = filtered.filter(reg => {
+        const eventDate = new Date(reg.event.startDateTime);
+        switch (dateFilter) {
+          case 'UPCOMING':
+            return eventDate > now;
+          case 'PAST':
+            return eventDate < now;
+          case 'THIS_MONTH':
+            return eventDate.getMonth() === now.getMonth() && 
+                   eventDate.getFullYear() === now.getFullYear();
+          default:
+            return true;
+        }
+      });
+    }
+
+    setFilteredRegistrations(filtered);
+  }, [registrations, searchQuery, statusFilter, dateFilter]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -52,7 +90,7 @@ const RegistrationHistoryPage: React.FC = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [registrations, searchQuery, statusFilter, dateFilter]);
+  }, [applyFilters]);
 
   const fetchRegistrations = async () => {
     try {
@@ -147,45 +185,6 @@ const RegistrationHistoryPage: React.FC = () => {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = registrations;
-
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(reg =>
-        reg.event.title.toLowerCase().includes(query) ||
-        reg.event.location.toLowerCase().includes(query) ||
-        reg.event.description.toLowerCase().includes(query)
-      );
-    }
-
-    // Status filter
-    if (statusFilter !== 'ALL') {
-      filtered = filtered.filter(reg => reg.status === statusFilter);
-    }
-
-    // Date filter
-    if (dateFilter !== 'ALL') {
-      const now = new Date();
-      filtered = filtered.filter(reg => {
-        const eventDate = new Date(reg.event.startDateTime);
-        switch (dateFilter) {
-          case 'UPCOMING':
-            return eventDate > now;
-          case 'PAST':
-            return eventDate < now;
-          case 'THIS_MONTH':
-            return eventDate.getMonth() === now.getMonth() && 
-                   eventDate.getFullYear() === now.getFullYear();
-          default:
-            return true;
-        }
-      });
-    }
-
-    setFilteredRegistrations(filtered);
-  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

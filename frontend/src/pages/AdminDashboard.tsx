@@ -95,11 +95,12 @@ const AdminDashboard: React.FC = () => {
             .catch(error => console.error("Failed to publish event", error));
     };
 
-    const handleClone = (eventId: string): void => {
-        apiClient.post(`/events/${eventId}/clone`)
-            .then(() => fetchEvents())
-            .catch(error => console.error("Failed to clone event", error));
-    };
+    // Clone functionality disabled - endpoint not implemented
+    // const handleClone = (eventId: string): void => {
+    //     apiClient.post(`/events/${eventId}/clone`)
+    //         .then(() => fetchEvents())
+    //         .catch(error => console.error("Failed to clone event", error));
+    // };
 
     const handleDelete = (eventId: string): void => {
         if (window.confirm('Are you sure you want to delete this event?')) {
@@ -304,13 +305,14 @@ const AdminDashboard: React.FC = () => {
                                                         Publish
                                                     </CButton>
                                                     
-                                                    <CButton 
+                                                    {/* Clone button disabled - endpoint not implemented */}
+                                                    {/* <CButton 
                                                         color="outline-success" 
                                                         size="sm" 
                                                         onClick={() => handleClone(event.id)}
                                                     >
                                                         <FontAwesomeIcon icon={faClone} />
-                                                    </CButton>
+                                                    </CButton> */}
                                                     
                                                     <Link to={`/admin/events/${event.id}/attendance`}>
                                                         <CButton color="outline-warning" size="sm">

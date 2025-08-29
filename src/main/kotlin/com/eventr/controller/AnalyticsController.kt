@@ -8,7 +8,6 @@ import java.util.*
 
 @RestController
 @RequestMapping("/api/analytics")
-@CrossOrigin(origins = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"])
 class AnalyticsController(private val analyticsService: AnalyticsService) {
 
     @GetMapping("/executive")

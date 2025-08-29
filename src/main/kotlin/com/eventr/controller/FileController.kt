@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.IOException
 
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/api/storage")
 class FileController(private val fileStorageService: FileStorageService) {
     
     @PostMapping("/upload")

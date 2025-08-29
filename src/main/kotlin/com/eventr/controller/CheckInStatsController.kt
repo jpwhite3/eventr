@@ -6,19 +6,18 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@CrossOrigin(origins = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"])
-@RequestMapping("/api/checkin")
+@RequestMapping("/api/checkin/stats")
 class CheckInStatsController(
     private val checkInStatsService: CheckInStatsService
 ) {
 
-    @GetMapping("/event/{eventId}/stats")
+    @GetMapping("/event/{eventId}")
     fun getEventCheckInStats(@PathVariable eventId: UUID): ResponseEntity<Map<String, Any>> {
         val stats = checkInStatsService.getEventCheckInStats(eventId)
         return ResponseEntity.ok(stats)
     }
 
-    @GetMapping("/session/{sessionId}/stats")
+    @GetMapping("/session/{sessionId}")
     fun getSessionCheckInStats(@PathVariable sessionId: UUID): ResponseEntity<Map<String, Any>> {
         val stats = checkInStatsService.getSessionCheckInStats(sessionId)
         return ResponseEntity.ok(stats)

@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@CrossOrigin(origins = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"])
 @RequestMapping("/api/notifications")
 class EmailNotificationController(
     private val emailReminderService: EmailReminderService

@@ -95,7 +95,7 @@ class CheckInStatsService {
         )
 
         // Initialize mock attendees
-        mockAttendees[eventId1] = listOf(
+        mockAttendees[eventId1] = listOf<Map<String, Any>>(
             mapOf(
                 "id" to UUID.randomUUID().toString(),
                 "firstName" to "John",
@@ -105,14 +105,14 @@ class CheckInStatsService {
                 "checkInStatus" to "CHECKED_IN",
                 "checkInTime" to "2024-03-15T08:45:00"
             ),
-            mapOf(
+            mapOf<String, Any>(
                 "id" to UUID.randomUUID().toString(),
                 "firstName" to "Jane",
                 "lastName" to "Smith",
                 "email" to "jane.smith@example.com",
                 "registrationDate" to "2024-02-21T14:15:00",
                 "checkInStatus" to "REGISTERED",
-                "checkInTime" to null
+                "checkInTime" to ""
             ),
             mapOf(
                 "id" to UUID.randomUUID().toString(),
@@ -125,7 +125,7 @@ class CheckInStatsService {
             )
         )
 
-        mockAttendees[eventId2] = listOf(
+        mockAttendees[eventId2] = listOf<Map<String, Any>>(
             mapOf(
                 "id" to UUID.randomUUID().toString(),
                 "firstName" to "Alice",
@@ -135,14 +135,14 @@ class CheckInStatsService {
                 "checkInStatus" to "CHECKED_IN",
                 "checkInTime" to "2024-03-20T09:30:00"
             ),
-            mapOf(
+            mapOf<String, Any>(
                 "id" to UUID.randomUUID().toString(),
                 "firstName" to "Charlie",
                 "lastName" to "Brown",
                 "email" to "charlie.brown@example.com",
                 "registrationDate" to "2024-02-26T13:45:00",
                 "checkInStatus" to "REGISTERED",
-                "checkInTime" to null
+                "checkInTime" to ""
             )
         )
     }

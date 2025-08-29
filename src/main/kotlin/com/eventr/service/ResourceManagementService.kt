@@ -1,5 +1,6 @@
 package com.eventr.service
 
+import com.eventr.dto.ResourceDto as DtoResourceDto
 import com.eventr.dto.*
 import com.eventr.model.*
 import com.eventr.repository.*
@@ -19,9 +20,9 @@ class ResourceManagementService(
     private val sessionRepository: SessionRepository
 ) {
 
-    fun getAllResources(): List<ResourceDto> {
+    fun getAllResources(): List<DtoResourceDto> {
         return resourceRepository.findAll().map { resource ->
-            ResourceDto(
+            DtoResourceDto(
                 id = resource.id,
                 name = resource.name,
                 description = resource.description,
@@ -59,11 +60,11 @@ class ResourceManagementService(
         }
     }
 
-    fun getResourceById(resourceId: UUID): ResourceDto {
+    fun getResourceById(resourceId: UUID): DtoResourceDto {
         val resource = resourceRepository.findById(resourceId)
             .orElseThrow { IllegalArgumentException("Resource not found with id: $resourceId") }
         
-        return ResourceDto(
+        return DtoResourceDto(
             id = resource.id,
             name = resource.name,
             description = resource.description,
@@ -100,7 +101,7 @@ class ResourceManagementService(
         )
     }
 
-    fun createResource(createDto: ResourceCreateDto): ResourceDto {
+    fun createResource(createDto: ResourceCreateDto): DtoResourceDto {
         val resource = Resource(
             name = createDto.name,
             description = createDto.description,
@@ -133,7 +134,7 @@ class ResourceManagementService(
         return convertToDto(saved)
     }
 
-    fun updateResource(resourceId: UUID, updateDto: ResourceCreateDto): ResourceDto {
+    fun updateResource(resourceId: UUID, updateDto: ResourceCreateDto): DtoResourceDto {
         val resource = resourceRepository.findById(resourceId)
             .orElseThrow { IllegalArgumentException("Resource not found") }
         
@@ -534,10 +535,10 @@ class ResourceManagementService(
         return emptyList()
     }
 
-    private fun convertToDto(resource: Resource): ResourceDto {
+    private fun convertToDto(resource: Resource): DtoResourceDto {
         val now = LocalDateTime.now()
         
-        return ResourceDto(
+        return DtoResourceDto(
             id = resource.id,
             name = resource.name,
             description = resource.description,

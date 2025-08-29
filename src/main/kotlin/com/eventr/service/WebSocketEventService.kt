@@ -120,10 +120,10 @@ class WebSocketEventService(
     private fun getAttendanceCount(eventId: UUID): Int {
         // This would need to be implemented based on your check-in logic
         // For now, return a placeholder
-        return registrationRepository.findByEventInstanceEventId(eventId).size
+        return registrationRepository.findByEventId(eventId).size
     }
     
     private fun getRegistrationCount(eventId: UUID): Int {
-        return registrationRepository.findByEventInstanceEventId(eventId).size
+        return registrationRepository.findByEventId(eventId).size
     }
 }

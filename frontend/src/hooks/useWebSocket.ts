@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { webSocketService, WebSocketCallbacks, WebSocketUpdate } from '../services/WebSocketService';
 
 interface UseWebSocketOptions {
@@ -51,7 +51,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
     setNotifications(prev => [...prev.slice(-9), update]); // Keep last 10 notifications
   }, []);
 
-  const callbacks: WebSocketCallbacks = {
+  const callbacks: WebSocketCallbacks = useMemo(() => ({
     onConnect: () => {
       updateConnectionState();
     },
@@ -132,7 +132,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
         addNotification(update);
       }
     }
-  };
+  }), [eventId, updateConnectionState, addNotification]);
 
   const connect = useCallback(() => {
     webSocketService.connect();
@@ -174,7 +174,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
         webSocketService.unsubscribeFromEvent();
       }
     };
-  }, [eventId, autoConnect, updateConnectionState]);
+  }, [eventId, autoConnect, updateConnectionState, callbacks]);
 
   return {
     ...state,

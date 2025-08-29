@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*
 import java.util.UUID
 
 @RestController
-@CrossOrigin(origins = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"])
 @RequestMapping("/api/registrations")
 class RegistrationController(
     private val registrationRepository: RegistrationRepository,

@@ -45,6 +45,7 @@ interface Filters {
 
 const HomePage: React.FC = () => {
     const [events, setEvents] = useState<Event[]>([]);
+    const [isUsingMockData, setIsUsingMockData] = useState(false);
     const [filters, setFilters] = useState<Filters>({
         city: '',
         category: '',
@@ -130,8 +131,50 @@ const HomePage: React.FC = () => {
             eventData = sortEvents(eventData, filters.sortBy, filters.sortOrder);
             
             setEvents(eventData);
+            setIsUsingMockData(false);
         }).catch(error => {
             console.error("There was an error fetching the events!", error);
+            
+            // Fallback to mock data when API is unavailable
+            console.warn("API unavailable, using mock data for development");
+            const mockEvents: Event[] = [
+                {
+                    id: '1',
+                    name: 'Sample Corporate Event',
+                    description: 'This is a sample event displayed when the backend API is not available. The application is running in development mode with mock data.',
+                    startDateTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    endDateTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000).toISOString(),
+                    city: 'San Francisco',
+                    state: 'CA',
+                    category: 'BUSINESS',
+                    eventType: 'IN_PERSON',
+                    venueName: 'Convention Center',
+                    organizerName: 'Sample Organizer',
+                    maxRegistrations: 100,
+                    requiresApproval: false,
+                    tags: ['networking', 'business', 'development']
+                },
+                {
+                    id: '2',
+                    name: 'Tech Workshop',
+                    description: 'Another sample event. Start the backend server to see real events.',
+                    startDateTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+                    endDateTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000 + 6 * 60 * 60 * 1000).toISOString(),
+                    city: 'New York',
+                    state: 'NY',
+                    category: 'TECHNOLOGY',
+                    eventType: 'HYBRID',
+                    venueName: 'Tech Hub',
+                    organizerName: 'Tech Team',
+                    maxRegistrations: 50,
+                    requiresApproval: true,
+                    tags: ['workshop', 'technology', 'learning']
+                }
+            ];
+            
+            const sortedMockEvents = sortEvents(mockEvents, filters.sortBy, filters.sortOrder);
+            setEvents(sortedMockEvents);
+            setIsUsingMockData(true);
         });
     }, [filters]);
 
@@ -205,6 +248,20 @@ const HomePage: React.FC = () => {
 
     return (
         <div className="min-vh-100 bg-light">
+            {/* Development Mode Banner */}
+            {isUsingMockData && (
+                <div className="bg-warning text-dark py-2">
+                    <div className="container">
+                        <div className="text-center">
+                            <small>
+                                <strong>⚠️ Development Mode:</strong> Backend API unavailable. Showing sample data. 
+                                Start the backend server to see real events.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             {/* Header Section */}
             <div className="bg-primary text-white py-5">
                 <div className="container">

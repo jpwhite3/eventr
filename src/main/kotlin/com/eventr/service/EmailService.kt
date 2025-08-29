@@ -2,6 +2,7 @@ package com.eventr.service
 
 import com.eventr.model.Event
 import com.eventr.model.EventInstance
+import com.eventr.model.EventType
 import com.eventr.model.Registration
 import jakarta.mail.MessagingException
 import jakarta.mail.internet.MimeMessage
@@ -120,7 +121,7 @@ class EmailService(private val mailSender: JavaMailSender) {
     
     private fun buildRegistrationConfirmationEmail(registration: Registration, event: Event): String {
         val eventUrl = "$baseUrl/events/${event.id}"
-        val startDateTime = event.startDateTime?.let { ZonedDateTime.parse(it) }
+        val startDateTime = event.startDateTime?.atZone(ZoneId.systemDefault())
         
         return """
             <!DOCTYPE html>
@@ -184,7 +185,7 @@ class EmailService(private val mailSender: JavaMailSender) {
     
     private fun buildEventReminderEmail(registration: Registration, event: Event, daysUntilEvent: Int): String {
         val eventUrl = "$baseUrl/events/${event.id}"
-        val startDateTime = event.startDateTime?.let { ZonedDateTime.parse(it) }
+        val startDateTime = event.startDateTime?.atZone(ZoneId.systemDefault())
         
         return """
             <!DOCTYPE html>
@@ -329,8 +330,8 @@ class EmailService(private val mailSender: JavaMailSender) {
     
     private fun formatEventLocation(event: Event): String {
         return when (event.eventType) {
-            "VIRTUAL" -> "Virtual Event"
-            "HYBRID" -> {
+            EventType.VIRTUAL -> "Virtual Event"
+            EventType.HYBRID -> {
                 val physicalLocation = buildPhysicalLocationString(event)
                 if (physicalLocation.isNotEmpty()) "$physicalLocation (Hybrid Event)" else "Hybrid Event"
             }
@@ -348,7 +349,7 @@ class EmailService(private val mailSender: JavaMailSender) {
     }
     
     private fun buildVirtualEventInfo(event: Event): String {
-        return if (event.eventType == "VIRTUAL" || event.eventType == "HYBRID") {
+        return if (event.eventType == EventType.VIRTUAL || event.eventType == EventType.HYBRID) {
             """
                 <h3>🖥️ Virtual Event Information:</h3>
                 <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin: 20px 0;">

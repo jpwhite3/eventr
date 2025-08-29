@@ -1,12 +1,14 @@
 package com.eventr.service
 
 import com.eventr.model.Event
+import com.eventr.model.EventType
 import com.eventr.model.Registration
 import com.eventr.repository.EventRepository
 import com.eventr.repository.RegistrationRepository
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 import java.time.ZonedDateTime
+import java.time.ZoneId
 import java.util.*
 
 @Service
@@ -38,11 +40,11 @@ class CalendarService(
         val now = ZonedDateTime.now()
         val formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
         
-        val startDateTime = event.startDateTime?.let { ZonedDateTime.parse(it) } ?: now.plusDays(1)
-        val endDateTime = event.endDateTime?.let { ZonedDateTime.parse(it) } ?: startDateTime.plusHours(2)
+        val startDateTime = event.startDateTime?.atZone(ZoneId.systemDefault()) ?: now.plusDays(1)
+        val endDateTime = event.endDateTime?.atZone(ZoneId.systemDefault()) ?: startDateTime.plusHours(2)
         
         val uid = "event-${event.id}-${UUID.randomUUID()}"
-        val summary = escapeIcsText(event.name)
+        val summary = escapeIcsText(event.name ?: "Event")
         val description = buildDescription(event, registration)
         val location = buildLocation(event)
         
@@ -90,8 +92,8 @@ class CalendarService(
     
     private fun buildDescription(event: Event, registration: Registration?): String {
         return buildString {
-            if (!event.description.isNullOrBlank()) {
-                append(escapeIcsText(event.description))
+            event.description?.takeIf { it.isNotBlank() }?.let { desc ->
+                append(escapeIcsText(desc))
                 append("\\n\\n")
             }
             
@@ -99,7 +101,7 @@ class CalendarService(
             append("Event Type: ${event.eventType ?: "TBD"}\\n")
             
             // Add virtual meeting details if available
-            if (event.eventType == "VIRTUAL" || event.eventType == "HYBRID") {
+            if (event.eventType == EventType.VIRTUAL || event.eventType == EventType.HYBRID) {
                 event.virtualUrl?.let { 
                     append("Meeting URL: $it\\n")
                 }
@@ -124,8 +126,8 @@ class CalendarService(
     
     private fun buildLocation(event: Event): String {
         return when (event.eventType) {
-            "VIRTUAL" -> "Virtual Event"
-            "HYBRID" -> {
+            EventType.VIRTUAL -> "Virtual Event"
+            EventType.HYBRID -> {
                 val physicalLocation = buildPhysicalLocation(event)
                 if (physicalLocation.isNotEmpty()) {
                     "$physicalLocation (Hybrid - Virtual option available)"
