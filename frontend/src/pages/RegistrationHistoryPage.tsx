@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
+import apiClient from '../api/apiClient';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCalendarAlt,
@@ -34,7 +35,7 @@ interface Registration {
 }
 
 const RegistrationHistoryPage: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [filteredRegistrations, setFilteredRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,90 +97,37 @@ const RegistrationHistoryPage: React.FC = () => {
     try {
       setLoading(true);
       
-      // Mock data for demonstration
-      const mockRegistrations: Registration[] = [
-        {
-          id: '1',
-          event: {
-            id: '1',
-            title: 'React Conference 2024',
-            description: 'Learn the latest React features and best practices',
-            startDateTime: '2024-03-15T09:00:00',
-            endDateTime: '2024-03-15T17:00:00',
-            location: 'San Francisco Convention Center',
-            imageUrl: 'https://via.placeholder.com/100x60?text=React',
-            status: 'PUBLISHED'
-          },
-          registrationDateTime: '2024-02-20T14:30:00',
-          status: 'CONFIRMED',
-          checkInDateTime: undefined
-        },
-        {
-          id: '2',
-          event: {
-            id: '2',
-            title: 'AI/ML Workshop',
-            description: 'Hands-on workshop on machine learning fundamentals',
-            startDateTime: '2024-03-20T10:00:00',
-            endDateTime: '2024-03-20T16:00:00',
-            location: 'Tech Hub Downtown',
-            imageUrl: 'https://via.placeholder.com/100x60?text=AI',
-            status: 'PUBLISHED'
-          },
-          registrationDateTime: '2024-02-25T11:15:00',
-          status: 'WAITLISTED'
-        },
-        {
-          id: '3',
-          event: {
-            id: '3',
-            title: 'Web Development Bootcamp',
-            description: 'Intensive 3-day bootcamp covering full-stack development',
-            startDateTime: '2024-02-10T09:00:00',
-            endDateTime: '2024-02-12T17:00:00',
-            location: 'Innovation Center',
-            imageUrl: 'https://via.placeholder.com/100x60?text=Bootcamp',
-            status: 'COMPLETED'
-          },
-          registrationDateTime: '2024-01-15T16:45:00',
-          status: 'ATTENDED',
-          checkInDateTime: '2024-02-10T08:45:00'
-        },
-        {
-          id: '4',
-          event: {
-            id: '4',
-            title: 'UX Design Principles',
-            description: 'Learn modern UX design principles and practices',
-            startDateTime: '2024-01-20T13:00:00',
-            endDateTime: '2024-01-20T17:00:00',
-            location: 'Design Studio',
-            imageUrl: 'https://via.placeholder.com/100x60?text=UX',
-            status: 'COMPLETED'
-          },
-          registrationDateTime: '2024-01-05T09:30:00',
-          status: 'NO_SHOW'
-        },
-        {
-          id: '5',
-          event: {
-            id: '5',
-            title: 'Startup Pitch Competition',
-            description: 'Present your startup idea to industry experts',
-            startDateTime: '2024-02-28T18:00:00',
-            endDateTime: '2024-02-28T21:00:00',
-            location: 'Entrepreneur Hub',
-            imageUrl: 'https://via.placeholder.com/100x60?text=Startup',
-            status: 'CANCELLED'
-          },
-          registrationDateTime: '2024-02-15T12:00:00',
-          status: 'CANCELLED'
-        }
-      ];
+      if (!user?.id) {
+        console.error('User ID not available');
+        setRegistrations([]);
+        return;
+      }
 
-      setRegistrations(mockRegistrations);
+      // Fetch user's registrations from API
+      const response = await apiClient.get(`/registrations/user/id/${user.id}`);
+      
+      // Transform the response to match our interface
+      const transformedRegistrations: Registration[] = response.data.map((reg: any) => ({
+        id: reg.id,
+        event: {
+          id: reg.eventInstance?.event?.id || reg.eventInstance?.id || 'unknown',
+          title: reg.eventInstance?.event?.name || 'Event',
+          description: reg.eventInstance?.event?.description || '',
+          startDateTime: reg.eventInstance?.event?.startDateTime || reg.eventInstance?.startDateTime || new Date().toISOString(),
+          endDateTime: reg.eventInstance?.event?.endDateTime || reg.eventInstance?.endDateTime || new Date().toISOString(),
+          location: reg.eventInstance?.event?.location?.address || 'Location TBD',
+          imageUrl: reg.eventInstance?.event?.bannerImageUrl,
+          status: reg.eventInstance?.event?.status || 'UNKNOWN'
+        },
+        registrationDateTime: reg.createdAt || new Date().toISOString(),
+        status: reg.status === 'REGISTERED' ? 'CONFIRMED' : (reg.status || 'CONFIRMED'),
+        checkInDateTime: reg.checkedIn ? reg.updatedAt : undefined
+      }));
+
+      setRegistrations(transformedRegistrations);
     } catch (error) {
       console.error('Error fetching registrations:', error);
+      setRegistrations([]);
     } finally {
       setLoading(false);
     }

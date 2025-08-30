@@ -15,8 +15,12 @@ data class Registration(
     @JoinColumn(name = "event_instance_id")
     var eventInstance: EventInstance? = null,
     
-    var userEmail: String? = null,
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    var user: User? = null,
     
+    // Keep these fields for backward compatibility and quick access
+    var userEmail: String? = null,
     var userName: String? = null,
     
     @Enumerated(EnumType.STRING)

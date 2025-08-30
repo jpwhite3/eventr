@@ -10,6 +10,8 @@ import java.util.UUID
 interface RegistrationRepository : JpaRepository<Registration, UUID> {
     fun findByUserEmail(userEmail: String): List<Registration>
     
+    fun findByUserId(userId: UUID): List<Registration>
+    
     @Query("SELECT r FROM Registration r JOIN r.eventInstance ei JOIN ei.event e WHERE e.id = :eventId AND (:name IS NULL OR LOWER(r.userName) LIKE LOWER(CONCAT('%', :name, '%')))")
     fun findByEventIdAndUserName(
         @Param("eventId") eventId: UUID, 

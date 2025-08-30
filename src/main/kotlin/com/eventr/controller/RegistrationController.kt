@@ -6,6 +6,7 @@ import com.eventr.model.Registration
 import com.eventr.model.RegistrationStatus
 import com.eventr.repository.EventInstanceRepository
 import com.eventr.repository.RegistrationRepository
+import com.eventr.repository.UserRepository
 import com.eventr.service.EmailService
 import com.eventr.service.WebSocketEventService
 import org.springframework.beans.BeanUtils
@@ -17,6 +18,7 @@ import java.util.UUID
 class RegistrationController(
     private val registrationRepository: RegistrationRepository,
     private val eventInstanceRepository: EventInstanceRepository,
+    private val userRepository: UserRepository,
     private val emailService: EmailService,
     private val webSocketEventService: WebSocketEventService
 ) {
@@ -29,8 +31,20 @@ class RegistrationController(
         
         val registration = Registration().apply {
             this.eventInstance = eventInstance
-            userEmail = registrationCreateDto.userEmail
-            userName = registrationCreateDto.userName
+            
+            // Handle user authentication approach
+            if (registrationCreateDto.userId != null) {
+                user = userRepository.findById(registrationCreateDto.userId!!).orElseThrow {
+                    IllegalArgumentException("User not found")
+                }
+                userEmail = user?.email
+                userName = "${user?.firstName} ${user?.lastName}"
+            } else {
+                // Backward compatibility with email/name approach
+                userEmail = registrationCreateDto.userEmail
+                userName = registrationCreateDto.userName
+            }
+            
             formData = registrationCreateDto.formData
             status = RegistrationStatus.REGISTERED
         }
@@ -66,6 +80,16 @@ class RegistrationController(
     @GetMapping("/user/{email}")
     fun getRegistrationsByUserEmail(@PathVariable email: String): List<RegistrationDto> {
         return registrationRepository.findByUserEmail(email).map { registration ->
+            RegistrationDto().apply {
+                BeanUtils.copyProperties(registration, this)
+                eventInstanceId = registration.eventInstance?.id
+            }
+        }
+    }
+    
+    @GetMapping("/user/id/{userId}")
+    fun getRegistrationsByUserId(@PathVariable userId: UUID): List<RegistrationDto> {
+        return registrationRepository.findByUserId(userId).map { registration ->
             RegistrationDto().apply {
                 BeanUtils.copyProperties(registration, this)
                 eventInstanceId = registration.eventInstance?.id

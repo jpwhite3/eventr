@@ -1,5 +1,6 @@
 import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import apiClient from '../api/apiClient';
+import { useAuth } from '../hooks/useAuth';
 
 interface FormField {
     name: string;
@@ -28,6 +29,7 @@ interface FormData {
 }
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId, onSuccess }) => {
+    const { user, isAuthenticated } = useAuth();
     const [formDefinition, setFormDefinition] = useState<FormDefinition | null>(null);
     const [formData, setFormData] = useState<FormData>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,14 +72,19 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        
+        if (!isAuthenticated || !user) {
+            setError('You must be logged in to register for events.');
+            return;
+        }
+
         setIsSubmitting(true);
         setError(null);
         setSuccess(false);
 
         const submissionData = {
             eventInstanceId: instanceId,
-            userEmail: formData.email, // Assuming 'email' is a standard field
-            userName: formData.name, // Assuming 'name' is a standard field
+            userId: user.id,
             formData: JSON.stringify(formData)
         };
 
@@ -88,8 +95,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId
                 if (onSuccess) {
                     onSuccess({
                         id: response.data.id,
-                        userName: submissionData.userName,
-                        userEmail: submissionData.userEmail
+                        userName: `${user.firstName} ${user.lastName}`,
+                        userEmail: user.email
                     });
                 }
             })
@@ -104,6 +111,15 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId
 
     if (error) {
         return <div className="alert alert-danger">{error}</div>;
+    }
+
+    if (!isAuthenticated || !user) {
+        return (
+            <div className="alert alert-warning">
+                <h5>Authentication Required</h5>
+                <p>You must be logged in to register for this event. Please sign in to continue.</p>
+            </div>
+        );
     }
 
     if (!formDefinition || !formDefinition.fields) {
@@ -199,8 +215,16 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            {formDefinition.fields.map(field => (
+        <div>
+            {/* User Info Display */}
+            <div className="alert alert-info mb-4">
+                <h6 className="mb-2">Registering as:</h6>
+                <p className="mb-1"><strong>{user.firstName} {user.lastName}</strong></p>
+                <p className="mb-0"><small>{user.email}</small></p>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+                {formDefinition.fields.map(field => (
                 <div className="mb-3" key={field.name}>
                     {field.type !== 'checkbox' && (
                         <label htmlFor={field.name} className="form-label">{field.label}</label>
@@ -219,7 +243,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId
                 {isSubmitting ? 'Registering...' : 'Register'}
             </button>
             {success && <div className="alert alert-success mt-3">Registration successful!</div>}
-        </form>
+            </form>
+        </div>
     );
 };
 
