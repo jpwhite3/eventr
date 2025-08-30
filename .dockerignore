@@ -1,0 +1,61 @@
+# Version control
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.iws
+
+# Build artifacts (excluding target/ since we need the built JAR)
+frontend/node_modules/
+frontend/build/
+frontend/.npm/
+frontend/coverage/
+
+# Maven wrapper (we'll use the container's Maven)
+.mvn/
+mvnw
+mvnw.cmd
+
+# Test artifacts
+target/test-classes/
+target/surefire-reports/
+target/site/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Environment files
+.env*
+!.env.example
+
+# GitHub Actions
+.github/
+
+# Docker files
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Spring Boot
+!target/*.jar
+!target/lib/
+
+# Webhook client (separate service)
+webhook-client/
