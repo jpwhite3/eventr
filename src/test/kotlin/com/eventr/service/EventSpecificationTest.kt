@@ -5,18 +5,24 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Assertions.*
 import java.time.LocalDate
 
-@DisplayName("EventSpecification Simple Tests")
-class EventSpecificationSimpleTest {
+@DisplayName("EventSpecification Tests")
+class EventSpecificationTest {
 
     @Test
     @DisplayName("Should create specification with all null parameters")
     fun shouldCreateSpecificationWithAllNullParameters() {
         // When
         val specification = EventSpecification.filterBy(
-            location = null,
+            category = null,
+            eventType = null,
+            city = null,
             dateStart = null,
             dateEnd = null,
             tags = null,
+            searchQuery = null,
+            latitude = null,
+            longitude = null,
+            radius = null,
             publishedOnly = false
         )
 
@@ -29,10 +35,6 @@ class EventSpecificationSimpleTest {
     fun shouldCreateSpecificationWithPublishedOnlyFilter() {
         // When
         val specification = EventSpecification.filterBy(
-            location = null,
-            dateStart = null,
-            dateEnd = null,
-            tags = null,
             publishedOnly = true
         )
 
@@ -41,14 +43,11 @@ class EventSpecificationSimpleTest {
     }
 
     @Test
-    @DisplayName("Should create specification with location filter")
-    fun shouldCreateSpecificationWithLocationFilter() {
+    @DisplayName("Should create specification with category filter")
+    fun shouldCreateSpecificationWithCategoryFilter() {
         // When
         val specification = EventSpecification.filterBy(
-            location = "New York",
-            dateStart = null,
-            dateEnd = null,
-            tags = null,
+            category = "MUSIC",
             publishedOnly = false
         )
 
@@ -57,14 +56,24 @@ class EventSpecificationSimpleTest {
     }
 
     @Test
-    @DisplayName("Should create specification with empty location")
-    fun shouldCreateSpecificationWithEmptyLocation() {
+    @DisplayName("Should create specification with event type filter")
+    fun shouldCreateSpecificationWithEventTypeFilter() {
         // When
         val specification = EventSpecification.filterBy(
-            location = "",
-            dateStart = null,
-            dateEnd = null,
-            tags = null,
+            eventType = "IN_PERSON",
+            publishedOnly = false
+        )
+
+        // Then
+        assertNotNull(specification)
+    }
+
+    @Test
+    @DisplayName("Should create specification with city filter")
+    fun shouldCreateSpecificationWithCityFilter() {
+        // When
+        val specification = EventSpecification.filterBy(
+            city = "New York",
             publishedOnly = false
         )
 
@@ -81,10 +90,8 @@ class EventSpecificationSimpleTest {
 
         // When
         val specification = EventSpecification.filterBy(
-            location = null,
             dateStart = startDate,
             dateEnd = endDate,
-            tags = null,
             publishedOnly = false
         )
 
@@ -100,9 +107,6 @@ class EventSpecificationSimpleTest {
 
         // When
         val specification = EventSpecification.filterBy(
-            location = null,
-            dateStart = null,
-            dateEnd = null,
             tags = tags,
             publishedOnly = false
         )
@@ -112,14 +116,11 @@ class EventSpecificationSimpleTest {
     }
 
     @Test
-    @DisplayName("Should create specification with empty tags list")
-    fun shouldCreateSpecificationWithEmptyTagsList() {
+    @DisplayName("Should create specification with search query")
+    fun shouldCreateSpecificationWithSearchQuery() {
         // When
         val specification = EventSpecification.filterBy(
-            location = null,
-            dateStart = null,
-            dateEnd = null,
-            tags = emptyList(),
+            searchQuery = "conference",
             publishedOnly = false
         )
 
@@ -131,17 +132,26 @@ class EventSpecificationSimpleTest {
     @DisplayName("Should create specification with all filters")
     fun shouldCreateSpecificationWithAllFilters() {
         // Given
-        val location = "San Francisco"
+        val category = "TECHNOLOGY"
+        val eventType = "VIRTUAL"
+        val city = "San Francisco"
         val startDate = LocalDate.of(2024, 6, 1)
         val endDate = LocalDate.of(2024, 6, 30)
         val tags = listOf("tech", "conference")
+        val searchQuery = "developer"
 
         // When
         val specification = EventSpecification.filterBy(
-            location = location,
+            category = category,
+            eventType = eventType,
+            city = city,
             dateStart = startDate,
             dateEnd = endDate,
             tags = tags,
+            searchQuery = searchQuery,
+            latitude = 37.7749,
+            longitude = -122.4194,
+            radius = 50,
             publishedOnly = true
         )
 
@@ -150,14 +160,11 @@ class EventSpecificationSimpleTest {
     }
 
     @Test
-    @DisplayName("Should create specification with single tag")
-    fun shouldCreateSpecificationWithSingleTag() {
+    @DisplayName("Should handle invalid category gracefully")
+    fun shouldHandleInvalidCategoryGracefully() {
         // When
         val specification = EventSpecification.filterBy(
-            location = null,
-            dateStart = null,
-            dateEnd = null,
-            tags = listOf("workshop"),
+            category = "INVALID_CATEGORY",
             publishedOnly = false
         )
 
@@ -166,36 +173,11 @@ class EventSpecificationSimpleTest {
     }
 
     @Test
-    @DisplayName("Should create specification with only start date")
-    fun shouldCreateSpecificationWithOnlyStartDate() {
-        // Given
-        val startDate = LocalDate.of(2024, 3, 15)
-
+    @DisplayName("Should handle invalid event type gracefully")
+    fun shouldHandleInvalidEventTypeGracefully() {
         // When
         val specification = EventSpecification.filterBy(
-            location = null,
-            dateStart = startDate,
-            dateEnd = null,
-            tags = null,
-            publishedOnly = false
-        )
-
-        // Then
-        assertNotNull(specification)
-    }
-
-    @Test
-    @DisplayName("Should create specification with only end date")
-    fun shouldCreateSpecificationWithOnlyEndDate() {
-        // Given
-        val endDate = LocalDate.of(2024, 12, 1)
-
-        // When
-        val specification = EventSpecification.filterBy(
-            location = null,
-            dateStart = null,
-            dateEnd = endDate,
-            tags = null,
+            eventType = "INVALID_TYPE",
             publishedOnly = false
         )
 

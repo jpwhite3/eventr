@@ -53,19 +53,51 @@ class EventController(
 
     @GetMapping
     fun getAllEvents(
-            @RequestParam(required = false) location: String?,
-            @RequestParam(required = false, name = "date_start")
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            dateStart: LocalDate?,
-            @RequestParam(required = false, name = "date_end")
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            dateEnd: LocalDate?,
-            @RequestParam(required = false) tags: List<String>?,
-            @RequestParam(defaultValue = "true") publishedOnly: Boolean,
-            sort: Sort
+            @RequestParam(required = false) category: String?,
+            @RequestParam(required = false) eventType: String?,
+            @RequestParam(required = false) city: String?,
+            @RequestParam(required = false) tags: String?,
+            @RequestParam(required = false) startDate: String?,
+            @RequestParam(required = false) endDate: String?,
+            @RequestParam(required = false) q: String?,
+            @RequestParam(required = false) latitude: Double?,
+            @RequestParam(required = false) longitude: Double?,
+            @RequestParam(required = false) radius: Int?,
+            @RequestParam(required = false) sortBy: String?,
+            @RequestParam(required = false) sortOrder: String?,
+            @RequestParam(defaultValue = "true") publishedOnly: Boolean
     ): List<EventDto> {
-        val spec: Specification<Event> =
-                EventSpecification.filterBy(location, dateStart, dateEnd, tags, publishedOnly)
+        // Parse tags from comma-separated string
+        val tagsList = tags?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
+        
+        // Parse dates
+        val dateStart = startDate?.let { LocalDate.parse(it) }
+        val dateEnd = endDate?.let { LocalDate.parse(it) }
+        
+        // Create sort configuration
+        val sortDirection = if (sortOrder?.lowercase() == "desc") Sort.Direction.DESC else Sort.Direction.ASC
+        val sortProperty = when (sortBy?.lowercase()) {
+            "name" -> "name"
+            "city" -> "city"
+            "category" -> "category"
+            "startdatetime", "date" -> "startDateTime"
+            else -> "startDateTime"
+        }
+        val sort = Sort.by(sortDirection, sortProperty)
+        
+        val spec: Specification<Event> = EventSpecification.filterBy(
+            category = category,
+            eventType = eventType,
+            city = city,
+            dateStart = dateStart,
+            dateEnd = dateEnd,
+            tags = tagsList,
+            searchQuery = q,
+            latitude = latitude,
+            longitude = longitude,
+            radius = radius,
+            publishedOnly = publishedOnly
+        )
         return eventRepository.findAll(spec, sort).map { convertToDto(it) }
     }
 
