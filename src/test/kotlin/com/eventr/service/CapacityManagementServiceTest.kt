@@ -198,6 +198,7 @@ class CapacityManagementServiceTest {
             currentWaitlistCount = 5
             maximumCapacity = 50
             currentRegistrations = 45
+            availableSpots = 5 // 50 - 45 = 5 available spots
         }
         val sessionReg = createSessionRegistration(registrationId, sessionId, SessionRegistrationStatus.WAITLIST)
         val promotionDto = WaitlistPromotionDto(
@@ -208,9 +209,9 @@ class CapacityManagementServiceTest {
         
         whenever(sessionCapacityRepository.findBySessionId(sessionId)).thenReturn(capacity)
         whenever(sessionRegistrationRepository.findByRegistrationIdAndSessionId(registrationId, sessionId)).thenReturn(sessionReg)
-        whenever(sessionRegistrationRepository.save(any<SessionRegistration>())).thenReturn(sessionReg.apply { 
-            status = SessionRegistrationStatus.REGISTERED 
-        })
+        whenever(sessionRegistrationRepository.save(any<SessionRegistration>())).thenReturn(
+            createSessionRegistration(registrationId, sessionId, SessionRegistrationStatus.REGISTERED)
+        )
         whenever(sessionRegistrationRepository.countBySessionIdAndStatus(sessionId, SessionRegistrationStatus.REGISTERED)).thenReturn(46L)
         whenever(sessionRegistrationRepository.countBySessionIdAndStatus(sessionId, SessionRegistrationStatus.WAITLIST)).thenReturn(4L)
         whenever(sessionCapacityRepository.save(any<SessionCapacity>())).thenReturn(capacity)

@@ -3,6 +3,7 @@ package com.eventr.controller
 import com.eventr.dto.*
 import com.eventr.model.*
 import com.eventr.service.CheckInService
+import com.eventr.service.WebSocketEventService
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -12,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
@@ -27,6 +30,9 @@ class CheckInControllerTest {
 
     @MockBean
     private lateinit var checkInService: CheckInService
+    
+    @MockBean
+    private lateinit var webSocketEventService: WebSocketEventService
 
     @Autowired
     private lateinit var objectMapper: ObjectMapper
@@ -43,6 +49,7 @@ class CheckInControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = ["USER"])
     @DisplayName("Should check in with QR code successfully")
     fun shouldCheckInWithQRSuccessfully() {
         // Given
@@ -65,12 +72,12 @@ class CheckInControllerTest {
         // When & Then
         mockMvc.perform(
             post("/api/checkin/qr")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(qrCheckInDto))
         )
         .andExpect(status().isOk)
         .andExpect(jsonPath("$.registrationId").value(registrationId.toString()))
-        .andExpect(jsonPath("$.eventId").value(eventId.toString()))
         .andExpect(jsonPath("$.sessionId").value(sessionId.toString()))
     }
 

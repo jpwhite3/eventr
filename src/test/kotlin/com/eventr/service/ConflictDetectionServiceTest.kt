@@ -90,7 +90,7 @@ class ConflictDetectionServiceTest {
         assertEquals(1, conflicts.size)
         
         val conflict = conflicts.first()
-        assertEquals("TIME_OVERLAP", conflict.type)
+        assertEquals(ConflictType.TIME_OVERLAP, conflict.type)
         assertEquals("Session Time Overlap", conflict.title)
         assertTrue(conflict.description!!.contains("Session 1"))
         assertTrue(conflict.description!!.contains("Session 2"))

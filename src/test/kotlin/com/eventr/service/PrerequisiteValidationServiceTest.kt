@@ -192,7 +192,10 @@ class PrerequisiteValidationServiceTest {
         
         whenever(sessionRepository.findByEventIdAndIsActiveTrue(eventId)).thenReturn(listOf(session1, session2))
         whenever(sessionDependencyRepository.detectCircularDependencies(any())).thenReturn(
-            listOf(arrayOf(session1.id.toString(), session2.id.toString()))
+            listOf(
+                arrayOf(session1.id.toString()),
+                arrayOf(session2.id.toString())
+            )
         )
         whenever(sessionRepository.findById(session1.id!!)).thenReturn(Optional.of(session1))
         whenever(sessionRepository.findById(session2.id!!)).thenReturn(Optional.of(session2))

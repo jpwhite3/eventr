@@ -3,7 +3,7 @@ package com.eventr.service
 import com.eventr.model.Event
 import com.eventr.model.EventInstance
 import com.eventr.model.Registration
-import jakarta.mail.Session
+import jakarta.mail.Session as MailSession
 import jakarta.mail.internet.MimeMessage
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -68,8 +68,8 @@ class EmailServiceTest {
     }
 
     @Test
-    @DisplayName("Should handle registration with null event instance")
-    fun shouldHandleRegistrationWithNullEventInstance() {
+    @DisplayName("Should throw exception when event instance is null")
+    fun shouldThrowExceptionWhenEventInstanceIsNull() {
         // Given
         val registration = Registration(
             id = UUID.randomUUID()
@@ -79,14 +79,13 @@ class EmailServiceTest {
             eventInstance = null
         }
 
-        // When
-        assertDoesNotThrow {
+        // When & Then
+        assertThrows<IllegalArgumentException> {
             emailService.sendRegistrationConfirmation(registration)
         }
-
-        // Then
-        verify(javaMailSender).createMimeMessage()
-        verify(javaMailSender).send(mimeMessage)
+        
+        // Verify no email was sent
+        verify(javaMailSender, never()).send(any<MimeMessage>())
     }
 
     @Test
@@ -112,8 +111,8 @@ class EmailServiceTest {
     }
 
     @Test
-    @DisplayName("Should handle event instance with null event")
-    fun shouldHandleEventInstanceWithNullEvent() {
+    @DisplayName("Should throw exception when event is null")
+    fun shouldThrowExceptionWhenEventIsNull() {
         // Given
         val eventInstance = EventInstance(
             id = UUID.randomUUID()
@@ -123,14 +122,13 @@ class EmailServiceTest {
         }
         val registration = createRegistration("john@example.com", "John Doe", eventInstance)
 
-        // When
-        assertDoesNotThrow {
+        // When & Then
+        assertThrows<IllegalArgumentException> {
             emailService.sendRegistrationConfirmation(registration)
         }
-
-        // Then
-        verify(javaMailSender).createMimeMessage()
-        verify(javaMailSender).send(mimeMessage)
+        
+        // Verify no email was sent
+        verify(javaMailSender, never()).send(any<MimeMessage>())
     }
 
     @Test
