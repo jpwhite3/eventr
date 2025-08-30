@@ -26,7 +26,6 @@ import {
   faUsers,
   faEye,
   faEdit,
-  faClone,
   faTrash,
   faPlus,
   faChartBar,

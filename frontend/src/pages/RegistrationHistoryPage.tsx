@@ -83,17 +83,7 @@ const RegistrationHistoryPage: React.FC = () => {
     setFilteredRegistrations(filtered);
   }, [registrations, searchQuery, statusFilter, dateFilter]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchRegistrations();
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    applyFilters();
-  }, [applyFilters]);
-
-  const fetchRegistrations = async () => {
+  const fetchRegistrations = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -131,7 +121,18 @@ const RegistrationHistoryPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchRegistrations();
+    }
+  }, [isAuthenticated, fetchRegistrations]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
 
 
   const formatDate = (dateString: string) => {
