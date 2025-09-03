@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import apiClient from '../api/apiClient';
 import {
   faCalendarAlt,
   faTicketAlt,
@@ -12,7 +13,8 @@ import {
   faPlus,
   faChartLine,
   faCalendarCheck,
-  faTrophy
+  faTrophy,
+  faSync
 } from '@fortawesome/free-solid-svg-icons';
 import './DashboardPage.css';
 
@@ -48,80 +50,97 @@ const DashboardPage: React.FC = () => {
     totalHoursAttended: 0
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchDashboardData();
-    }
-  }, [isAuthenticated]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       
-      // Mock data for demonstration
-      // In a real application, these would be API calls
-      const mockUpcomingEvents: Event[] = [
-        {
-          id: '1',
-          title: 'React Conference 2024',
-          description: 'Learn the latest React features and best practices',
-          startDateTime: '2024-03-15T09:00:00',
-          endDateTime: '2024-03-15T17:00:00',
-          location: 'San Francisco Convention Center',
-          totalCapacity: 500,
-          registeredCount: 387,
-          status: 'PUBLISHED',
-          imageUrl: 'https://via.placeholder.com/400x200?text=React+Conf',
-          registrationStatus: 'REGISTERED'
-        },
-        {
-          id: '2',
-          title: 'AI/ML Workshop',
-          description: 'Hands-on workshop on machine learning fundamentals',
-          startDateTime: '2024-03-20T10:00:00',
-          endDateTime: '2024-03-20T16:00:00',
-          location: 'Tech Hub Downtown',
-          totalCapacity: 50,
-          registeredCount: 42,
-          status: 'PUBLISHED',
-          imageUrl: 'https://via.placeholder.com/400x200?text=AI+Workshop',
-          registrationStatus: 'REGISTERED'
-        }
-      ];
+      if (!user?.id) {
+        setError('User information not available. Please try refreshing the page.');
+        return;
+      }
 
-      const mockRecentEvents: Event[] = [
-        {
-          id: '3',
-          title: 'Web Development Bootcamp',
-          description: 'Intensive 3-day bootcamp covering full-stack development',
-          startDateTime: '2024-02-10T09:00:00',
-          endDateTime: '2024-02-12T17:00:00',
-          location: 'Innovation Center',
-          totalCapacity: 30,
-          registeredCount: 28,
-          status: 'COMPLETED',
-          imageUrl: 'https://via.placeholder.com/400x200?text=Bootcamp',
-          registrationStatus: 'REGISTERED'
-        }
-      ];
+      // Fetch user's registrations from the API
+      const registrationsResponse = await apiClient.get(`/registrations/user/id/${user.id}`);
+      const userRegistrations = registrationsResponse.data || [];
 
-      const mockStats: DashboardStats = {
-        totalEventsRegistered: 8,
-        upcomingEvents: 2,
-        completedEvents: 5,
-        totalHoursAttended: 42
+      // Transform registrations to events and separate upcoming vs recent
+      const now = new Date();
+      const transformedEvents: Event[] = userRegistrations.map((reg: any) => ({
+        id: reg.eventInstance?.event?.id || reg.eventInstance?.id || reg.id,
+        title: reg.eventInstance?.event?.name || reg.eventInstance?.event?.title || 'Event',
+        description: reg.eventInstance?.event?.description || '',
+        startDateTime: reg.eventInstance?.event?.startDateTime || reg.eventInstance?.startDateTime || new Date().toISOString(),
+        endDateTime: reg.eventInstance?.event?.endDateTime || reg.eventInstance?.endDateTime || new Date().toISOString(),
+        location: reg.eventInstance?.event?.location || 'TBD',
+        totalCapacity: reg.eventInstance?.event?.maxCapacity || reg.eventInstance?.maxCapacity || 0,
+        registeredCount: reg.eventInstance?.currentRegistrations || 0,
+        status: reg.eventInstance?.event?.status || 'PUBLISHED',
+        imageUrl: reg.eventInstance?.event?.imageUrl || null,
+        registrationStatus: reg.status || 'REGISTERED'
+      }));
+
+      // Separate upcoming and recent events
+      const upcomingEvents = transformedEvents.filter(event => 
+        new Date(event.startDateTime) > now
+      ).sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
+
+      const recentEvents = transformedEvents.filter(event => 
+        new Date(event.startDateTime) <= now
+      ).sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime());
+
+      // Calculate real statistics
+      const totalEventsRegistered = transformedEvents.length;
+      const upcomingEventsCount = upcomingEvents.length;
+      const completedEventsCount = recentEvents.filter(event => 
+        new Date(event.endDateTime) <= now
+      ).length;
+
+      // Calculate total hours attended (estimate based on event durations)
+      const totalHoursAttended = recentEvents
+        .filter(event => new Date(event.endDateTime) <= now)
+        .reduce((total, event) => {
+          const start = new Date(event.startDateTime);
+          const end = new Date(event.endDateTime);
+          const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+          return total + hours;
+        }, 0);
+
+      const realStats: DashboardStats = {
+        totalEventsRegistered,
+        upcomingEvents: upcomingEventsCount,
+        completedEvents: completedEventsCount,
+        totalHoursAttended: Math.round(totalHoursAttended)
       };
 
-      setUpcomingEvents(mockUpcomingEvents);
-      setRecentEvents(mockRecentEvents);
-      setStats(mockStats);
+      setUpcomingEvents(upcomingEvents);
+      setRecentEvents(recentEvents);
+      setStats(realStats);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data. Please try refreshing the page.');
+      
+      // Fallback to empty data on error rather than mock data
+      setUpcomingEvents([]);
+      setRecentEvents([]);
+      setStats({
+        totalEventsRegistered: 0,
+        upcomingEvents: 0,
+        completedEvents: 0,
+        totalHoursAttended: 0
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchDashboardData();
+    }
+  }, [isAuthenticated, user, fetchDashboardData]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -171,6 +190,23 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="dashboard-container">
+      {/* Error Display */}
+      {error && (
+        <div className="alert alert-danger mb-4" role="alert">
+          <h5 className="alert-heading">Unable to Load Dashboard</h5>
+          <p className="mb-2">{error}</p>
+          <button 
+            className="btn btn-outline-danger btn-sm" 
+            onClick={() => {
+              setError(null);
+              fetchDashboardData();
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
       {/* Welcome Header */}
       <div className="welcome-section">
         <div className="welcome-content">
@@ -184,6 +220,18 @@ const DashboardPage: React.FC = () => {
             <FontAwesomeIcon icon={faPlus} className="me-2" />
             Discover Events
           </Link>
+          <button 
+            className="btn btn-outline-secondary ms-2" 
+            onClick={fetchDashboardData}
+            disabled={loading}
+          >
+            <FontAwesomeIcon 
+              icon={faSync} 
+              className="me-2" 
+              spin={loading}
+            />
+            Refresh
+          </button>
         </div>
       </div>
 
