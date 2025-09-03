@@ -6,11 +6,7 @@ import {
   CCardBody,
   CCardHeader,
   CButton,
-  CForm,
-  CFormInput,
-  CFormSelect,
-  CBadge,
-  CSpinner
+  CBadge
 } from '@coreui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -78,7 +74,7 @@ const EventListPage: React.FC = () => {
     apiClient.get('/events', { params })
       .then(response => {
         setEvents(response.data);
-        const uniqueCities = [...new Set(response.data.map((event: Event) => event.city))];
+        const uniqueCities = Array.from(new Set(response.data.map((event: Event) => event.city))) as string[];
         setCities(uniqueCities.sort());
         setError('');
       })
@@ -131,7 +127,9 @@ const EventListPage: React.FC = () => {
   if (loading && events.length === 0) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-        <CSpinner />
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
       </div>
     );
   }
@@ -148,17 +146,19 @@ const EventListPage: React.FC = () => {
               </h2>
             </CCardHeader>
             <CCardBody>
-              <CForm className="row g-3">
+              <form className="row g-3">
                 <CCol md={4}>
-                  <CFormInput
+                  <input
                     type="text"
+                    className="form-control"
                     placeholder="Search events..."
                     value={filters.search}
                     onChange={(e) => handleFilterChange('search', e.target.value)}
                   />
                 </CCol>
                 <CCol md={3}>
-                  <CFormSelect
+                  <select
+                    className="form-select"
                     value={filters.city}
                     onChange={(e) => handleFilterChange('city', e.target.value)}
                   >
@@ -166,17 +166,18 @@ const EventListPage: React.FC = () => {
                     {cities.map(city => (
                       <option key={city} value={city}>{city}</option>
                     ))}
-                  </CFormSelect>
+                  </select>
                 </CCol>
                 <CCol md={3}>
-                  <CFormSelect
+                  <select
+                    className="form-select"
                     value={filters.category}
                     onChange={(e) => handleFilterChange('category', e.target.value)}
                   >
                     {categories.map(category => (
                       <option key={category} value={category}>{category}</option>
                     ))}
-                  </CFormSelect>
+                  </select>
                 </CCol>
                 <CCol md={2}>
                   <CButton color="primary" onClick={fetchEvents} disabled={loading}>
@@ -184,7 +185,7 @@ const EventListPage: React.FC = () => {
                     {loading ? 'Searching...' : 'Search'}
                   </CButton>
                 </CCol>
-              </CForm>
+              </form>
             </CCardBody>
           </CCard>
         </CCol>

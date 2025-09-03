@@ -28,8 +28,7 @@ import {
   faUser,
   faSignOutAlt,
   faSignInAlt,
-  faUserPlus,
-  faCog
+  faUserPlus
 } from '@fortawesome/free-solid-svg-icons';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -251,14 +250,6 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
                     </span>
                   </CDropdownToggle>
                   <CDropdownMenu>
-                    <CDropdownItem>
-                      <FontAwesomeIcon icon={faUser} className="me-2" />
-                      Profile
-                    </CDropdownItem>
-                    <CDropdownItem>
-                      <FontAwesomeIcon icon={faCog} className="me-2" />
-                      Settings
-                    </CDropdownItem>
                     <CDropdownItem onClick={handleLogout} disabled={isLoading}>
                       <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
                       {isLoading ? 'Signing out...' : 'Sign Out'}
