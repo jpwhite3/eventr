@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ResourceDetailModal from './ResourceDetailModal';
 import {
   CRow,
   CCol,
@@ -86,6 +87,8 @@ const ResourceManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
     loadResources();
@@ -179,8 +182,13 @@ const ResourceManagement: React.FC = () => {
   });
 
   const handleViewResource = (resource: Resource) => {
-    // TODO: Implement resource details view
-    console.log('Viewing resource:', resource);
+    setSelectedResourceId(resource.id);
+    setShowDetailModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowDetailModal(false);
+    setSelectedResourceId(null);
   };
 
   if (loading) {
@@ -464,6 +472,12 @@ const ResourceManagement: React.FC = () => {
         </CCol>
       </CRow>
 
+      {/* Resource Detail Modal */}
+      <ResourceDetailModal
+        resourceId={selectedResourceId}
+        visible={showDetailModal}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };
