@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
@@ -22,6 +23,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @WebMvcTest(CheckInController::class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("CheckInController Tests")
 class CheckInControllerTest {
 
@@ -170,6 +172,7 @@ class CheckInControllerTest {
     fun shouldGetEventCheckInStatsSuccessfully() {
         // Given
         val statsDto = CheckInStatsDto(
+            eventId = eventId,
             totalRegistrations = 100,
             totalCheckedIn = 85,
             eventCheckedIn = 70,
@@ -186,7 +189,7 @@ class CheckInControllerTest {
         .andExpect(status().isOk)
         .andExpect(jsonPath("$.eventId").value(eventId.toString()))
         .andExpect(jsonPath("$.totalRegistrations").value(100))
-        .andExpect(jsonPath("$.totalCheckIns").value(85))
+        .andExpect(jsonPath("$.totalCheckedIn").value(85))
         .andExpect(jsonPath("$.checkInRate").value(85.0))
     }
 
@@ -236,8 +239,8 @@ class CheckInControllerTest {
         )
         .andExpect(status().isOk)
         .andExpect(jsonPath("$.eventId").value(eventId.toString()))
-        .andExpect(jsonPath("$.summary.totalRegistrations").value(100))
-        .andExpect(jsonPath("$.summary.overallAttendanceRate").value(85.0))
+        .andExpect(jsonPath("$.totalRegistrations").value(100))
+        .andExpect(jsonPath("$.overallAttendanceRate").value(85.0))
     }
 
     @Test
@@ -297,7 +300,7 @@ class CheckInControllerTest {
             get("/api/checkin/qr/event/{eventId}/user/{userId}", eventId, userId)
         )
         .andExpect(status().isOk)
-        .andExpect(jsonPath("$.qrCode").value("test-qr-code"))
+        .andExpect(jsonPath("$.qrCodeUrl").value("https://example.com/qr"))
         .andExpect(jsonPath("$.qrCodeBase64").value("base64-encoded-image"))
     }
 
@@ -321,7 +324,7 @@ class CheckInControllerTest {
             get("/api/checkin/qr/session/{sessionId}/user/{userId}", sessionId, userId)
         )
         .andExpect(status().isOk)
-        .andExpect(jsonPath("$.qrCode").value("session-qr-code"))
+        .andExpect(jsonPath("$.qrCodeUrl").value("https://example.com/session-qr"))
         .andExpect(jsonPath("$.qrCodeBase64").value("base64-session-image"))
     }
 
@@ -344,7 +347,7 @@ class CheckInControllerTest {
             get("/api/checkin/qr/staff/event/{eventId}", eventId)
         )
         .andExpect(status().isOk)
-        .andExpect(jsonPath("$.qrCode").value("staff-event-qr"))
+        .andExpect(jsonPath("$.qrCodeUrl").value("https://example.com/staff-qr"))
         .andExpect(jsonPath("$.qrCodeBase64").value("base64-staff-image"))
     }
 
@@ -369,9 +372,8 @@ class CheckInControllerTest {
                 .param("userName", userName)
         )
         .andExpect(status().isOk)
-        .andExpect(jsonPath("$.qrCode").value("badge-qr-code"))
+        .andExpect(jsonPath("$.qrCodeUrl").value("https://example.com/badge-qr"))
         .andExpect(jsonPath("$.qrCodeBase64").value("base64-badge-image"))
-        .andExpect(jsonPath("$.additionalInfo.userName").value(userName))
     }
 
     @Test

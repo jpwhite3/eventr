@@ -69,6 +69,7 @@ data class BulkCheckInDto(
 )
 
 data class CheckInStatsDto(
+    var eventId: UUID? = null,
     var totalRegistrations: Int = 0,
     var totalCheckedIn: Int = 0,
     var eventCheckedIn: Int = 0,

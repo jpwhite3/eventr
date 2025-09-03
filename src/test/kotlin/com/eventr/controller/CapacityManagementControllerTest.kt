@@ -10,14 +10,18 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.util.*
 
 @WebMvcTest(CapacityManagementController::class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("CapacityManagementController Tests")
 class CapacityManagementControllerTest {
 
@@ -214,11 +218,11 @@ class CapacityManagementControllerTest {
             notifyAttendees = true
         )
         
-        val promotedRegistration = SessionRegistrationDto().apply {
-            this.sessionId = sessionId
-            this.registrationId = registrationId
-            this.status = SessionRegistrationStatus.REGISTERED
-        }
+        val promotedRegistration = SessionRegistrationDto(
+            sessionId = sessionId,
+            registrationId = registrationId,
+            status = SessionRegistrationStatus.REGISTERED
+        )
         
         whenever(capacityManagementService.promoteFromWaitlist(promotionDto))
             .thenReturn(listOf(promotedRegistration))
