@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import CoreUILayout from './components/layout/CoreUILayout';
 import HomePage from './pages/HomePage';
+import EventListPage from './pages/EventListPage';
 import DashboardPage from './pages/DashboardPage';
 import RegistrationHistoryPage from './pages/RegistrationHistoryPage';
 import EventDetailsPage from './pages/EventDetailsPage';
@@ -23,6 +24,7 @@ function App(): React.JSX.Element {
       <CoreUILayout>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/events" element={<EventListPage />} />
           <Route path="/events/:id" element={<EventDetailsPage />} />
           
           {/* Protected Routes - Require Authentication */}
