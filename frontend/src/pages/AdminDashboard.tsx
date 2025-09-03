@@ -30,7 +30,8 @@ import {
   faPlus,
   faChartBar,
   faUserCheck,
-  faDollarSign
+  faDollarSign,
+  faClone
 } from '@fortawesome/free-solid-svg-icons';
 import apiClient from '../api/apiClient';
 
@@ -58,6 +59,7 @@ const AdminDashboard: React.FC = () => {
     const [events, setEvents] = useState<Event[]>([]);
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [cloning, setCloning] = useState<string | null>(null);
 
     const fetchEvents = (): void => {
         apiClient.get('/events', { params: { publishedOnly: false } })
@@ -94,12 +96,23 @@ const AdminDashboard: React.FC = () => {
             .catch(error => console.error("Failed to publish event", error));
     };
 
-    // Clone functionality disabled - endpoint not implemented
-    // const handleClone = (eventId: string): void => {
-    //     apiClient.post(`/events/${eventId}/clone`)
-    //         .then(() => fetchEvents())
-    //         .catch(error => console.error("Failed to clone event", error));
-    // };
+    const handleClone = async (eventId: string): Promise<void> => {
+        try {
+            setCloning(eventId);
+            await apiClient.post(`/events/${eventId}/clone`);
+            
+            // Show success notification
+            alert('Event cloned successfully! The cloned event has been created with DRAFT status.');
+            
+            // Refresh the events list to show the new clone
+            await fetchEvents();
+        } catch (error) {
+            console.error('Failed to clone event:', error);
+            alert('Failed to clone event. Please try again.');
+        } finally {
+            setCloning(null);
+        }
+    };
 
     const handleDelete = (eventId: string): void => {
         if (window.confirm('Are you sure you want to delete this event?')) {
@@ -304,14 +317,18 @@ const AdminDashboard: React.FC = () => {
                                                         Publish
                                                     </CButton>
                                                     
-                                                    {/* Clone button disabled - endpoint not implemented */}
-                                                    {/* <CButton 
+                                                    <CButton 
                                                         color="outline-success" 
                                                         size="sm" 
                                                         onClick={() => handleClone(event.id)}
+                                                        disabled={cloning === event.id}
+                                                        title="Clone Event"
                                                     >
-                                                        <FontAwesomeIcon icon={faClone} />
-                                                    </CButton> */}
+                                                        <FontAwesomeIcon 
+                                                            icon={faClone} 
+                                                            spin={cloning === event.id}
+                                                        />
+                                                    </CButton>
                                                     
                                                     <Link to={`/admin/events/${event.id}/attendance`}>
                                                         <CButton color="outline-warning" size="sm">
