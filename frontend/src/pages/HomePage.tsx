@@ -268,7 +268,7 @@ const HomePage: React.FC = () => {
                     <div className="row align-items-center">
                         <div className="col-md-8">
                             <h1 className="display-4 fw-bold mb-3">Corporate Events</h1>
-                            <p className="lead">Discover and register for company events</p>
+                            <p className="lead">Browse and register for company events</p>
                         </div>
                         <div className="col-md-4">
                             <div className="bg-white p-4 rounded shadow">

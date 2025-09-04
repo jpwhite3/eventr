@@ -118,7 +118,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ eventId, registrationId, 
                     <ul className="list-unstyled text-muted small">
                         <li>• Show this code to event staff for quick check-in</li>
                         <li>• Save it to your phone's photos for offline access</li>
-                        <li>• Print it out if you prefer paper tickets</li>
+                        <li>• Print it out if you prefer a paper confirmation</li>
                     </ul>
                 </div>
 

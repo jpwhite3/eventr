@@ -380,7 +380,7 @@ const RegistrationHistoryPage: React.FC = () => {
           {(!searchQuery && statusFilter === 'ALL' && dateFilter === 'ALL') && (
             <Link to="/" className="btn btn-primary">
               <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
-              Discover Events
+              Browse Events
             </Link>
           )}
         </div>

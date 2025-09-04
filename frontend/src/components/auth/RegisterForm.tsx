@@ -82,7 +82,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onSwitchToLogin 
       <div className="auth-form register-form">
         <div className="auth-header">
           <h2>Create Account</h2>
-          <p>Join EventR to discover and manage events</p>
+          <p>Join EventR to browse and manage events</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form-fields">

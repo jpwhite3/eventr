@@ -218,7 +218,7 @@ const DashboardPage: React.FC = () => {
         <div className="quick-actions">
           <Link to="/events" className="btn btn-primary">
             <FontAwesomeIcon icon={faPlus} className="me-2" />
-            Discover Events
+            Browse Events
           </Link>
           <button 
             className="btn btn-outline-secondary ms-2" 
@@ -343,7 +343,7 @@ const DashboardPage: React.FC = () => {
             <p className="text-muted">You haven't registered for any upcoming events yet.</p>
             <Link to="/events" className="btn btn-primary">
               <FontAwesomeIcon icon={faPlus} className="me-2" />
-              Discover Events
+              Browse Events
             </Link>
           </div>
         )}
