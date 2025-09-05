@@ -1,4 +1,22 @@
-# Getting Started with Create React App
+# Eventr - Corporate Event Management Frontend
+
+A React-based frontend for corporate event management with QR code check-in functionality.
+
+## Features
+
+- **Event Management**: Create, view, and manage corporate events
+- **User Registration**: Attendee registration with profile management
+- **QR Code Check-in**: Generate QR codes for attendees and scan them for quick check-in
+- **Real-time Updates**: WebSocket integration for live notifications and status updates
+- **Administrative Dashboard**: Staff interfaces for event management and attendee tracking
+- **Responsive Design**: Mobile-friendly interface for both attendees and staff
+
+## Architecture
+
+- **Frontend**: React 18 with TypeScript
+- **Backend**: Spring Boot (port 8080)
+- **Real-time**: STOMP over SockJS WebSockets
+- **Testing**: Jest + React Testing Library with comprehensive coverage
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
@@ -9,7 +27,7 @@ In the project directory, you can run:
 ### `npm start`
 
 Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Open [http://localhost:3002](http://localhost:3002) to view it in your browser (configured to run on port 3002).
 
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
@@ -18,6 +36,10 @@ You may also see any lint errors in the console.
 
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+
+### `npm run test:ci`
+
+Runs tests with coverage reporting and without watch mode (suitable for CI/CD pipelines).
 
 ### `npm run build`
 
