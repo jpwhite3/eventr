@@ -361,4 +361,50 @@ class EmailService(private val mailSender: JavaMailSender) {
             """.trimIndent()
         } else ""
     }
+    
+    @Throws(MessagingException::class)
+    fun sendCustomEmail(registration: Registration, subject: String, body: String) {
+        val message: MimeMessage = mailSender.createMimeMessage()
+        val helper = MimeMessageHelper(message, true, "UTF-8")
+        
+        registration.userEmail?.let { helper.setTo(it) } ?: return
+        helper.setSubject(subject)
+        helper.setText(buildCustomEmail(registration, subject, body), true)
+        
+        mailSender.send(message)
+    }
+    
+    private fun buildCustomEmail(registration: Registration, subject: String, body: String): String {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .header { background: #007bff; color: white; padding: 20px; text-align: center; }
+                    .content { padding: 20px; }
+                    .footer { background: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>📧 $subject</h1>
+                </div>
+                
+                <div class="content">
+                    <h2>Hello ${registration.userName ?: "Event Attendee"},</h2>
+                    
+                    <div>
+                        ${body.replace("\n", "<br>")}
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <p>This message was sent from Eventr Event Management System.</p>
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
+    }
 }

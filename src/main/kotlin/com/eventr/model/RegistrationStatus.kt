@@ -2,5 +2,8 @@ package com.eventr.model
 
 enum class RegistrationStatus {
     REGISTERED,
-    CANCELLED
+    CANCELLED,
+    CHECKED_IN,
+    NO_SHOW,
+    WAITLISTED
 }

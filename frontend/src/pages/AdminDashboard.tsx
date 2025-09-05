@@ -441,8 +441,8 @@ const AdminDashboard: React.FC = () => {
                                                         />
                                                     </CButton>
                                                     
-                                                    <Link to={`/admin/events/${event.id}/attendance`}>
-                                                        <CButton color="outline-warning" size="sm">
+                                                    <Link to={`/admin/events/${event.id}/registrations`}>
+                                                        <CButton color="outline-warning" size="sm" title="Manage Registrations">
                                                             <FontAwesomeIcon icon={faUserCheck} />
                                                         </CButton>
                                                     </Link>

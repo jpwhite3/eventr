@@ -1,6 +1,7 @@
 package com.eventr.repository
 
 import com.eventr.model.Registration
+import com.eventr.model.EventInstance
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -26,4 +27,6 @@ interface RegistrationRepository : JpaRepository<Registration, UUID> {
     
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.eventInstance.event.id = :eventId")
     fun countByEventId(@Param("eventId") eventId: UUID): Long
+    
+    fun findByEventInstance(eventInstance: EventInstance): List<Registration>
 }

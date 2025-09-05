@@ -28,7 +28,9 @@ describe('WebSocketService', () => {
       deactivate: jest.fn(),
       subscribe: jest.fn().mockReturnValue(mockSubscription),
       publish: jest.fn(),
-      connected: false,
+      get connected() { return this._connected; },
+      set connected(value) { this._connected = value; },
+      _connected: false,
       active: false,
       onConnect: jest.fn(),
       onStompError: jest.fn(),
@@ -60,7 +62,7 @@ describe('WebSocketService', () => {
       const connectPromise = webSocketService.connect();
       
       // Simulate successful connection
-      mockStompClient.connected = true;
+      Object.defineProperty(mockStompClient, 'connected', { value: true, writable: true });
       const connectCallback = mockStompClient.onConnect;
       if (connectCallback) {
         connectCallback({} as any);
@@ -85,7 +87,7 @@ describe('WebSocketService', () => {
     });
 
     it('should disconnect from WebSocket server', () => {
-      mockStompClient.connected = true;
+      Object.defineProperty(mockStompClient, 'connected', { value: true, writable: true });
       
       webSocketService.disconnect();
       
@@ -121,7 +123,7 @@ describe('WebSocketService', () => {
 
   describe('Subscription Management', () => {
     beforeEach(() => {
-      mockStompClient.connected = true;
+      Object.defineProperty(mockStompClient, 'connected', { value: true, writable: true });
     });
 
     it('should create subscription with callback', () => {
@@ -146,7 +148,15 @@ describe('WebSocketService', () => {
       const messageHandler = mockStompClient.subscribe.mock.calls[0][1];
       
       // Simulate receiving a message
-      messageHandler({ body: JSON.stringify(testMessage) });
+      messageHandler({ 
+        body: JSON.stringify(testMessage),
+        command: '',
+        headers: {},
+        ack: jest.fn(),
+        nack: jest.fn(),
+        binaryBody: new Uint8Array(),
+        isBinaryBody: false
+      });
       
       expect(callback).toHaveBeenCalledWith(testMessage);
     });
@@ -160,7 +170,15 @@ describe('WebSocketService', () => {
       const messageHandler = mockStompClient.subscribe.mock.calls[0][1];
       
       // Simulate malformed JSON
-      messageHandler({ body: 'invalid json' });
+      messageHandler({ 
+        body: 'invalid json',
+        command: '',
+        headers: {},
+        ack: jest.fn(),
+        nack: jest.fn(),
+        binaryBody: new Uint8Array(),
+        isBinaryBody: false
+      });
       
       expect(consoleError).toHaveBeenCalledWith('Error parsing WebSocket message:', expect.any(Error));
       expect(callback).not.toHaveBeenCalled();
@@ -186,7 +204,7 @@ describe('WebSocketService', () => {
 
   describe('Event-Specific Subscriptions', () => {
     beforeEach(() => {
-      mockStompClient.connected = true;
+      Object.defineProperty(mockStompClient, 'connected', { value: true, writable: true });
     });
 
     it('should create event updates subscription', () => {
@@ -255,7 +273,7 @@ describe('WebSocketService', () => {
 
   describe('Global Subscriptions', () => {
     beforeEach(() => {
-      mockStompClient.connected = true;
+      Object.defineProperty(mockStompClient, 'connected', { value: true, writable: true });
     });
 
     it('should create all events subscription', () => {
@@ -293,7 +311,7 @@ describe('WebSocketService', () => {
 
   describe('Message Publishing', () => {
     beforeEach(() => {
-      mockStompClient.connected = true;
+      Object.defineProperty(mockStompClient, 'connected', { value: true, writable: true });
     });
 
     it('should publish messages when connected', () => {
@@ -309,7 +327,7 @@ describe('WebSocketService', () => {
     });
 
     it('should not publish messages when disconnected', () => {
-      mockStompClient.connected = false;
+      Object.defineProperty(mockStompClient, 'connected', { value: false, writable: true });
       const consoleWarn = jest.spyOn(console, 'warn').mockImplementation();
       
       const destination = '/app/test';
@@ -330,15 +348,15 @@ describe('WebSocketService', () => {
     });
 
     it('should return connecting state when active but not connected', () => {
-      mockStompClient.active = true;
-      mockStompClient.connected = false;
+      Object.defineProperty(mockStompClient, 'active', { value: true, writable: true });
+      Object.defineProperty(mockStompClient, 'connected', { value: false, writable: true });
       webSocketService.client = mockStompClient;
       
       expect(webSocketService.getConnectionState()).toBe('CONNECTING');
     });
 
     it('should return connected state when connected', () => {
-      mockStompClient.connected = true;
+      Object.defineProperty(mockStompClient, 'connected', { value: true, writable: true });
       webSocketService.isConnected = true;
       
       expect(webSocketService.getConnectionStatus()).toBe(true);

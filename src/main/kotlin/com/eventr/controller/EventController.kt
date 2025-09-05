@@ -4,10 +4,14 @@ import com.eventr.dto.EventCreateDto
 import com.eventr.dto.EventDto
 import com.eventr.dto.EventInstanceDto
 import com.eventr.dto.EventUpdateDto
+import com.eventr.dto.RegistrationDto
 import com.eventr.model.Event
 import com.eventr.model.EventStatus
+import com.eventr.model.RegistrationStatus
 import com.eventr.repository.EventRepository
+import com.eventr.repository.RegistrationRepository
 import com.eventr.service.DynamoDbService
+import com.eventr.service.EmailService
 import com.eventr.service.EventSpecification
 import java.time.LocalDate
 import java.util.UUID
@@ -22,6 +26,8 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/events")
 class EventController(
         private val eventRepository: EventRepository,
+        private val registrationRepository: RegistrationRepository,
+        private val emailService: EmailService,
         private val dynamoDbService: DynamoDbService
 ) {
 
@@ -161,5 +167,154 @@ class EventController(
             dynamoDbService.saveFormDefinition(clonedEvent.id.toString(), formDefinition)
         }
         return convertToDto(clonedEvent)
+    }
+
+    @GetMapping("/{eventId}/registrations")
+    fun getEventRegistrations(@PathVariable eventId: UUID): List<RegistrationDto> {
+        val event = eventRepository.findById(eventId).orElseThrow()
+        val registrations = event.instances?.flatMap { instance ->
+            registrationRepository.findByEventInstance(instance)
+        } ?: emptyList()
+        
+        return registrations.map { registration ->
+            RegistrationDto().apply {
+                BeanUtils.copyProperties(registration, this)
+                eventInstanceId = registration.eventInstance?.id
+            }
+        }
+    }
+
+    data class BulkActionRequest(
+        val action: String,
+        val registrationIds: List<UUID>,
+        val reason: String? = null,
+        val emailSubject: String? = null,
+        val emailBody: String? = null
+    )
+
+    @PostMapping("/{eventId}/registrations/bulk")
+    fun performBulkAction(
+        @PathVariable eventId: UUID,
+        @RequestBody request: BulkActionRequest
+    ): ResponseEntity<Map<String, Any>> {
+        val registrations = registrationRepository.findAllById(request.registrationIds)
+        val results = mutableMapOf<String, Int>()
+        
+        when (request.action.lowercase()) {
+            "approve" -> {
+                registrations.forEach { registration ->
+                    if (registration.status == RegistrationStatus.WAITLISTED) {
+                        registration.status = RegistrationStatus.REGISTERED
+                        registrationRepository.save(registration)
+                    }
+                }
+                results["approved"] = registrations.count { it.status == RegistrationStatus.REGISTERED }
+            }
+            
+            "cancel" -> {
+                registrations.forEach { registration ->
+                    registration.status = RegistrationStatus.CANCELLED
+                    registrationRepository.save(registration)
+                    
+                    // Send cancellation email if reason provided
+                    request.reason?.let { reason ->
+                        try {
+                            emailService.sendCancellationNotification(registration, reason)
+                        } catch (e: Exception) {
+                            // Log but don't fail the operation
+                            println("Failed to send cancellation email: ${e.message}")
+                        }
+                    }
+                }
+                results["cancelled"] = registrations.size
+            }
+            
+            "checkin" -> {
+                registrations.forEach { registration ->
+                    if (registration.status == RegistrationStatus.REGISTERED) {
+                        registration.status = RegistrationStatus.CHECKED_IN
+                        registrationRepository.save(registration)
+                    }
+                }
+                results["checkedIn"] = registrations.count { it.status == RegistrationStatus.CHECKED_IN }
+            }
+            
+            "email" -> {
+                request.emailSubject?.let { subject ->
+                    request.emailBody?.let { body ->
+                        var emailsSent = 0
+                        registrations.forEach { registration ->
+                            try {
+                                emailService.sendCustomEmail(registration, subject, body)
+                                emailsSent++
+                            } catch (e: Exception) {
+                                println("Failed to send email to ${registration.userEmail}: ${e.message}")
+                            }
+                        }
+                        results["emailsSent"] = emailsSent
+                    }
+                }
+            }
+        }
+        
+        return ResponseEntity.ok(mapOf(
+            "action" to request.action,
+            "processed" to registrations.size,
+            "results" to results
+        ))
+    }
+
+    data class EmailRequest(
+        val recipientType: String, // "selected", "all", "status"
+        val statusFilter: String? = null,
+        val selectedRegistrationIds: List<UUID>? = null,
+        val subject: String,
+        val body: String
+    )
+
+    @PostMapping("/{eventId}/email")
+    fun sendEventEmail(
+        @PathVariable eventId: UUID,
+        @RequestBody request: EmailRequest
+    ): ResponseEntity<Map<String, Any>> {
+        val event = eventRepository.findById(eventId).orElseThrow()
+        val allRegistrations = event.instances?.flatMap { instance ->
+            registrationRepository.findByEventInstance(instance)
+        } ?: emptyList()
+        
+        val targetRegistrations = when (request.recipientType) {
+            "selected" -> {
+                request.selectedRegistrationIds?.let { ids ->
+                    allRegistrations.filter { it.id in ids }
+                } ?: emptyList()
+            }
+            "all" -> allRegistrations
+            "status" -> {
+                request.statusFilter?.let { status ->
+                    allRegistrations.filter { it.status == RegistrationStatus.valueOf(status) }
+                } ?: emptyList()
+            }
+            else -> emptyList()
+        }
+        
+        var emailsSent = 0
+        var emailsFailed = 0
+        
+        targetRegistrations.forEach { registration ->
+            try {
+                emailService.sendCustomEmail(registration, request.subject, request.body)
+                emailsSent++
+            } catch (e: Exception) {
+                emailsFailed++
+                println("Failed to send email to ${registration.userEmail}: ${e.message}")
+            }
+        }
+        
+        return ResponseEntity.ok(mapOf(
+            "totalRecipients" to targetRegistrations.size,
+            "emailsSent" to emailsSent,
+            "emailsFailed" to emailsFailed,
+            "recipientType" to request.recipientType
+        ))
     }
 }

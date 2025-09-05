@@ -18,6 +18,7 @@ import ResourceManagement from './components/ResourceManagement';
 import CheckInPage from './pages/CheckInPage';
 import UserProfilePage from './pages/UserProfilePage';
 import UserSettingsPage from './pages/UserSettingsPage';
+import EventRegistrationManagement from './pages/EventRegistrationManagement';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App(): React.JSX.Element {
@@ -42,6 +43,7 @@ function App(): React.JSX.Element {
           <Route path="/admin/event/new" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><EventBuilder /></ProtectedRoute>} />
           <Route path="/admin/event/:id/edit" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><EventBuilder /></ProtectedRoute>} />
           <Route path="/admin/events/:id/attendance" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><AttendancePage /></ProtectedRoute>} />
+          <Route path="/admin/events/:eventId/registrations" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><EventRegistrationManagement /></ProtectedRoute>} />
           
           {/* Analytics Routes - Protected */}
           <Route path="/analytics/executive" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><ExecutiveDashboard /></ProtectedRoute>} />
