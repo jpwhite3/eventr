@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import webSocketService, { WebSocketMessage } from '../services/WebSocketService';
+import webSocketService from '../services/WebSocketService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBell,
@@ -119,7 +119,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     return () => {
       subscriptions.forEach(sub => sub.unsubscribe());
     };
-  }, [isAuthenticated, user?.id]);
+  }, [isAuthenticated, user?.id, addNotification]);
 
   const addNotification = (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotification: Notification = {
