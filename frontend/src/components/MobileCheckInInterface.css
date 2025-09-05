@@ -1,0 +1,661 @@
+/* Mobile Check-In Interface Styles */
+
+.mobile-checkin-interface {
+  padding: 1rem;
+  max-width: 100%;
+  margin: 0 auto;
+  background: #f8f9fa;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Offline Banner */
+.offline-banner {
+  background: linear-gradient(135deg, #ff9500, #ff6b00);
+  color: white;
+  text-align: center;
+  padding: 0.75rem;
+  margin: -1rem -1rem 1rem -1rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.offline-queue-info {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.offline-clear-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.7rem;
+  transition: background 0.3s ease;
+}
+
+.offline-clear-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Sync Banner */
+.sync-banner {
+  background: linear-gradient(135deg, #2196f3, #1976d2);
+  color: white;
+  text-align: center;
+  padding: 0.75rem;
+  margin: -1rem -1rem 1rem -1rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.sync-now-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  border-radius: 20px;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.sync-now-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.sync-now-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Enhanced Stats Header */
+.mobile-stats-header {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 12px;
+  background: #f8f9fa;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.stat-item.primary {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.stat-item.info {
+  background: #e8f5e8;
+  border-color: #4caf50;
+}
+
+.stat-item.success {
+  background: #fff3e0;
+  border-color: #ff9800;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.progress-bar {
+  background: #e9ecef;
+  border-radius: 8px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  border-radius: 8px;
+  transition: width 0.5s ease;
+}
+
+.staff-info {
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Status Messages */
+.alert {
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideDown 0.3s ease;
+}
+
+.alert-error {
+  background: #ffebee;
+  color: #c62828;
+  border-left: 4px solid #f44336;
+}
+
+.alert-success {
+  background: #e8f5e8;
+  color: #2e7d32;
+  border-left: 4px solid #4caf50;
+}
+
+/* Last Check-in Card */
+.last-checkin-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.15);
+  border: 2px solid #4caf50;
+  animation: pulseGreen 0.5s ease;
+}
+
+.checkin-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.checkin-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #4caf50, #8bc34a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.checkin-details {
+  flex: 1;
+}
+
+.checkin-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.checkin-email {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.checkin-time {
+  color: #4caf50;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.scan-button, .manual-button {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  min-height: 100px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.scan-button:hover, .manual-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.scan-button.active {
+  background: #e3f2fd;
+  border-color: #2196f3;
+  color: #1976d2;
+}
+
+.manual-button.active {
+  background: #fff3e0;
+  border-color: #ff9800;
+  color: #f57c00;
+}
+
+.button-icon {
+  font-size: 2rem;
+}
+
+.button-text {
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Scanner Container */
+.scanner-container {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.scanner-instructions {
+  margin-top: 1rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Manual Search */
+.manual-search-container {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-input-container {
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.search-results {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  gap: 1rem;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.result-info {
+  flex: 1;
+}
+
+.result-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.result-email {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.result-status {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.checkin-result-button {
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  min-width: 80px;
+}
+
+.checkin-result-button:hover {
+  background: #45a049;
+}
+
+.checkin-result-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Recent Check-ins */
+.recent-checkins {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  padding: 1.25rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.section-header h6 {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.refresh-indicator {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.empty-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #666;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+
+.checkin-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.checkin-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 1rem;
+}
+
+.checkin-item:last-child {
+  border-bottom: none;
+}
+
+.checkin-avatar-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2196f3, #64b5f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.checkin-info {
+  flex: 1;
+}
+
+.checkin-name-small {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.checkin-time-small {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.checkin-method {
+  font-size: 1.2rem;
+  opacity: 0.7;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e3f2fd;
+  border-top: 4px solid #2196f3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGreen {
+  0% {
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.15);
+  }
+  50% {
+    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.15);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .mobile-checkin-interface {
+    padding: 0.75rem;
+  }
+  
+  .stats-row {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+  }
+  
+  .stat-item {
+    padding: 0.75rem;
+  }
+  
+  .stat-number {
+    font-size: 1.5rem;
+  }
+  
+  .stat-label {
+    font-size: 0.7rem;
+  }
+  
+  .action-buttons {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .scan-button, .manual-button {
+    min-height: 80px;
+    padding: 1rem;
+  }
+  
+  .button-icon {
+    font-size: 1.5rem;
+  }
+  
+  .button-text {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+  }
+  
+  .last-checkin-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .checkin-avatar {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (pointer: coarse) {
+  .scan-button, .manual-button {
+    min-height: 110px;
+  }
+  
+  .search-input {
+    padding: 1.25rem;
+    font-size: 1.1rem;
+  }
+  
+  .checkin-result-button {
+    padding: 0.75rem 1.25rem;
+    min-width: 90px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .mobile-checkin-interface {
+    background: #121212;
+    color: #e0e0e0;
+  }
+  
+  .mobile-stats-header,
+  .last-checkin-card,
+  .scanner-container,
+  .manual-search-container,
+  .recent-checkins {
+    background: #1e1e1e;
+    border-color: #333;
+  }
+  
+  .scan-button, .manual-button {
+    background: #1e1e1e;
+    border-color: #333;
+    color: #e0e0e0;
+  }
+  
+  .search-input {
+    background: #1e1e1e;
+    border-color: #333;
+    color: #e0e0e0;
+  }
+}

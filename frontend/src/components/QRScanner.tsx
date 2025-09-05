@@ -27,6 +27,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
     const [offlineQueue, setOfflineQueue] = useState<string[]>([]);
     const [checkInResult, setCheckInResult] = useState<CheckInResult | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+    const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
     const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
@@ -48,13 +50,26 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
         };
     }, [isActive]);
 
-    // Load offline queue on mount
+    // Load offline queue and enumerate cameras on mount
     useEffect(() => {
         const savedQueue = localStorage.getItem('qr_offline_queue');
         if (savedQueue) {
             setOfflineQueue(JSON.parse(savedQueue));
         }
+        
+        // Enumerate available cameras
+        enumerateCameras();
     }, []);
+
+    const enumerateCameras = async () => {
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const cameras = devices.filter(device => device.kind === 'videoinput');
+            setAvailableCameras(cameras);
+        } catch (error) {
+            console.log('Could not enumerate cameras:', error);
+        }
+    };
 
     // Auto-sync when coming back online
     useEffect(() => {
@@ -73,24 +88,78 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
             setError(null);
             setIsScanning(true);
 
+            // Enhanced mobile-friendly camera constraints
             const constraints = {
                 video: {
-                    facingMode: 'environment', // Use back camera if available
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
+                    facingMode: facingMode, // Use selected camera
+                    width: { 
+                        min: 320,
+                        ideal: 640,
+                        max: 1280
+                    },
+                    height: { 
+                        min: 240,
+                        ideal: 480,
+                        max: 720
+                    },
+                    frameRate: { ideal: 30, max: 30 },
+                    aspectRatio: 4/3,
+                    focusMode: 'continuous',
+                    exposureMode: 'continuous',
+                    whiteBalanceMode: 'continuous'
                 }
             };
 
-            const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+            let mediaStream;
+            
+            try {
+                // Try with enhanced constraints first
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (advancedErr) {
+                // Fallback to basic constraints if advanced features aren't supported
+                const basicConstraints = {
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                };
+                mediaStream = await navigator.mediaDevices.getUserMedia(basicConstraints);
+            }
+
             setStream(mediaStream);
 
             if (videoRef.current) {
                 videoRef.current.srcObject = mediaStream;
-                videoRef.current.play();
-                startScanning();
+                
+                // Enhanced video element setup for mobile
+                videoRef.current.setAttribute('playsinline', 'true');
+                videoRef.current.setAttribute('webkit-playsinline', 'true');
+                videoRef.current.muted = true;
+                videoRef.current.autoplay = true;
+                
+                await videoRef.current.play();
+                
+                // Start scanning after video is ready
+                videoRef.current.addEventListener('loadedmetadata', () => {
+                    startScanning();
+                });
             }
         } catch (err) {
-            const errorMessage = `Camera access denied or unavailable: ${err}`;
+            let errorMessage = 'Camera access denied or unavailable';
+            
+            if (err instanceof Error) {
+                if (err.name === 'NotAllowedError') {
+                    errorMessage = 'Camera permission denied. Please allow camera access and try again.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage = 'No camera found. Please ensure your device has a camera.';
+                } else if (err.name === 'NotSupportedError') {
+                    errorMessage = 'Camera not supported by your browser.';
+                } else {
+                    errorMessage = `Camera error: ${err.message}`;
+                }
+            }
+            
             setError(errorMessage);
             onError?.(errorMessage);
             setIsScanning(false);
@@ -256,6 +325,21 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
         return deviceId;
     };
 
+    const switchCamera = async () => {
+        if (availableCameras.length < 2) return;
+        
+        const newFacingMode = facingMode === 'environment' ? 'user' : 'environment';
+        setFacingMode(newFacingMode);
+        
+        // Restart camera with new facing mode
+        if (isScanning) {
+            stopCamera();
+            setTimeout(() => {
+                startCamera();
+            }, 100);
+        }
+    };
+
     const handleManualInput = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -306,10 +390,14 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
                             muted
                             style={{
                                 width: '100%',
-                                maxWidth: '400px',
+                                maxWidth: '100%',
                                 height: 'auto',
-                                border: '2px solid #007bff',
-                                borderRadius: '8px'
+                                minHeight: '250px',
+                                maxHeight: '400px',
+                                border: '3px solid #007bff',
+                                borderRadius: '16px',
+                                objectFit: 'cover',
+                                backgroundColor: '#000'
                             }}
                         />
                         
@@ -329,7 +417,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
                         </div>
                         
                         <div className="scanner-status text-center mt-3">
-                            <div className="d-flex justify-content-center gap-2 flex-wrap">
+                            <div className="d-flex justify-content-center gap-2 flex-wrap mb-3">
                                 {isScanning ? (
                                     <span className="badge bg-success">
                                         📹 Scanning for QR codes...
@@ -362,6 +450,19 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
                                     </span>
                                 )}
                             </div>
+                            
+                            {/* Mobile Camera Controls */}
+                            {availableCameras.length > 1 && isScanning && (
+                                <div className="camera-controls">
+                                    <button 
+                                        className="btn btn-outline-primary btn-sm me-2"
+                                        onClick={switchCamera}
+                                        title={`Switch to ${facingMode === 'environment' ? 'front' : 'back'} camera`}
+                                    >
+                                        🔄 {facingMode === 'environment' ? '🤳' : '📷'} Switch Camera
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </>
                 )}
@@ -452,14 +553,53 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
                     padding-top: 1rem;
                 }
 
+                .camera-controls {
+                    margin-top: 0.5rem;
+                }
+
+                .camera-controls button {
+                    font-size: 0.9rem;
+                    padding: 0.5rem 1rem;
+                    border-radius: 20px;
+                    font-weight: 500;
+                }
+
                 @media (max-width: 768px) {
+                    .scanner-container {
+                        max-width: 100%;
+                        padding: 0;
+                    }
+
                     .scanner-frame {
                         width: 200px;
                         height: 200px;
                     }
                     
                     .scanner-video {
-                        max-width: 300px;
+                        max-width: 100%;
+                        border-radius: 12px;
+                        border-width: 2px;
+                    }
+
+                    .camera-controls button {
+                        font-size: 0.85rem;
+                        padding: 0.4rem 0.8rem;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .scanner-frame {
+                        width: 150px;
+                        height: 150px;
+                    }
+                    
+                    .camera-controls {
+                        margin-top: 1rem;
+                    }
+
+                    .camera-controls button {
+                        width: 100%;
+                        max-width: 200px;
                     }
                 }
                 `
