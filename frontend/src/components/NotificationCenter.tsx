@@ -54,6 +54,28 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: `${Date.now()}-${Math.random()}`,
+      timestamp: Date.now(),
+      read: false
+    };
+
+    setNotifications(prev => {
+      const updated = [newNotification, ...prev].slice(0, maxNotifications);
+      
+      // Auto-hide notifications after 5 seconds if specified
+      if (notification.autoHide) {
+        setTimeout(() => {
+          setNotifications(current => current.filter(n => n.id !== newNotification.id));
+        }, 5000);
+      }
+      
+      return updated;
+    });
+  }, [maxNotifications]);
+
   // Set up WebSocket subscriptions for notifications
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
@@ -120,28 +142,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       subscriptions.forEach(sub => sub.unsubscribe());
     };
   }, [isAuthenticated, user?.id, addNotification]);
-
-  const addNotification = (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: `${Date.now()}-${Math.random()}`,
-      timestamp: Date.now(),
-      read: false
-    };
-
-    setNotifications(prev => {
-      const updated = [newNotification, ...prev].slice(0, maxNotifications);
-      
-      // Auto-hide notifications after 5 seconds if specified
-      if (notification.autoHide) {
-        setTimeout(() => {
-          removeNotification(newNotification.id);
-        }, 5000);
-      }
-      
-      return updated;
-    });
-  };
 
   const removeNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));

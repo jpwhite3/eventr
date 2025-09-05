@@ -56,8 +56,8 @@ const DashboardPage: React.FC = () => {
   const [liveUpdates, setLiveUpdates] = useState<any[]>([]);
   const [showUpdates, setShowUpdates] = useState(false);
   
-  // Real-time notifications
-  const { notifications, clearNotifications, isConnected } = useRealTimeNotifications();
+  // Real-time notifications - available for future use
+  const { isConnected } = useRealTimeNotifications();
 
   const fetchDashboardData = useCallback(async () => {
     try {

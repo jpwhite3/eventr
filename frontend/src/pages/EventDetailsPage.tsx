@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import apiClient from '../api/apiClient';
@@ -58,7 +58,9 @@ const EventDetailsPage: React.FC = () => {
         autoConnect: true
     });
 
-    const fetchEventDetails = () => {
+    const fetchEventDetails = useCallback(() => {
+        if (!id) return;
+        
         apiClient.get(`/events/${id}`)
             .then(response => {
                 setEvent(response.data);
@@ -69,11 +71,11 @@ const EventDetailsPage: React.FC = () => {
             .catch(error => {
                 console.error("There was an error fetching the event details!", error);
             });
-    };
+    }, [id]);
 
     useEffect(() => {
         fetchEventDetails();
-    }, [id]);
+    }, [fetchEventDetails]);
 
     // Set up WebSocket subscriptions manually
     useEffect(() => {
@@ -98,7 +100,7 @@ const EventDetailsPage: React.FC = () => {
         return () => {
             subscriptions.forEach(sub => sub.unsubscribe());
         };
-    }, [id]);
+    }, [id, fetchEventDetails]);
 
     if (!event) {
         return (
