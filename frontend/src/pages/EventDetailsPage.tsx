@@ -161,19 +161,6 @@ const EventDetailsPage: React.FC = () => {
         document.body.removeChild(link);
     };
 
-    const handleShareEvent = () => {
-        // TODO: Implement share functionality
-        if (navigator.share) {
-            navigator.share({
-                title: event.name,
-                text: event.description,
-                url: window.location.href,
-            });
-        } else {
-            navigator.clipboard.writeText(window.location.href);
-            alert('Event link copied to clipboard!');
-        }
-    };
 
     const handleContactOrganizer = () => {
         if (event.organizerEmail) {
@@ -452,24 +439,12 @@ const EventDetailsPage: React.FC = () => {
                                         🎯 Register Now
                                     </button>
                                     
-                                    <div className="row g-2">
-                                        <div className="col-6">
-                                            <button 
-                                                className="btn btn-outline-primary btn-sm w-100"
-                                                onClick={handleAddToCalendar}
-                                            >
-                                                📅 Add to Calendar
-                                            </button>
-                                        </div>
-                                        <div className="col-6">
-                                            <button 
-                                                className="btn btn-outline-secondary btn-sm w-100"
-                                                onClick={handleShareEvent}
-                                            >
-                                                📤 Share Event
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <button 
+                                        className="btn btn-outline-primary btn-sm w-100"
+                                        onClick={handleAddToCalendar}
+                                    >
+                                        📅 Add to Calendar
+                                    </button>
                                 </div>
 
                                 {event.instances && event.instances.length > 0 && (
