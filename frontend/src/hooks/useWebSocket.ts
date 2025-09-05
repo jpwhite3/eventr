@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { webSocketService, WebSocketCallbacks, WebSocketUpdate } from '../services/WebSocketService';
+import webSocketService, { WebSocketCallbacks, WebSocketMessage } from '../services/WebSocketService';
 
 interface UseWebSocketOptions {
   eventId?: string;
@@ -9,7 +9,7 @@ interface UseWebSocketOptions {
 interface WebSocketState {
   isConnected: boolean;
   connectionState: string;
-  lastUpdate: WebSocketUpdate | null;
+  lastUpdate: WebSocketMessage | null;
   attendanceCount: number;
   registrationCount: number;
   capacityInfo: {
@@ -37,17 +37,17 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
     }
   });
 
-  const [notifications, setNotifications] = useState<WebSocketUpdate[]>([]);
+  const [notifications, setNotifications] = useState<WebSocketMessage[]>([]);
 
   const updateConnectionState = useCallback(() => {
     setState(prev => ({
       ...prev,
-      isConnected: webSocketService.isConnected(),
+      isConnected: webSocketService.getConnectionStatus(),
       connectionState: webSocketService.getConnectionState()
     }));
   }, []);
 
-  const addNotification = useCallback((update: WebSocketUpdate) => {
+  const addNotification = useCallback((update: WebSocketMessage) => {
     setNotifications(prev => [...prev.slice(-9), update]); // Keep last 10 notifications
   }, []);
 
@@ -134,13 +134,19 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
     }
   }), [eventId, updateConnectionState, addNotification]);
 
-  const connect = useCallback(() => {
-    webSocketService.connect();
-  }, []);
+  const connect = useCallback(async () => {
+    try {
+      await webSocketService.connect();
+      updateConnectionState();
+    } catch (error) {
+      console.error('Failed to connect:', error);
+    }
+  }, [updateConnectionState]);
 
   const disconnect = useCallback(() => {
     webSocketService.disconnect();
-  }, []);
+    updateConnectionState();
+  }, [updateConnectionState]);
 
   const clearNotifications = useCallback(() => {
     setNotifications([]);
@@ -158,7 +164,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
     webSocketService.setCallbacks(callbacks);
 
     if (autoConnect) {
-      webSocketService.connect();
+      connect();
     }
 
     if (eventId) {
@@ -174,7 +180,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
         webSocketService.unsubscribeFromEvent();
       }
     };
-  }, [eventId, autoConnect, updateConnectionState, callbacks]);
+  }, [eventId, autoConnect, connect, updateConnectionState, callbacks]);
 
   return {
     ...state,

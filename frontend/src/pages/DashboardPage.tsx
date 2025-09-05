@@ -17,6 +17,8 @@ import {
   faSync
 } from '@fortawesome/free-solid-svg-icons';
 import './DashboardPage.css';
+import { useRealTimeNotifications } from '../hooks/useWebSocket';
+import webSocketService from '../services/WebSocketService';
 
 interface Event {
   id: string;
@@ -51,6 +53,11 @@ const DashboardPage: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [liveUpdates, setLiveUpdates] = useState<any[]>([]);
+  const [showUpdates, setShowUpdates] = useState(false);
+  
+  // Real-time notifications
+  const { notifications, clearNotifications, isConnected } = useRealTimeNotifications();
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -142,6 +149,66 @@ const DashboardPage: React.FC = () => {
     }
   }, [isAuthenticated, user, fetchDashboardData]);
 
+  // Set up real-time subscriptions for user's registered events
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+
+    const subscriptions = [
+      // Listen for registration updates (when user registers/unregisters for events)
+      webSocketService.subscribeToAllRegistrations((message) => {
+        // Check if this relates to the current user's registrations
+        if (message.registrationData?.userId === user.id) {
+          setLiveUpdates(prev => [...prev.slice(-9), {
+            ...message,
+            icon: message.registrationType === 'NEW' ? '🎉' : 
+                  message.registrationType === 'CANCELLED' ? '❌' : '📝',
+            title: message.registrationType === 'NEW' ? 'New Registration' :
+                   message.registrationType === 'CANCELLED' ? 'Registration Cancelled' : 
+                   'Registration Updated',
+            eventName: message.registrationData?.eventName || 'Unknown Event'
+          }]);
+          
+          // Refresh dashboard data when user's registrations change
+          fetchDashboardData();
+        }
+      }),
+
+      // Listen for updates to events the user is registered for
+      webSocketService.subscribeToAllEvents((message) => {
+        // Check if this is an event the user is registered for
+        const userEventIds = [...upcomingEvents, ...recentEvents].map(e => e.id);
+        if (message.eventId && userEventIds.includes(message.eventId)) {
+          setLiveUpdates(prev => [...prev.slice(-9), {
+            ...message,
+            icon: '🔄',
+            title: 'Event Updated',
+            eventName: upcomingEvents.find(e => e.id === message.eventId)?.title || 
+                      recentEvents.find(e => e.id === message.eventId)?.title || 'Event'
+          }]);
+          
+          // Refresh dashboard data when registered events are updated
+          if (message.updateType === 'DETAILS_CHANGED' || message.updateType === 'TIME_CHANGED') {
+            fetchDashboardData();
+          }
+        }
+      }),
+
+      // Listen for user-specific notifications
+      webSocketService.subscribeToUserNotifications(user.id, (message) => {
+        setLiveUpdates(prev => [...prev.slice(-9), {
+          ...message,
+          icon: '💬',
+          title: 'Personal Notification'
+        }]);
+      })
+    ];
+
+    return () => {
+      // Clean up subscriptions
+      subscriptions.forEach(sub => sub.unsubscribe());
+    };
+  }, [isAuthenticated, user?.id, upcomingEvents, recentEvents, fetchDashboardData]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -216,6 +283,20 @@ const DashboardPage: React.FC = () => {
           </p>
         </div>
         <div className="quick-actions">
+          <div className="live-status me-3">
+            <span className={`badge ${isConnected ? 'bg-success' : 'bg-secondary'}`}>
+              {isConnected ? '🟢 Live' : '⚫ Offline'}
+            </span>
+            {liveUpdates.length > 0 && (
+              <button
+                className="btn btn-sm btn-outline-info ms-2"
+                onClick={() => setShowUpdates(!showUpdates)}
+              >
+                🔔 {liveUpdates.length} updates
+              </button>
+            )}
+          </div>
+          
           <Link to="/events" className="btn btn-primary">
             <FontAwesomeIcon icon={faPlus} className="me-2" />
             Browse Events
@@ -234,6 +315,41 @@ const DashboardPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Live Updates Feed */}
+      {showUpdates && liveUpdates.length > 0 && (
+        <div className="section">
+          <div className="section-header">
+            <h3>📡 Live Updates</h3>
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setLiveUpdates([])}
+            >
+              Clear Updates
+            </button>
+          </div>
+          
+          <div className="live-updates-container">
+            {liveUpdates.slice(-5).reverse().map((update, index) => (
+              <div key={index} className="alert alert-light border-start border-primary border-3">
+                <div className="d-flex align-items-center">
+                  <span className="me-2">{update.icon}</span>
+                  <div className="flex-grow-1">
+                    <strong>{update.title}</strong>
+                    {update.eventName && (
+                      <span className="text-muted ms-2">• {update.eventName}</span>
+                    )}
+                    <br />
+                    <small className="text-muted">
+                      {new Date(update.timestamp).toLocaleString()}
+                    </small>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="stats-grid">

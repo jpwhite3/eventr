@@ -238,8 +238,8 @@
     "location": "Central Park Amphitheater Gate",
     "verificationCode": "JAZZ2024-015-AMANDA",
     "isVerified": true,
-    "notes": "Ticket purchased at gate",
-    "metadata": "{\"gate_purchase\":true,\"payment_method\":\"credit_card\",\"wristband\":true}",
+    "notes": "Registered at event entrance",
+    "metadata": "{\"late_registration\":true,\"wristband\":true}",
     "isSynced": true,
     "syncedAt": "2024-11-15T18:30:45"
   },

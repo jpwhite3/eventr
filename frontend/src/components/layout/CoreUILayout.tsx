@@ -34,6 +34,7 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import AuthModal from '../auth/AuthModal';
+import NotificationCenter from '../NotificationCenter';
 
 interface CoreUILayoutProps {
   children: React.ReactNode;
@@ -241,7 +242,15 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
           </CHeaderToggler>
           
           <CHeaderNav className="ms-auto">
-            <div className="d-flex align-items-center">
+            <div className="d-flex align-items-center gap-3">
+              {isAuthenticated && (
+                <NotificationCenter 
+                  position="bottom-right" 
+                  maxNotifications={20}
+                  showBadge={true}
+                />
+              )}
+              
               {isAuthenticated ? (
                 <CDropdown variant="nav-item">
                   <CDropdownToggle className="d-flex align-items-center text-decoration-none">
