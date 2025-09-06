@@ -16,8 +16,8 @@ interface CalendarEvent {
   id: string;
   name: string;
   description?: string;
-  startDateTime: string;
-  endDateTime: string;
+  startDateTime?: string;
+  endDateTime?: string;
   location?: string;
   organizerEmail?: string;
 }
@@ -93,7 +93,8 @@ const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
     }
   };
 
-  const formatEventTime = (dateTime: string) => {
+  const formatEventTime = (dateTime?: string) => {
+    if (!dateTime) return 'Date TBD';
     try {
       return formatInTimeZone(new Date(dateTime), userTimeZone, 'PPP pp');
     } catch {
@@ -102,6 +103,7 @@ const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
   };
 
   const generateGoogleCalendarUrl = () => {
+    if (!event.startDateTime || !event.endDateTime) return '#';
     const startDate = new Date(event.startDateTime);
     const endDate = new Date(event.endDateTime);
     
@@ -122,6 +124,7 @@ const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
   };
 
   const generateOutlookCalendarUrl = () => {
+    if (!event.startDateTime || !event.endDateTime) return '#';
     const startDate = new Date(event.startDateTime);
     const endDate = new Date(event.endDateTime);
 
