@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, momentLocalizer, View, Event as CalendarEvent } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -7,7 +7,6 @@ import {
   faCalendar, 
   faList, 
   faFilter,
-  faDownload,
   faSync,
   faEye
 } from '@fortawesome/free-solid-svg-icons';
@@ -60,13 +59,13 @@ const CalendarViewPage: React.FC = () => {
     if (user) {
       loadUserEvents();
     }
-  }, [user]);
+  }, [user, loadUserEvents]);
 
   useEffect(() => {
     applyFilters();
-  }, [events, filters]);
+  }, [applyFilters]);
 
-  const loadUserEvents = async () => {
+  const loadUserEvents = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
@@ -78,9 +77,9 @@ const CalendarViewPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...events];
 
     if (filters.eventType) {
@@ -97,7 +96,7 @@ const CalendarViewPage: React.FC = () => {
     }
 
     setFilteredEvents(filtered);
-  };
+  }, [events, filters]);
 
   const transformEventsForCalendar = (): CalendarEventData[] => {
     return filteredEvents.map(event => ({

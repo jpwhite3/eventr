@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { format, formatInTimeZone } from 'date-fns-tz';
+import React, { useState, useEffect, useCallback } from 'react';
+import { formatInTimeZone } from 'date-fns-tz';
 import apiClient from '../api/apiClient';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faCalendarPlus, 
-  faDownload, 
   faLink, 
   faCopy,
   faExternalLinkAlt,
@@ -62,9 +61,9 @@ const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
     if (userId && options.includes('subscribe')) {
       loadCalendarSubscription();
     }
-  }, [userId, options]);
+  }, [userId, options, loadCalendarSubscription]);
 
-  const loadCalendarSubscription = async () => {
+  const loadCalendarSubscription = useCallback(async () => {
     if (!userId) return;
     
     try {
@@ -73,7 +72,7 @@ const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
     } catch (error) {
       console.log('No existing calendar subscription found');
     }
-  };
+  }, [userId]);
 
   const generateSubscriptionUrl = async () => {
     if (!userId) {

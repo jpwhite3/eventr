@@ -154,17 +154,6 @@ const EventDetailsPage: React.FC = () => {
         }
     };
 
-    const handleAddToCalendar = () => {
-        const calendarUrl = `http://localhost:8080/api/calendar/event/${id}.ics`;
-        
-        // Create a temporary link element and trigger download
-        const link = document.createElement('a');
-        link.href = calendarUrl;
-        link.download = `event-${event.name?.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.ics`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
 
 
     const handleContactOrganizer = () => {
