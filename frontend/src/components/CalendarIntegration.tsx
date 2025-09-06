@@ -12,7 +12,7 @@ import {
   faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 
-interface Event {
+interface CalendarEvent {
   id: string;
   name: string;
   description?: string;
@@ -23,7 +23,7 @@ interface Event {
 }
 
 interface CalendarIntegrationProps {
-  event: Event;
+  event: CalendarEvent;
   userId?: string;
   options?: ('google' | 'outlook' | 'ics' | 'subscribe' | 'apple')[];
   userTimezone?: string;

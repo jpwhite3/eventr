@@ -14,7 +14,7 @@ interface EventInstance {
     location: string;
 }
 
-interface Event {
+interface EventData {
     id: string;
     name: string;
     description?: string;
@@ -49,7 +49,7 @@ const EventDetailsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const [event, setEvent] = useState<Event | null>(null);
+    const [event, setEvent] = useState<EventData | null>(null);
     const [selectedInstance, setSelectedInstance] = useState('');
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [liveNotifications, setLiveNotifications] = useState<WebSocketMessage[]>([]);
