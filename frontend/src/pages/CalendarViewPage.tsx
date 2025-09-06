@@ -55,16 +55,6 @@ const CalendarViewPage: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      loadUserEvents();
-    }
-  }, [user, loadUserEvents]);
-
-  useEffect(() => {
-    applyFilters();
-  }, [applyFilters]);
-
   const loadUserEvents = useCallback(async () => {
     if (!user) return;
     
@@ -97,6 +87,16 @@ const CalendarViewPage: React.FC = () => {
 
     setFilteredEvents(filtered);
   }, [events, filters]);
+
+  useEffect(() => {
+    if (user) {
+      loadUserEvents();
+    }
+  }, [user, loadUserEvents]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
   const transformEventsForCalendar = (): CalendarEventData[] => {
     return filteredEvents.map(event => ({
