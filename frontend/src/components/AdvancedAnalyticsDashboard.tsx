@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
+import ExportManagerComponent from './ExportManager';
 
 interface AdvancedAnalyticsDashboardProps {
     eventId: string;
@@ -117,27 +118,7 @@ const AdvancedAnalyticsDashboard: React.FC<AdvancedAnalyticsDashboardProps> = ({
         }
     };
 
-    const handleExportReport = async () => {
-        try {
-            const response = await apiClient.get(`/analytics/events/${eventId}/export`, {
-                params: { format: exportFormat, range: dateRange },
-                responseType: 'blob'
-            });
-
-            // Create download link
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `analytics-report-${eventId}.${exportFormat}`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Failed to export report:', error);
-            alert('Failed to export analytics report');
-        }
-    };
+    const [showExportPanel, setShowExportPanel] = useState(false);
 
     const getUtilizationColor = (rate: number) => {
         if (rate >= 90) return 'success';
@@ -201,25 +182,35 @@ const AdvancedAnalyticsDashboard: React.FC<AdvancedAnalyticsDashboardProps> = ({
                         <option value="90d">Last 90 Days</option>
                         <option value="all">All Time</option>
                     </select>
-                    <div className="btn-group">
-                        <select 
-                            className="form-select"
-                            value={exportFormat}
-                            onChange={(e) => setExportFormat(e.target.value as any)}
-                        >
-                            <option value="pdf">PDF</option>
-                            <option value="excel">Excel</option>
-                            <option value="csv">CSV</option>
-                        </select>
-                        <button className="btn btn-success" onClick={handleExportReport}>
-                            📥 Export
-                        </button>
-                    </div>
+                    <button 
+                        className="btn btn-success" 
+                        onClick={() => setShowExportPanel(!showExportPanel)}
+                        disabled={!eventAnalytics}
+                    >
+                        📥 Export
+                    </button>
                     <button className="btn btn-outline-primary" onClick={loadAnalyticsData}>
                         🔄 Refresh
                     </button>
                 </div>
             </div>
+
+            {/* Export Panel */}
+            {showExportPanel && eventAnalytics && (
+                <div className="mb-4">
+                    <ExportManagerComponent
+                        analyticsData={{
+                            ...eventAnalytics,
+                            sessionAnalytics,
+                            registrationAnalytics,
+                            predictiveAnalytics,
+                            resourceAnalytics
+                        }}
+                        eventName={eventAnalytics.eventName}
+                        dateRange={dateRange}
+                    />
+                </div>
+            )}
 
             {/* Navigation Tabs */}
             <ul className="nav nav-tabs mb-4">

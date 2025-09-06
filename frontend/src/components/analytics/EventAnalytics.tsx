@@ -16,10 +16,6 @@ import {
   CProgress,
   CWidgetStatsF,
   CBadge,
-  CDropdown,
-  CDropdownToggle,
-  CDropdownMenu,
-  CDropdownItem
 } from '@coreui/react';
 import {
   Chart as ChartJS,
@@ -44,6 +40,7 @@ import {
   faSync,
   faDownload
 } from '@fortawesome/free-solid-svg-icons';
+import ExportManagerComponent from '../ExportManager';
 
 // Register ChartJS components
 ChartJS.register(
@@ -101,6 +98,7 @@ const EventAnalytics: React.FC = () => {
   const [analyticsData, setAnalyticsData] = useState<EventAnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(true);
+  const [showExportPanel, setShowExportPanel] = useState(false);
 
   // Load events list on component mount
   useEffect(() => {
@@ -254,17 +252,14 @@ const EventAnalytics: React.FC = () => {
             Refresh
           </CButton>
           
-          <CDropdown>
-            <CDropdownToggle color="primary" disabled={!analyticsData}>
-              <FontAwesomeIcon icon={faDownload} className="me-1" />
-              Export
-            </CDropdownToggle>
-            <CDropdownMenu>
-              <CDropdownItem>PDF Report</CDropdownItem>
-              <CDropdownItem>Excel Export</CDropdownItem>
-              <CDropdownItem>CSV Data</CDropdownItem>
-            </CDropdownMenu>
-          </CDropdown>
+          <CButton
+            color="primary"
+            disabled={!analyticsData}
+            onClick={() => setShowExportPanel(!showExportPanel)}
+          >
+            <FontAwesomeIcon icon={faDownload} className="me-1" />
+            Export
+          </CButton>
         </div>
       </div>
 
@@ -296,6 +291,17 @@ const EventAnalytics: React.FC = () => {
             </p>
           </CCardBody>
         </CCard>
+      )}
+
+      {/* Export Panel */}
+      {showExportPanel && analyticsData && (
+        <div className="mb-4">
+          <ExportManagerComponent
+            analyticsData={analyticsData}
+            eventName={selectedEvent?.name || 'Event Analytics'}
+            dateRange="all"
+          />
+        </div>
       )}
 
       {analyticsData && !loading && (
@@ -384,22 +390,24 @@ const EventAnalytics: React.FC = () => {
                   <h5 className="card-title mb-0">Registration Timeline</h5>
                 </CCardHeader>
                 <CCardBody>
-                  <Line 
-                    data={registrationTrendData} 
-                    options={{
-                      responsive: true,
-                      plugins: {
-                        legend: {
-                          position: 'top' as const,
+                  <div id="registration-trend-chart">
+                    <Line 
+                      data={registrationTrendData} 
+                      options={{
+                        responsive: true,
+                        plugins: {
+                          legend: {
+                            position: 'top' as const,
+                          },
                         },
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                          },
                         },
-                      },
-                    }}
-                  />
+                      }}
+                    />
+                  </div>
                 </CCardBody>
               </CCard>
             </CCol>
@@ -410,17 +418,19 @@ const EventAnalytics: React.FC = () => {
                   <h5 className="card-title mb-0">Check-in Methods</h5>
                 </CCardHeader>
                 <CCardBody>
-                  <Doughnut 
-                    data={checkInMethodsData}
-                    options={{
-                      responsive: true,
-                      plugins: {
-                        legend: {
-                          position: 'bottom' as const,
+                  <div id="checkin-methods-chart">
+                    <Doughnut 
+                      data={checkInMethodsData}
+                      options={{
+                        responsive: true,
+                        plugins: {
+                          legend: {
+                            position: 'bottom' as const,
+                          },
                         },
-                      },
-                    }}
-                  />
+                      }}
+                    />
+                  </div>
                 </CCardBody>
               </CCard>
             </CCol>
@@ -434,7 +444,8 @@ const EventAnalytics: React.FC = () => {
                   <h5 className="card-title mb-0">Session Performance</h5>
                 </CCardHeader>
                 <CCardBody className="p-0">
-                  <CTable hover responsive>
+                  <div id="session-analytics-chart">
+                    <CTable hover responsive>
                     <CTableHead>
                       <CTableRow>
                         <CTableHeaderCell>Session Name</CTableHeaderCell>
@@ -482,7 +493,8 @@ const EventAnalytics: React.FC = () => {
                         </CTableRow>
                       ))}
                     </CTableBody>
-                  </CTable>
+                    </CTable>
+                  </div>
                 </CCardBody>
               </CCard>
             </CCol>

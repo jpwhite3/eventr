@@ -5,6 +5,8 @@ import apiClient from '../api/apiClient';
 import RealTimeStats from '../components/RealTimeStats';
 import { useWebSocket } from '../hooks/useWebSocket';
 import webSocketService, { WebSocketMessage } from '../services/WebSocketService';
+import CalendarIntegration from '../components/CalendarIntegration';
+import { useAuth } from '../hooks/useAuth';
 
 interface EventInstance {
     id: string;
@@ -46,6 +48,7 @@ interface Event {
 const EventDetailsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [event, setEvent] = useState<Event | null>(null);
     const [selectedInstance, setSelectedInstance] = useState('');
     const [showFullDescription, setShowFullDescription] = useState(false);
@@ -441,12 +444,12 @@ const EventDetailsPage: React.FC = () => {
                                         🎯 Register Now
                                     </button>
                                     
-                                    <button 
-                                        className="btn btn-outline-primary btn-sm w-100"
-                                        onClick={handleAddToCalendar}
-                                    >
-                                        📅 Add to Calendar
-                                    </button>
+                                    <CalendarIntegration
+                                        event={event}
+                                        userId={user?.id}
+                                        options={['google', 'outlook', 'ics', 'subscribe', 'apple']}
+                                        userTimezone={Intl.DateTimeFormat().resolvedOptions().timeZone}
+                                    />
                                 </div>
 
                                 {event.instances && event.instances.length > 0 && (

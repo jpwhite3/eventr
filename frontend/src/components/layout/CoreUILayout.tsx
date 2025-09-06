@@ -19,6 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome,
   faCalendarAlt,
+  faCalendar,
   faUsers,
   faChartBar,
   faBuilding,
@@ -107,6 +108,12 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
         name: 'My Registrations',
         to: '/my-registrations',
         icon: <FontAwesomeIcon icon={faClipboardCheck} className="nav-icon" />,
+      },
+      {
+        component: CNavItem,
+        name: 'My Calendar',
+        to: '/calendar',
+        icon: <FontAwesomeIcon icon={faCalendar} className="nav-icon" />,
       }
     ] : []),
     {

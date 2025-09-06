@@ -18,6 +18,7 @@ import ResourceManagement from './components/ResourceManagement';
 import CheckInPage from './pages/CheckInPage';
 import UserProfilePage from './pages/UserProfilePage';
 import UserSettingsPage from './pages/UserSettingsPage';
+import CalendarViewPage from './pages/CalendarViewPage';
 import EventRegistrationManagement from './pages/EventRegistrationManagement';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
@@ -33,6 +34,7 @@ function App(): React.JSX.Element {
           {/* Protected Routes - Require Authentication */}
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/my-registrations" element={<ProtectedRoute><RegistrationHistoryPage /></ProtectedRoute>} />
+          <Route path="/calendar" element={<ProtectedRoute><CalendarViewPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><UserSettingsPage /></ProtectedRoute>} />
           <Route path="/events/:id/register" element={<ProtectedRoute><RegistrationPage /></ProtectedRoute>} />
