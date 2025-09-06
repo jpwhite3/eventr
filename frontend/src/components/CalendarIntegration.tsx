@@ -56,13 +56,6 @@ const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
     }
   }, [userTimezone]);
 
-  useEffect(() => {
-    // Load user's calendar subscription if available
-    if (userId && options.includes('subscribe')) {
-      loadCalendarSubscription();
-    }
-  }, [userId, options, loadCalendarSubscription]);
-
   const loadCalendarSubscription = useCallback(async () => {
     if (!userId) return;
     
@@ -73,6 +66,13 @@ const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
       console.log('No existing calendar subscription found');
     }
   }, [userId]);
+
+  useEffect(() => {
+    // Load user's calendar subscription if available
+    if (userId && options.includes('subscribe')) {
+      loadCalendarSubscription();
+    }
+  }, [userId, options, loadCalendarSubscription]);
 
   const generateSubscriptionUrl = async () => {
     if (!userId) {
