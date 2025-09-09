@@ -21,6 +21,22 @@ class DevSecurityConfig {
         return http
             .cors { it.disable() } // CORS is handled by WebConfig
             .csrf { it.disable() } // Disable CSRF for development
+            
+            // Basic security headers for development (less restrictive than production)
+            .headers { headers ->
+                headers
+                    // Basic XSS protection
+                    .xssProtection { xss ->
+                        xss.and()
+                    }
+                    // Prevent MIME sniffing
+                    .contentTypeOptions { }
+                    // Allow frames for development tools
+                    .frameOptions { frameOptions ->
+                        frameOptions.sameOrigin()
+                    }
+            }
+            
             .authorizeHttpRequests { authz ->
                 authz
                     // Allow all GET requests for development
