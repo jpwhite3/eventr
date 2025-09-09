@@ -11,7 +11,7 @@ import com.eventr.model.RegistrationStatus
 import com.eventr.repository.EventRepository
 import com.eventr.repository.RegistrationRepository
 import com.eventr.service.DynamoDbService
-import com.eventr.service.EmailService
+import com.eventr.service.EmailNotificationService
 import com.eventr.service.EventSpecification
 import java.time.LocalDate
 import java.util.UUID
@@ -28,7 +28,7 @@ import com.eventr.util.SecureLogger
 class EventController(
         private val eventRepository: EventRepository,
         private val registrationRepository: RegistrationRepository,
-        private val emailService: EmailService,
+        private val emailNotificationService: EmailNotificationService,
         private val dynamoDbService: DynamoDbService
 ) {
     
@@ -222,7 +222,7 @@ class EventController(
                     // Send cancellation email if reason provided
                     request.reason?.let { reason ->
                         try {
-                            emailService.sendCancellationNotification(registration, reason)
+                            emailNotificationService.sendCancellationNotification(registration, reason)
                         } catch (e: Exception) {
                             // Log but don't fail the operation
                             secureLogger.logErrorEvent("EVENT_CANCELLATION_EMAIL_FAILED", null, e, "Failed to send event cancellation email")
@@ -248,7 +248,7 @@ class EventController(
                         var emailsSent = 0
                         registrations.forEach { registration ->
                             try {
-                                emailService.sendCustomEmail(registration, subject, body)
+                                emailNotificationService.sendCustomEmail(registration, subject, body)
                                 emailsSent++
                             } catch (e: Exception) {
                                 secureLogger.logErrorEvent("EVENT_UPDATE_EMAIL_FAILED", registration.user?.id, e, "Failed to send event update email")

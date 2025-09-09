@@ -1,7 +1,10 @@
 package com.eventr.controller
 
 import com.eventr.dto.*
-import com.eventr.service.AuthService
+import com.eventr.service.UserAuthenticationService
+import com.eventr.service.UserRegistrationService
+import com.eventr.service.PasswordManagementService
+import com.eventr.service.UserProfileService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.*
@@ -9,13 +12,16 @@ import java.util.*
 @RestController
 @RequestMapping("/api/auth")
 class AuthController(
-    private val authService: AuthService
+    private val authenticationService: UserAuthenticationService,
+    private val registrationService: UserRegistrationService,
+    private val passwordService: PasswordManagementService,
+    private val profileService: UserProfileService
 ) {
     
     @PostMapping("/register")
     fun register(@RequestBody registerDto: RegisterRequestDto): ResponseEntity<AuthResponseDto> {
         return try {
-            val response = authService.register(registerDto)
+            val response = registrationService.register(registerDto)
             ResponseEntity.ok(response)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().build()
@@ -25,7 +31,7 @@ class AuthController(
     @PostMapping("/login")
     fun login(@RequestBody loginDto: LoginRequestDto): ResponseEntity<AuthResponseDto> {
         return try {
-            val response = authService.login(loginDto)
+            val response = authenticationService.login(loginDto)
             ResponseEntity.ok(response)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.status(401).build()
@@ -35,7 +41,7 @@ class AuthController(
     @PostMapping("/verify-email")
     fun verifyEmail(@RequestBody verificationDto: EmailVerificationDto): ResponseEntity<UserDto> {
         return try {
-            val user = authService.verifyEmail(verificationDto.token)
+            val user = registrationService.verifyEmail(verificationDto.token)
             ResponseEntity.ok(user)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().build()
@@ -45,7 +51,7 @@ class AuthController(
     @PostMapping("/forgot-password")
     fun forgotPassword(@RequestBody resetRequestDto: PasswordResetRequestDto): ResponseEntity<Map<String, String>> {
         return try {
-            authService.requestPasswordReset(resetRequestDto.email)
+            passwordService.requestPasswordReset(resetRequestDto.email)
             ResponseEntity.ok(mapOf("message" to "Password reset email sent if account exists"))
         } catch (e: Exception) {
             ResponseEntity.status(500).body(mapOf("error" to "Failed to send password reset email"))
@@ -55,7 +61,7 @@ class AuthController(
     @PostMapping("/reset-password")
     fun resetPassword(@RequestBody resetDto: PasswordResetDto): ResponseEntity<AuthResponseDto> {
         return try {
-            val response = authService.resetPassword(resetDto)
+            val response = passwordService.resetPassword(resetDto)
             ResponseEntity.ok(response)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().build()
@@ -69,7 +75,7 @@ class AuthController(
     ): ResponseEntity<UserDto> {
         return try {
             val userId = extractUserIdFromToken(authToken)
-            val user = authService.changePassword(userId, changePasswordDto)
+            val user = passwordService.changePassword(userId, changePasswordDto)
             ResponseEntity.ok(user)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().build()
@@ -85,7 +91,7 @@ class AuthController(
     ): ResponseEntity<UserDto> {
         return try {
             val userId = extractUserIdFromToken(authToken)
-            val user = authService.updateProfile(userId, updateDto)
+            val user = profileService.updateProfile(userId, updateDto)
             ResponseEntity.ok(user)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().build()
@@ -98,7 +104,7 @@ class AuthController(
     fun getProfile(@RequestHeader("Authorization") authToken: String): ResponseEntity<UserDto> {
         return try {
             val userId = extractUserIdFromToken(authToken)
-            val user = authService.getUserById(userId)
+            val user = profileService.getUserById(userId)
             if (user != null) {
                 ResponseEntity.ok(user)
             } else {
@@ -122,11 +128,11 @@ class AuthController(
             val token = authToken.removePrefix("Bearer ").trim()
             
             // Validate and extract user ID from JWT token
-            if (!authService.validateJwtToken(token)) {
+            if (!authenticationService.validateJwtToken(token)) {
                 throw IllegalArgumentException("Invalid JWT token")
             }
             
-            return authService.getUserIdFromJwtToken(token)
+            return authenticationService.getUserIdFromJwtToken(token)
         } catch (e: Exception) {
             throw IllegalArgumentException("Invalid authorization token: ${e.message}")
         }

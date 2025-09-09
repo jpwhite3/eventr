@@ -7,7 +7,7 @@ import com.eventr.model.RegistrationStatus
 import com.eventr.repository.EventInstanceRepository
 import com.eventr.repository.RegistrationRepository
 import com.eventr.repository.UserRepository
-import com.eventr.service.EmailService
+import com.eventr.service.EmailNotificationService
 import com.eventr.service.WebSocketEventService
 import org.springframework.beans.BeanUtils
 import org.springframework.web.bind.annotation.*
@@ -20,7 +20,7 @@ class RegistrationController(
     private val registrationRepository: RegistrationRepository,
     private val eventInstanceRepository: EventInstanceRepository,
     private val userRepository: UserRepository,
-    private val emailService: EmailService,
+    private val emailNotificationService: EmailNotificationService,
     private val webSocketEventService: WebSocketEventService
 ) {
     
@@ -55,7 +55,7 @@ class RegistrationController(
         val savedRegistration = registrationRepository.save(registration)
         
         try {
-            emailService.sendRegistrationConfirmation(savedRegistration)
+            emailNotificationService.sendRegistrationConfirmation(savedRegistration)
         } catch (e: Exception) {
             // Log the exception, but don't block the registration process
             secureLogger.logErrorEvent("REGISTRATION_CONFIRMATION_EMAIL_FAILED", savedRegistration.user?.id, e, "Failed to send registration confirmation email")
@@ -111,7 +111,7 @@ class RegistrationController(
         
         // Send cancellation email notification
         try {
-            emailService.sendCancellationNotification(cancelledRegistration, reason)
+            emailNotificationService.sendCancellationNotification(cancelledRegistration, reason)
         } catch (e: Exception) {
             // Log the exception, but don't block the cancellation process
             secureLogger.logErrorEvent("REGISTRATION_CANCELLATION_EMAIL_FAILED", cancelledRegistration.user?.id, e, "Failed to send registration cancellation email")
