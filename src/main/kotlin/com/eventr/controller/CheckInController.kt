@@ -1,8 +1,7 @@
 package com.eventr.controller
 
 import com.eventr.dto.*
-import com.eventr.service.CheckInService
-import com.eventr.service.WebSocketEventService
+import com.eventr.service.*
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -12,14 +11,18 @@ import java.util.*
 @RestController
 @RequestMapping("/api/checkin")
 class CheckInController(
-    private val checkInService: CheckInService,
+    private val qrCodeProcessingService: QRCodeProcessingService,
+    private val checkInOperationsService: CheckInOperationsService,
+    private val attendanceTrackingService: AttendanceTrackingService,
+    private val checkInAnalyticsService: CheckInAnalyticsService,
+    private val offlineCheckInSyncService: OfflineCheckInSyncService,
     private val webSocketEventService: WebSocketEventService
 ) {
 
     @PostMapping("/qr")
     fun checkInWithQR(@RequestBody qrCheckInDto: QRCheckInDto): ResponseEntity<CheckInDto> {
         return try {
-            val result = checkInService.checkInWithQR(qrCheckInDto)
+            val result = qrCodeProcessingService.processQRCheckIn(qrCheckInDto)
             
             // Broadcast real-time check-in update
             result.registrationId?.let { registrationId ->
@@ -41,7 +44,7 @@ class CheckInController(
     @PostMapping("/manual")
     fun manualCheckIn(@RequestBody createDto: CheckInCreateDto): ResponseEntity<CheckInDto> {
         return try {
-            val result = checkInService.manualCheckIn(createDto)
+            val result = checkInOperationsService.manualCheckIn(createDto)
             ResponseEntity.ok(result)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().build()
@@ -50,31 +53,31 @@ class CheckInController(
 
     @PostMapping("/bulk")
     fun bulkCheckIn(@RequestBody bulkDto: BulkCheckInDto): ResponseEntity<List<CheckInDto>> {
-        val results = checkInService.bulkCheckIn(bulkDto)
+        val results = checkInOperationsService.bulkCheckIn(bulkDto)
         return ResponseEntity.ok(results)
     }
 
     @GetMapping("/event/{eventId}/stats")
     fun getEventStats(@PathVariable eventId: UUID): ResponseEntity<CheckInStatsDto> {
-        val stats = checkInService.getEventCheckInStats(eventId)
+        val stats = checkInAnalyticsService.getEventCheckInStats(eventId)
         return ResponseEntity.ok(stats)
     }
 
     @GetMapping("/session/{sessionId}/attendance")
     fun getSessionAttendance(@PathVariable sessionId: UUID): ResponseEntity<List<CheckInDto>> {
-        val attendance = checkInService.getSessionAttendance(sessionId)
+        val attendance = attendanceTrackingService.getSessionAttendance(sessionId)
         return ResponseEntity.ok(attendance)
     }
 
     @GetMapping("/event/{eventId}/report")
     fun getAttendanceReport(@PathVariable eventId: UUID): ResponseEntity<AttendanceReportDto> {
-        val report = checkInService.getAttendanceReport(eventId)
+        val report = attendanceTrackingService.getAttendanceReport(eventId)
         return ResponseEntity.ok(report)
     }
 
     @PostMapping("/sync")
     fun syncOfflineCheckIns(@RequestBody offlineCheckIns: List<OfflineCheckInDto>): ResponseEntity<List<CheckInDto>> {
-        val results = checkInService.syncOfflineCheckIns(offlineCheckIns)
+        val results = offlineCheckInSyncService.syncOfflineCheckIns(offlineCheckIns)
         return ResponseEntity.ok(results)
     }
 
@@ -85,7 +88,7 @@ class CheckInController(
         @PathVariable eventId: UUID,
         @PathVariable userId: String
     ): ResponseEntity<QRCodeResponseDto> {
-        val qrCode = checkInService.generateEventQRCode(eventId, userId)
+        val qrCode = qrCodeProcessingService.generateEventQRCode(eventId, userId)
         return ResponseEntity.ok(qrCode)
     }
 
@@ -94,13 +97,13 @@ class CheckInController(
         @PathVariable sessionId: UUID,
         @PathVariable userId: String
     ): ResponseEntity<QRCodeResponseDto> {
-        val qrCode = checkInService.generateSessionQRCode(sessionId, userId)
+        val qrCode = qrCodeProcessingService.generateSessionQRCode(sessionId, userId)
         return ResponseEntity.ok(qrCode)
     }
 
     @GetMapping("/qr/staff/event/{eventId}")
     fun generateStaffEventQR(@PathVariable eventId: UUID): ResponseEntity<QRCodeResponseDto> {
-        val qrCode = checkInService.generateStaffQRCode(eventId)
+        val qrCode = qrCodeProcessingService.generateStaffQRCode(eventId)
         return ResponseEntity.ok(qrCode)
     }
 
@@ -109,7 +112,7 @@ class CheckInController(
         @PathVariable sessionId: UUID,
         @RequestParam eventId: UUID
     ): ResponseEntity<QRCodeResponseDto> {
-        val qrCode = checkInService.generateStaffQRCode(eventId, sessionId)
+        val qrCode = qrCodeProcessingService.generateStaffQRCode(eventId, sessionId)
         return ResponseEntity.ok(qrCode)
     }
 
@@ -119,7 +122,7 @@ class CheckInController(
         @PathVariable userId: String,
         @RequestParam userName: String
     ): ResponseEntity<QRCodeResponseDto> {
-        val badge = checkInService.generateAttendeeBadge(eventId, userId, userName)
+        val badge = qrCodeProcessingService.generateAttendeeBadge(eventId, userId, userName)
         return ResponseEntity.ok(badge)
     }
 
@@ -131,7 +134,7 @@ class CheckInController(
         @PathVariable userId: String,
         @RequestParam userName: String
     ): ResponseEntity<ByteArray> {
-        val badge = checkInService.generateAttendeeBadge(eventId, userId, userName)
+        val badge = qrCodeProcessingService.generateAttendeeBadge(eventId, userId, userName)
         val imageBytes = Base64.getDecoder().decode(badge.qrCodeBase64)
         
         return ResponseEntity.ok()
@@ -142,7 +145,7 @@ class CheckInController(
 
     @GetMapping("/qr/staff/event/{eventId}/image")
     fun downloadStaffQRImage(@PathVariable eventId: UUID): ResponseEntity<ByteArray> {
-        val qrCode = checkInService.generateStaffQRCode(eventId)
+        val qrCode = qrCodeProcessingService.generateStaffQRCode(eventId)
         val imageBytes = Base64.getDecoder().decode(qrCode.qrCodeBase64)
         
         return ResponseEntity.ok()
@@ -156,7 +159,7 @@ class CheckInController(
         @PathVariable sessionId: UUID,
         @RequestParam eventId: UUID
     ): ResponseEntity<ByteArray> {
-        val qrCode = checkInService.generateStaffQRCode(eventId, sessionId)
+        val qrCode = qrCodeProcessingService.generateStaffQRCode(eventId, sessionId)
         val imageBytes = Base64.getDecoder().decode(qrCode.qrCodeBase64)
         
         return ResponseEntity.ok()
