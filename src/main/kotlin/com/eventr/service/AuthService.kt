@@ -5,6 +5,7 @@ import com.eventr.model.User
 import com.eventr.model.UserRole
 import com.eventr.model.UserStatus
 import com.eventr.repository.UserRepository
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import io.jsonwebtoken.Jwts
@@ -13,6 +14,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.crypto.SecretKey
+import java.util.Base64
+import javax.annotation.PostConstruct
 
 @Service
 class AuthService(
@@ -21,10 +24,46 @@ class AuthService(
     private val emailService: EmailService
 ) {
     
-    private val jwtSecret: SecretKey = Keys.hmacShaKeyFor(
-        "MyVerySecureSecretKeyForJWTTokenGenerationInEventRApplication".toByteArray()
-    )
-    private val jwtExpiration = 86400000L // 24 hours in milliseconds
+    @Value("\${app.jwt.secret:#{environment.JWT_SECRET}}")
+    private lateinit var jwtSecretString: String
+    
+    @Value("\${app.jwt.expiration:86400000}")
+    private var jwtExpiration: Long = 86400000L // 24 hours in milliseconds
+    
+    private lateinit var jwtSecret: SecretKey
+    
+    @PostConstruct
+    private fun initJwtSecret() {
+        // Validate JWT secret configuration
+        if (jwtSecretString.isBlank()) {
+            throw IllegalStateException(
+                "JWT secret must be configured via app.jwt.secret property or JWT_SECRET environment variable. " +
+                "For security, the JWT secret cannot be hardcoded and must be provided externally."
+            )
+        }
+        
+        // Ensure minimum security requirements
+        if (jwtSecretString.length < 32) {
+            throw IllegalStateException(
+                "JWT secret must be at least 32 characters long for security. " +
+                "Current length: ${jwtSecretString.length}. Please generate a secure secret using: openssl rand -base64 32"
+            )
+        }
+        
+        try {
+            // Try to decode as base64 first, fallback to plain string
+            val secretBytes = try {
+                Base64.getDecoder().decode(jwtSecretString)
+            } catch (e: IllegalArgumentException) {
+                // If not valid base64, use string directly (for development)
+                jwtSecretString.toByteArray()
+            }
+            
+            jwtSecret = Keys.hmacShaKeyFor(secretBytes)
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to initialize JWT secret: ${e.message}", e)
+        }
+    }
     
     fun register(registerDto: RegisterRequestDto): AuthResponseDto {
         // Check if email already exists
