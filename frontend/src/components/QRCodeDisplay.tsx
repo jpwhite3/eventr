@@ -28,8 +28,9 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ eventId, registrationId, 
                 `/checkin/qr/badge/event/${eventId}/user/${registrationId}?userName=${encodeURIComponent(userName)}`
             );
             setQrCode(response.data);
-        } catch (err) {
-            setError('Failed to generate QR code');
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.message || 'Failed to generate QR code';
+            setError(errorMessage);
             console.error('QR code generation error:', err);
         } finally {
             setLoading(false);

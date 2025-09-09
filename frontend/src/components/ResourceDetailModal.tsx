@@ -107,11 +107,12 @@ const ResourceDetailModal: React.FC<ResourceDetailModalProps> = ({
       setLoading(true);
       setError(null);
       
-      const response = await apiClient.get(`/mock/resources/${id}`);
+      const response = await apiClient.get(`/simple-resources/${id}`);
       setResource(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch resource details:', error);
-      setError('Failed to load resource details. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Failed to load resource details. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

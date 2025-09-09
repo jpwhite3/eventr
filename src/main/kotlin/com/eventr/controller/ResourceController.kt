@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@RequestMapping("/api/mock/resources")
+@RequestMapping("/api/simple-resources")
 class ResourceController(
     private val resourceService: ResourceService
 ) {

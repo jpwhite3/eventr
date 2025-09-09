@@ -77,7 +77,8 @@ const AttendanceDashboard: React.FC<AttendanceDashboardProps> = ({
             
         } catch (error: any) {
             console.error('Failed to load dashboard data:', error);
-            setError('Failed to load attendance data');
+            const errorMessage = error.response?.data?.message || 'Failed to load attendance data';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

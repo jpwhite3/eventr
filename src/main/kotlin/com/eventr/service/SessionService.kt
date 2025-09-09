@@ -1,162 +1,117 @@
 package com.eventr.service
+import com.eventr.model.Session
+import com.eventr.model.SessionType
+import com.eventr.repository.SessionRepository
+import com.eventr.repository.EventRepository
+import com.eventr.repository.SessionRegistrationRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Service
-class SessionService {
+class SessionService(
+    private val sessionRepository: SessionRepository,
+    private val eventRepository: EventRepository,
+    private val sessionRegistrationRepository: SessionRegistrationRepository
+) {
 
-    // Mock data for development
-    private val mockSessions = mutableListOf<SessionDto>()
-
-    init {
-        // Initialize with mock data
-        mockSessions.addAll(
-            listOf(
-                SessionDto(
-                    id = UUID.fromString("650e8400-e29b-41d4-a716-446655440001"),
-                    eventId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000"),
-                    title = "Opening Keynote",
-                    description = "Welcome and overview of the conference",
-                    startDateTime = "2024-03-15T09:00:00",
-                    endDateTime = "2024-03-15T10:00:00",
-                    location = "Main Auditorium",
-                    speakerName = "Dr. Jane Smith",
-                    speakerBio = "Leading expert in React development and software architecture",
-                    capacity = 500,
-                    attendeeCount = 387,
-                    sessionType = "KEYNOTE",
-                    isActive = true,
-                    requirements = listOf("Conference badge required"),
-                    materials = listOf("Presentation slides will be available after session"),
-                    createdAt = "2024-02-01T10:00:00",
-                    updatedAt = "2024-02-20T14:30:00"
-                ),
-                SessionDto(
-                    id = UUID.fromString("650e8400-e29b-41d4-a716-446655440002"),
-                    eventId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000"),
-                    title = "Advanced React Patterns",
-                    description = "Deep dive into advanced React patterns and best practices",
-                    startDateTime = "2024-03-15T10:30:00",
-                    endDateTime = "2024-03-15T12:00:00",
-                    location = "Tech Lab 1",
-                    speakerName = "Mike Johnson",
-                    speakerBio = "Senior React Developer at Tech Corp",
-                    capacity = 50,
-                    attendeeCount = 45,
-                    sessionType = "WORKSHOP",
-                    isActive = true,
-                    requirements = listOf("Laptop required", "Node.js installed"),
-                    materials = listOf("Code repository", "Exercise files"),
-                    createdAt = "2024-02-01T10:30:00",
-                    updatedAt = "2024-02-15T09:15:00"
-                ),
-                SessionDto(
-                    id = UUID.fromString("650e8400-e29b-41d4-a716-446655440003"),
-                    eventId = UUID.fromString("550e8400-e29b-41d4-a716-446655440001"),
-                    title = "Machine Learning Fundamentals",
-                    description = "Introduction to ML concepts and practical applications",
-                    startDateTime = "2024-03-20T10:00:00",
-                    endDateTime = "2024-03-20T12:00:00",
-                    location = "Workshop Room A",
-                    speakerName = "Dr. Sarah Lee",
-                    speakerBio = "Data Science Professor and ML researcher",
-                    capacity = 30,
-                    attendeeCount = 25,
-                    sessionType = "WORKSHOP",
-                    isActive = true,
-                    requirements = listOf("Basic Python knowledge helpful"),
-                    materials = listOf("Jupyter notebooks", "Dataset samples"),
-                    createdAt = "2024-02-05T11:00:00",
-                    updatedAt = "2024-02-18T16:20:00"
-                )
-            )
-        )
-    }
 
     fun getSessionsByEvent(eventId: UUID): List<SessionDto> {
-        return mockSessions.filter { it.eventId == eventId }
+        return sessionRepository.findByEventIdAndIsActiveTrue(eventId).map { it.toDto() }
     }
 
     fun getSessionById(id: UUID): SessionDto? {
-        return mockSessions.find { it.id == id }
+        return sessionRepository.findById(id).orElse(null)?.toDto()
     }
 
     fun createSession(createDto: CreateSessionDto): SessionDto {
-        val newSession = SessionDto(
-            id = UUID.randomUUID(),
-            eventId = createDto.eventId,
+        val event = eventRepository.findById(createDto.eventId).orElseThrow {
+            IllegalArgumentException("Event not found")
+        }
+        
+        val session = Session(
+            event = event,
             title = createDto.title,
             description = createDto.description,
-            startDateTime = createDto.startDateTime,
-            endDateTime = createDto.endDateTime,
+            type = SessionType.valueOf(createDto.sessionType?.uppercase() ?: "PRESENTATION"),
+            startTime = LocalDateTime.parse(createDto.startDateTime),
+            endTime = LocalDateTime.parse(createDto.endDateTime),
             location = createDto.location,
-            speakerName = createDto.speakerName,
-            speakerBio = createDto.speakerBio,
+            presenter = createDto.speakerName,
+            presenterBio = createDto.speakerBio,
             capacity = createDto.capacity,
-            attendeeCount = 0,
-            sessionType = createDto.sessionType ?: "PRESENTATION",
-            isActive = true,
-            requirements = createDto.requirements ?: emptyList(),
-            materials = createDto.materials ?: emptyList(),
-            createdAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-            updatedAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            prerequisites = createDto.requirements?.joinToString("; "),
+            materialUrl = createDto.materials?.joinToString("; ")
         )
-        mockSessions.add(newSession)
-        return newSession
+        
+        return sessionRepository.save(session).toDto()
     }
 
     fun updateSession(id: UUID, updateDto: UpdateSessionDto): SessionDto? {
-        val index = mockSessions.indexOfFirst { it.id == id }
-        if (index == -1) return null
-
-        val existingSession = mockSessions[index]
-        val updatedSession = existingSession.copy(
-            title = updateDto.title ?: existingSession.title,
-            description = updateDto.description ?: existingSession.description,
-            startDateTime = updateDto.startDateTime ?: existingSession.startDateTime,
-            endDateTime = updateDto.endDateTime ?: existingSession.endDateTime,
-            location = updateDto.location ?: existingSession.location,
-            speakerName = updateDto.speakerName ?: existingSession.speakerName,
-            speakerBio = updateDto.speakerBio ?: existingSession.speakerBio,
-            capacity = updateDto.capacity ?: existingSession.capacity,
-            sessionType = updateDto.sessionType ?: existingSession.sessionType,
-            isActive = updateDto.isActive ?: existingSession.isActive,
-            requirements = updateDto.requirements ?: existingSession.requirements,
-            materials = updateDto.materials ?: existingSession.materials,
-            updatedAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        )
-
-        mockSessions[index] = updatedSession
-        return updatedSession
+        val session = sessionRepository.findById(id).orElse(null) ?: return null
+        
+        updateDto.title?.let { session.title = it }
+        updateDto.description?.let { session.description = it }
+        updateDto.startDateTime?.let { session.startTime = LocalDateTime.parse(it) }
+        updateDto.endDateTime?.let { session.endTime = LocalDateTime.parse(it) }
+        updateDto.location?.let { session.location = it }
+        updateDto.speakerName?.let { session.presenter = it }
+        updateDto.speakerBio?.let { session.presenterBio = it }
+        updateDto.capacity?.let { session.capacity = it }
+        updateDto.sessionType?.let { session.type = SessionType.valueOf(it.uppercase()) }
+        updateDto.isActive?.let { session.isActive = it }
+        updateDto.requirements?.let { session.prerequisites = it.joinToString("; ") }
+        updateDto.materials?.let { session.materialUrl = it.joinToString("; ") }
+        session.updatedAt = LocalDateTime.now()
+        
+        return sessionRepository.save(session).toDto()
     }
 
     fun deleteSession(id: UUID): Boolean {
-        return mockSessions.removeIf { it.id == id }
+        val session = sessionRepository.findById(id).orElse(null) ?: return false
+        session.isActive = false
+        session.updatedAt = LocalDateTime.now()
+        sessionRepository.save(session)
+        return true
     }
 
     fun getSessionAttendees(sessionId: UUID): List<AttendeeDto> {
-        // Mock attendees data
-        return listOf(
+        val sessionRegistrations = sessionRegistrationRepository.findBySessionIdOrderByRegisteredAtAsc(sessionId)
+        return sessionRegistrations.map { sessionReg ->
             AttendeeDto(
-                id = UUID.randomUUID(),
-                firstName = "John",
-                lastName = "Doe",
-                email = "john.doe@example.com",
-                registrationDate = "2024-02-20T10:30:00",
-                checkInStatus = "CHECKED_IN",
-                sessionId = sessionId
-            ),
-            AttendeeDto(
-                id = UUID.randomUUID(),
-                firstName = "Jane",
-                lastName = "Smith",
-                email = "jane.smith@example.com",
-                registrationDate = "2024-02-21T14:15:00",
-                checkInStatus = "REGISTERED",
+                id = sessionReg.id!!,
+                firstName = sessionReg.registration?.userName?.split(" ")?.firstOrNull() ?: "Unknown",
+                lastName = sessionReg.registration?.userName?.split(" ")?.drop(1)?.joinToString(" ") ?: "Unknown", 
+                email = sessionReg.registration?.userEmail ?: "Unknown",
+                registrationDate = sessionReg.registeredAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                checkInStatus = sessionReg.status.name,
                 sessionId = sessionId
             )
+        }
+    }
+    
+    private fun Session.toDto(): SessionDto {
+        val attendeeCount = sessionRegistrationRepository.countBySessionIdAndStatus(this.id!!, com.eventr.model.SessionRegistrationStatus.REGISTERED)
+        
+        return SessionDto(
+            id = this.id!!,
+            eventId = this.event?.id!!,
+            title = this.title,
+            description = this.description,
+            startDateTime = this.startTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) ?: "",
+            endDateTime = this.endTime?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) ?: "",
+            location = this.location,
+            speakerName = this.presenter,
+            speakerBio = this.presenterBio,
+            capacity = this.capacity,
+            attendeeCount = attendeeCount.toInt(),
+            sessionType = this.type.name,
+            isActive = this.isActive,
+            requirements = this.prerequisites?.split("; ") ?: emptyList(),
+            materials = this.materialUrl?.split("; ") ?: emptyList(),
+            createdAt = this.createdAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            updatedAt = this.updatedAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         )
     }
 }

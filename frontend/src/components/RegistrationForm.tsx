@@ -100,8 +100,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId
                     });
                 }
             })
-            .catch(err => {
-                setError('Registration failed. Please try again.');
+            .catch((err: any) => {
+                const errorMessage = err.response?.data?.message || 'Registration failed. Please try again.';
+                setError(errorMessage);
                 console.error('Registration error', err);
             })
             .finally(() => {
