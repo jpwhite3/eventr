@@ -12,6 +12,7 @@ import com.eventr.service.WebSocketEventService
 import org.springframework.beans.BeanUtils
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
+import com.eventr.util.SecureLogger
 
 @RestController
 @RequestMapping("/api/registrations")
@@ -22,6 +23,8 @@ class RegistrationController(
     private val emailService: EmailService,
     private val webSocketEventService: WebSocketEventService
 ) {
+    
+    private val secureLogger = SecureLogger(RegistrationController::class.java)
 
     @PostMapping
     fun createRegistration(@RequestBody registrationCreateDto: RegistrationCreateDto): RegistrationDto {
@@ -55,7 +58,7 @@ class RegistrationController(
             emailService.sendRegistrationConfirmation(savedRegistration)
         } catch (e: Exception) {
             // Log the exception, but don't block the registration process
-            System.err.println("Failed to send confirmation email: ${e.message}")
+            secureLogger.logErrorEvent("REGISTRATION_CONFIRMATION_EMAIL_FAILED", savedRegistration.user?.id, e, "Failed to send registration confirmation email")
         }
         
         // Broadcast real-time registration update
@@ -111,7 +114,7 @@ class RegistrationController(
             emailService.sendCancellationNotification(cancelledRegistration, reason)
         } catch (e: Exception) {
             // Log the exception, but don't block the cancellation process
-            System.err.println("Failed to send cancellation email: ${e.message}")
+            secureLogger.logErrorEvent("REGISTRATION_CANCELLATION_EMAIL_FAILED", cancelledRegistration.user?.id, e, "Failed to send registration cancellation email")
         }
         
         // Broadcast real-time cancellation update

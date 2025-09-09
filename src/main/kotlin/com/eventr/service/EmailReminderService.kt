@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import java.time.ZonedDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import com.eventr.util.SecureLogger
 
 @Service
 class EmailReminderService(
@@ -14,6 +15,8 @@ class EmailReminderService(
     private val registrationRepository: RegistrationRepository,
     private val emailService: EmailService
 ) {
+    
+    private val secureLogger = SecureLogger(EmailReminderService::class.java)
     
     // Run every day at 9 AM
     @Scheduled(cron = "0 0 9 * * *")
@@ -44,7 +47,7 @@ class EmailReminderService(
                     emailService.sendEventReminder(registration, daysAhead)
                 } catch (e: Exception) {
                     // Log error but continue processing other registrations
-                    println("Failed to send reminder email to ${registration.userEmail}: ${e.message}")
+                    secureLogger.logErrorEvent("EMAIL_REMINDER_FAILED", registration.user?.id, e, "Failed to send event reminder email")
                 }
             }
         }
@@ -62,7 +65,7 @@ class EmailReminderService(
             try {
                 emailService.sendEventReminder(registration, daysUntilEvent)
             } catch (e: Exception) {
-                println("Failed to send manual reminder to ${registration.userEmail}: ${e.message}")
+                secureLogger.logErrorEvent("MANUAL_REMINDER_EMAIL_FAILED", registration.user?.id, e, "Failed to send manual reminder email")
             }
         }
     }
@@ -78,7 +81,7 @@ class EmailReminderService(
         try {
             emailService.sendEventUpdate(event, updateMessage, registrations.toList())
         } catch (e: Exception) {
-            println("Failed to send event update notifications: ${e.message}")
+            secureLogger.logErrorEvent("EVENT_UPDATE_NOTIFICATION_FAILED", null, e, "Failed to send event update notifications")
             throw e
         }
     }

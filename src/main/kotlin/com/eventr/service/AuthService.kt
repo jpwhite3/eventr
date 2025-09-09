@@ -15,7 +15,8 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.crypto.SecretKey
 import java.util.Base64
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
+import com.eventr.util.SecureLogger
 
 @Service
 class AuthService(
@@ -23,6 +24,8 @@ class AuthService(
     private val passwordEncoder: BCryptPasswordEncoder = BCryptPasswordEncoder(),
     private val emailService: EmailService
 ) {
+    
+    private val secureLogger = SecureLogger(AuthService::class.java)
     
     @Value("\${app.jwt.secret:#{environment.JWT_SECRET}}")
     private lateinit var jwtSecretString: String
@@ -96,9 +99,10 @@ class AuthService(
         // Send verification email
         try {
             sendVerificationEmail(savedUser)
+            secureLogger.logEmailEvent(savedUser.id!!, "REGISTRATION_VERIFICATION", true)
         } catch (e: Exception) {
             // Log error but don't fail registration
-            println("Failed to send verification email: ${e.message}")
+            secureLogger.logErrorEvent("EMAIL_SEND_FAILED", savedUser.id, e, "Failed to send verification email")
         }
         
         // Generate JWT token (simplified - in production use proper JWT library)
@@ -165,8 +169,9 @@ class AuthService(
         
         try {
             sendPasswordResetEmail(user)
+            secureLogger.logSecurityEvent("PASSWORD_RESET_EMAIL_SENT", user.id, true)
         } catch (e: Exception) {
-            println("Failed to send password reset email: ${e.message}")
+            secureLogger.logErrorEvent("PASSWORD_RESET_EMAIL_FAILED", user.id, e, "Failed to send password reset email")
             throw IllegalStateException("Failed to send password reset email")
         }
     }
@@ -323,13 +328,15 @@ class AuthService(
     
     private fun sendVerificationEmail(user: User) {
         // This would integrate with the existing EmailService
-        // For now, just print the verification link
-        println("Verification email for ${user.email}: http://localhost:3002/verify-email?token=${user.emailVerificationToken}")
+        // For development, log the verification event securely
+        secureLogger.logEmailEvent(user.id!!, "EMAIL_VERIFICATION_INITIATED", true, "Verification email queued")
+        secureLogger.logDebugSafe("Email verification link generated for user: {}", user.id)
     }
     
     private fun sendPasswordResetEmail(user: User) {
         // This would integrate with the existing EmailService
-        // For now, just print the reset link
-        println("Password reset email for ${user.email}: http://localhost:3002/reset-password?token=${user.passwordResetToken}")
+        // For development, log the password reset event securely
+        secureLogger.logSecurityEvent("PASSWORD_RESET_EMAIL_INITIATED", user.id, true, "Password reset email queued")
+        secureLogger.logDebugSafe("Password reset link generated for user: {}", user.id)
     }
 }

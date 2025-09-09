@@ -21,6 +21,7 @@ import org.springframework.data.jpa.domain.Specification
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import com.eventr.util.SecureLogger
 
 @RestController
 @RequestMapping("/api/events")
@@ -30,6 +31,8 @@ class EventController(
         private val emailService: EmailService,
         private val dynamoDbService: DynamoDbService
 ) {
+    
+    private val secureLogger = SecureLogger(EventController::class.java)
 
     private fun convertToDto(event: Event): EventDto {
         val eventDto = EventDto()
@@ -222,7 +225,7 @@ class EventController(
                             emailService.sendCancellationNotification(registration, reason)
                         } catch (e: Exception) {
                             // Log but don't fail the operation
-                            println("Failed to send cancellation email: ${e.message}")
+                            secureLogger.logErrorEvent("EVENT_CANCELLATION_EMAIL_FAILED", null, e, "Failed to send event cancellation email")
                         }
                     }
                 }
@@ -248,7 +251,7 @@ class EventController(
                                 emailService.sendCustomEmail(registration, subject, body)
                                 emailsSent++
                             } catch (e: Exception) {
-                                println("Failed to send email to ${registration.userEmail}: ${e.message}")
+                                secureLogger.logErrorEvent("EVENT_UPDATE_EMAIL_FAILED", registration.user?.id, e, "Failed to send event update email")
                             }
                         }
                         results["emailsSent"] = emailsSent
@@ -306,7 +309,7 @@ class EventController(
                 emailsSent++
             } catch (e: Exception) {
                 emailsFailed++
-                println("Failed to send email to ${registration.userEmail}: ${e.message}")
+                secureLogger.logErrorEvent("EVENT_DELETION_EMAIL_FAILED", registration.user?.id, e, "Failed to send event deletion email")
             }
         }
         
