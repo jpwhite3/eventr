@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import jsQR from 'jsqr';
 import apiClient from '../api/apiClient';
 
 interface QRScannerProps {
@@ -94,19 +95,22 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
                     facingMode: facingMode, // Use selected camera
                     width: { 
                         min: 320,
-                        ideal: 640,
-                        max: 1280
+                        ideal: 800,
+                        max: 1920
                     },
                     height: { 
                         min: 240,
-                        ideal: 480,
-                        max: 720
+                        ideal: 600,
+                        max: 1080
                     },
                     frameRate: { ideal: 30, max: 30 },
-                    aspectRatio: 4/3,
+                    aspectRatio: { ideal: 4/3 },
                     focusMode: 'continuous',
                     exposureMode: 'continuous',
-                    whiteBalanceMode: 'continuous'
+                    whiteBalanceMode: 'continuous',
+                    // Enhanced mobile camera settings
+                    zoom: { ideal: 1.0 },
+                    torch: false // Disable torch by default
                 }
             };
 
@@ -185,7 +189,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
 
         scanIntervalRef.current = setInterval(() => {
             scanForQRCode();
-        }, 500); // Scan every 500ms
+        }, 300); // Scan every 300ms for better responsiveness
     };
 
     const scanForQRCode = () => {
@@ -229,15 +233,33 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
         }
     };
 
-    // Simple QR code detection (placeholder - would use jsQR or similar library)
+    // Enhanced QR code detection using jsQR library
     const detectQRCode = (imageData: ImageData): string | null => {
-        // This is a placeholder. In a real implementation, you would use:
-        // import jsQR from 'jsqr';
-        // const code = jsQR(imageData.data, imageData.width, imageData.height);
-        // return code ? code.data : null;
-        
-        // For demo purposes, we'll simulate QR detection
-        return null;
+        try {
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: 'dontInvert',
+            });
+            
+            if (code) {
+                console.log('QR Code detected:', code.data);
+                return code.data;
+            }
+            
+            // Try with inversion if first attempt fails
+            const invertedCode = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: 'attemptBoth',
+            });
+            
+            if (invertedCode) {
+                console.log('QR Code detected (inverted):', invertedCode.data);
+                return invertedCode.data;
+            }
+            
+            return null;
+        } catch (error) {
+            console.warn('QR detection error:', error);
+            return null;
+        }
     };
 
     // Process QR code for check-in

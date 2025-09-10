@@ -2,8 +2,11 @@ package com.eventr.service.impl
 
 import com.eventr.dto.*
 import com.eventr.model.*
+import com.eventr.model.CheckInMethod
+import com.eventr.model.CheckInType
 import com.eventr.repository.*
 import com.eventr.service.CheckInOperationsService
+import com.eventr.service.*
 import org.springframework.beans.BeanUtils
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -111,7 +114,7 @@ class CheckInOperationsServiceImpl(
             this.location = checkInDetails.location
             this.verificationCode = checkInDetails.verificationCode
             this.notes = checkInDetails.notes
-            this.metadata = checkInDetails.metadata
+            this.metadata = checkInDetails.metadata?.toString()
         }
         
         val saved = checkInRepository.save(checkIn)
@@ -147,7 +150,7 @@ class CheckInOperationsServiceImpl(
             this.location = checkInDetails.location
             this.verificationCode = checkInDetails.verificationCode
             this.notes = checkInDetails.notes
-            this.metadata = checkInDetails.metadata
+            this.metadata = checkInDetails.metadata?.toString()
         }
         
         val saved = checkInRepository.save(checkIn)
@@ -169,8 +172,8 @@ class CheckInOperationsServiceImpl(
     }
 
     override fun updateRegistrationStatus(checkIn: CheckInDto) {
-        checkIn.registration?.let { registrationDto ->
-            val registration = registrationRepository.findById(registrationDto.id!!)
+        checkIn.registrationId?.let { registrationId ->
+            val registration = registrationRepository.findById(registrationId)
                 .orElse(null) ?: return
             
             // Update registration status to checked in if it was registered
@@ -197,7 +200,7 @@ class CheckInOperationsServiceImpl(
     }
 
     private fun findRegistrationByUserIdAndEventId(userId: String, eventId: UUID): Registration? {
-        return registrationRepository.findByUserIdAndEventId(userId, eventId)
+        return registrationRepository.findByUserEmailAndEventId(userId, eventId)
     }
 
     private fun findRegistrationByUserIdAndSessionId(userId: String, sessionId: UUID): Registration? {
@@ -213,21 +216,17 @@ class CheckInOperationsServiceImpl(
         return CheckInDto().apply {
             BeanUtils.copyProperties(checkIn, this)
             
-            // Convert registration if present
-            checkIn.registration?.let { reg ->
-                this.registration = RegistrationDto().apply {
-                    BeanUtils.copyProperties(reg, this)
-                }
-            }
+            // Set registration ID
+            this.registrationId = checkIn.registration?.id
             
             // Convert session if present
             checkIn.session?.let { sess ->
                 this.sessionId = sess.id
-                this.sessionName = sess.name
+                this.sessionTitle = sess.title
             }
             
             // Format timestamp
-            this.checkedInAt = checkIn.checkedInAt?.format(formatter)
+            this.checkedInAt = checkIn.checkedInAt
         }
     }
 }

@@ -26,8 +26,10 @@ import {
   faSync,
   faUserPlus,
   faCheckCircle,
-  faTimesCircle
+  faTimesCircle,
+  faMobile
 } from '@fortawesome/free-solid-svg-icons';
+import MobileCheckInLink from '../components/MobileCheckInLink';
 
 interface Event {
   id: string;
@@ -230,6 +232,10 @@ const CheckInPage: React.FC = () => {
             <FontAwesomeIcon icon={faSync} className="me-1" />
             Refresh
           </CButton>
+          <CButton color="outline-primary">
+            <FontAwesomeIcon icon={faMobile} className="me-1" />
+            Mobile Check-In
+          </CButton>
           <CButton color="primary">
             <FontAwesomeIcon icon={faQrcode} className="me-1" />
             QR Scanner
@@ -335,6 +341,20 @@ const CheckInPage: React.FC = () => {
               title="Check-in Rate"
               value={`${stats.checkInRate.toFixed(1)}%`}
               color="info"
+            />
+          </CCol>
+        </CRow>
+      )}
+
+      {/* Mobile Check-In Link Generator */}
+      {selectedEvent && (
+        <CRow className="mb-4">
+          <CCol>
+            <MobileCheckInLink
+              eventId={selectedEvent}
+              eventName={selectedEventData?.name || 'Selected Event'}
+              sessionId={selectedSession}
+              sessionName={sessions.find(s => s.id === selectedSession)?.title}
             />
           </CCol>
         </CRow>

@@ -1,4 +1,4 @@
-package com.eventr.config
+package com.eventr.config.application
 
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties

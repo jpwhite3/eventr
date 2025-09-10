@@ -194,8 +194,8 @@ class EmailTemplateServiceImpl : EmailTemplateService {
     }
     
     override fun formatEventDetails(event: Event, eventInstance: EventInstance?): String {
-        val startDateTime = eventInstance?.startDateTime ?: event.startDateTime
-        val endDateTime = eventInstance?.endDateTime ?: event.endDateTime
+        val startDateTime = eventInstance?.dateTime ?: event.startDateTime
+        val endDateTime = event.endDateTime
         
         return """
             <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -217,10 +217,10 @@ class EmailTemplateServiceImpl : EmailTemplateService {
                         </td>
                     </tr>
                     """ else ""}
-                    ${if (event.eventType == EventType.IN_PERSON && !event.location.isNullOrBlank()) """
+                    ${if (event.eventType == EventType.IN_PERSON && !event.venueName.isNullOrBlank()) """
                     <tr>
                         <td style="padding: 8px 0; font-weight: 600; color: #6c757d;">Location:</td>
-                        <td style="padding: 8px 0;">${event.location}</td>
+                        <td style="padding: 8px 0;">${event.venueName}</td>
                     </tr>
                     ${if (!event.address.isNullOrBlank()) """
                     <tr>
@@ -229,11 +229,11 @@ class EmailTemplateServiceImpl : EmailTemplateService {
                     </tr>
                     """ else ""}
                     """ else ""}
-                    ${if (event.eventType == EventType.VIRTUAL && !event.meetingUrl.isNullOrBlank()) """
+                    ${if (event.eventType == EventType.VIRTUAL && !event.virtualUrl.isNullOrBlank()) """
                     <tr>
                         <td style="padding: 8px 0; font-weight: 600; color: #6c757d;">Meeting Link:</td>
                         <td style="padding: 8px 0;">
-                            <a href="${event.meetingUrl}" style="color: #007bff; text-decoration: none;">Join Virtual Event</a>
+                            <a href="${event.virtualUrl}" style="color: #007bff; text-decoration: none;">Join Virtual Event</a>
                         </td>
                     </tr>
                     """ else ""}
@@ -250,10 +250,10 @@ class EmailTemplateServiceImpl : EmailTemplateService {
     
     override fun formatUserInfo(registration: Registration): Map<String, String> {
         return mapOf(
-            "firstName" to (registration.firstName ?: "Attendee"),
-            "lastName" to (registration.lastName ?: ""),
+            "firstName" to (registration.userName ?: "Attendee"),
+            "lastName" to "",
             "email" to (registration.userEmail ?: ""),
-            "fullName" to "${registration.firstName ?: "Attendee"} ${registration.lastName ?: ""}".trim()
+            "fullName" to (registration.userName ?: "Attendee")
         )
     }
     

@@ -56,7 +56,7 @@ class EmailNotificationServiceImpl(
             mailSender.send(message)
             
             secureLogger.logEmailEvent(
-                registration.user?.id, 
+                registration.user?.id!!, 
                 "REGISTRATION_CONFIRMATION_SENT", 
                 true, 
                 "Registration confirmation email sent successfully"
@@ -65,7 +65,7 @@ class EmailNotificationServiceImpl(
         } catch (e: Exception) {
             secureLogger.logErrorEvent(
                 "REGISTRATION_EMAIL_FAILED", 
-                registration.user?.id, 
+                registration.user?.id!!, 
                 e, 
                 "Failed to send registration confirmation email"
             )
@@ -91,7 +91,7 @@ class EmailNotificationServiceImpl(
             mailSender.send(message)
             
             secureLogger.logEmailEvent(
-                registration.user?.id, 
+                registration.user?.id!!, 
                 "EVENT_REMINDER_SENT", 
                 true, 
                 "Event reminder email sent for $daysUntil days"
@@ -100,7 +100,7 @@ class EmailNotificationServiceImpl(
         } catch (e: Exception) {
             secureLogger.logErrorEvent(
                 "REMINDER_EMAIL_FAILED", 
-                registration.user?.id, 
+                registration.user?.id!!, 
                 e, 
                 "Failed to send event reminder email"
             )
@@ -127,7 +127,7 @@ class EmailNotificationServiceImpl(
                 emailsSent++
                 
                 secureLogger.logEmailEvent(
-                    registration.user?.id, 
+                    registration.user?.id!!, 
                     "EVENT_UPDATE_SENT", 
                     true, 
                     "Event update email sent successfully"
@@ -136,7 +136,7 @@ class EmailNotificationServiceImpl(
             } catch (e: Exception) {
                 secureLogger.logErrorEvent(
                     "EVENT_UPDATE_EMAIL_FAILED", 
-                    registration.user?.id, 
+                    registration.user?.id!!, 
                     e, 
                     "Failed to send event update email"
                 )
@@ -164,7 +164,7 @@ class EmailNotificationServiceImpl(
             mailSender.send(message)
             
             secureLogger.logEmailEvent(
-                registration.user?.id, 
+                registration.user?.id!!, 
                 "CANCELLATION_EMAIL_SENT", 
                 true, 
                 "Cancellation notification email sent"
@@ -173,7 +173,7 @@ class EmailNotificationServiceImpl(
         } catch (e: Exception) {
             secureLogger.logErrorEvent(
                 "CANCELLATION_EMAIL_FAILED", 
-                registration.user?.id, 
+                registration.user?.id!!, 
                 e, 
                 "Failed to send cancellation notification email"
             )
@@ -199,7 +199,7 @@ class EmailNotificationServiceImpl(
             mailSender.send(message)
             
             secureLogger.logEmailEvent(
-                registration.user?.id, 
+                registration.user?.id!!, 
                 "CUSTOM_EMAIL_SENT", 
                 true, 
                 "Custom email sent successfully"
@@ -208,7 +208,7 @@ class EmailNotificationServiceImpl(
         } catch (e: Exception) {
             secureLogger.logErrorEvent(
                 "CUSTOM_EMAIL_FAILED", 
-                registration.user?.id, 
+                registration.user?.id!!, 
                 e, 
                 "Failed to send custom email"
             )
@@ -255,7 +255,7 @@ class EmailNotificationServiceImpl(
             mailSender.send(message)
             
             secureLogger.logEmailEvent(
-                registration.user?.id, 
+                registration.user?.id!!, 
                 "CHECKIN_CONFIRMATION_SENT", 
                 true, 
                 "Check-in confirmation email sent"
@@ -264,7 +264,7 @@ class EmailNotificationServiceImpl(
         } catch (e: Exception) {
             secureLogger.logErrorEvent(
                 "CHECKIN_EMAIL_FAILED", 
-                registration.user?.id, 
+                registration.user?.id!!, 
                 e, 
                 "Failed to send check-in confirmation email"
             )

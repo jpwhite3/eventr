@@ -20,6 +20,9 @@ import UserProfilePage from './pages/UserProfilePage';
 import UserSettingsPage from './pages/UserSettingsPage';
 import CalendarViewPage from './pages/CalendarViewPage';
 import EventRegistrationManagement from './pages/EventRegistrationManagement';
+import UserManagement from './pages/UserManagement';
+import SystemReports from './pages/SystemReports';
+import MobileCheckInPage from './pages/MobileCheckInPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App(): React.JSX.Element {
@@ -46,6 +49,8 @@ function App(): React.JSX.Element {
           <Route path="/admin/event/:id/edit" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><EventBuilder /></ProtectedRoute>} />
           <Route path="/admin/events/:id/attendance" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><AttendancePage /></ProtectedRoute>} />
           <Route path="/admin/events/:eventId/registrations" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><EventRegistrationManagement /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute requiredRoles={['ADMIN', 'SUPER_ADMIN']}><UserManagement /></ProtectedRoute>} />
+          <Route path="/admin/reports" element={<ProtectedRoute requiredRoles={['ADMIN', 'SUPER_ADMIN']}><SystemReports /></ProtectedRoute>} />
           
           {/* Analytics Routes - Protected */}
           <Route path="/analytics/executive" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><ExecutiveDashboard /></ProtectedRoute>} />
@@ -57,6 +62,10 @@ function App(): React.JSX.Element {
           <Route path="/resources" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><ResourceManagement /></ProtectedRoute>} />
           <Route path="/registrations" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><RegistrationTrends /></ProtectedRoute>} />
           <Route path="/checkin" element={<ProtectedRoute requiredRoles={['ORGANIZER', 'ADMIN', 'SUPER_ADMIN']}><CheckInPage /></ProtectedRoute>} />
+          
+          {/* Mobile Check-In Routes - Staff Access */}
+          <Route path="/mobile-checkin/:eventId" element={<MobileCheckInPage />} />
+          <Route path="/mobile-checkin" element={<MobileCheckInPage />} />
         </Routes>
       </CoreUILayout>
     </Router>

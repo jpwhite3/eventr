@@ -1,6 +1,7 @@
 package com.eventr.service
 
 import com.eventr.dto.*
+import com.eventr.model.CheckInMethod
 import java.util.*
 
 /**

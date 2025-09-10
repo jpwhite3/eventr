@@ -22,9 +22,17 @@ import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import com.eventr.util.SecureLogger
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 
 @RestController
 @RequestMapping("/api/events")
+@Tag(name = "Events", description = "Event management operations for creating, updating, publishing, and managing corporate events")
 class EventController(
         private val eventRepository: EventRepository,
         private val registrationRepository: RegistrationRepository,
@@ -47,7 +55,21 @@ class EventController(
     }
 
     @PostMapping
-    fun createEvent(@RequestBody eventCreateDto: EventCreateDto): EventDto {
+    @Operation(
+        summary = "Create a new event",
+        description = "Creates a new event in draft status with the provided details. Supports custom registration forms and event instances for recurring events."
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Event created successfully",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = EventDto::class))]),
+        ApiResponse(responseCode = "400", description = "Invalid event data provided"),
+        ApiResponse(responseCode = "401", description = "Authentication required"),
+        ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    ])
+    fun createEvent(
+        @Parameter(description = "Event creation details including title, description, dates, and optional custom form data")
+        @RequestBody eventCreateDto: EventCreateDto
+    ): EventDto {
         val event =
                 Event().apply {
                     BeanUtils.copyProperties(eventCreateDto, this)
@@ -61,20 +83,30 @@ class EventController(
     }
 
     @GetMapping
+    @Operation(
+        summary = "Get all events with filtering and search",
+        description = "Retrieves events with comprehensive filtering options including category, type, location, date range, and text search. Supports geographical proximity search and custom sorting."
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Events retrieved successfully",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = Array<EventDto>::class))]),
+        ApiResponse(responseCode = "400", description = "Invalid filter parameters"),
+        ApiResponse(responseCode = "401", description = "Authentication required")
+    ])
     fun getAllEvents(
-            @RequestParam(required = false) category: String?,
-            @RequestParam(required = false) eventType: String?,
-            @RequestParam(required = false) city: String?,
-            @RequestParam(required = false) tags: String?,
-            @RequestParam(required = false) startDate: String?,
-            @RequestParam(required = false) endDate: String?,
-            @RequestParam(required = false) q: String?,
-            @RequestParam(required = false) latitude: Double?,
-            @RequestParam(required = false) longitude: Double?,
-            @RequestParam(required = false) radius: Int?,
-            @RequestParam(required = false) sortBy: String?,
-            @RequestParam(required = false) sortOrder: String?,
-            @RequestParam(defaultValue = "true") publishedOnly: Boolean
+            @Parameter(description = "Filter by event category") @RequestParam(required = false) category: String?,
+            @Parameter(description = "Filter by event type (in-person, virtual, hybrid)") @RequestParam(required = false) eventType: String?,
+            @Parameter(description = "Filter by city location") @RequestParam(required = false) city: String?,
+            @Parameter(description = "Filter by tags (comma-separated)") @RequestParam(required = false) tags: String?,
+            @Parameter(description = "Filter events starting from date (ISO format)") @RequestParam(required = false) startDate: String?,
+            @Parameter(description = "Filter events ending before date (ISO format)") @RequestParam(required = false) endDate: String?,
+            @Parameter(description = "Text search query for title, description, or content") @RequestParam(required = false) q: String?,
+            @Parameter(description = "Latitude for geographical search") @RequestParam(required = false) latitude: Double?,
+            @Parameter(description = "Longitude for geographical search") @RequestParam(required = false) longitude: Double?,
+            @Parameter(description = "Search radius in kilometers for geographical search") @RequestParam(required = false) radius: Int?,
+            @Parameter(description = "Sort field (title, startDate, endDate, category)") @RequestParam(required = false) sortBy: String?,
+            @Parameter(description = "Sort order (asc, desc)") @RequestParam(required = false) sortOrder: String?,
+            @Parameter(description = "Show only published events") @RequestParam(defaultValue = "true") publishedOnly: Boolean
     ): List<EventDto> {
         // Parse tags from comma-separated string
         val tagsList = tags?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
@@ -111,7 +143,19 @@ class EventController(
     }
 
     @GetMapping("/{eventId}")
-    fun getEventById(@PathVariable eventId: UUID): ResponseEntity<EventDto> {
+    @Operation(
+        summary = "Get event by ID",
+        description = "Retrieves a specific event by its unique identifier including all event details and instances."
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Event found",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = EventDto::class))]),
+        ApiResponse(responseCode = "404", description = "Event not found"),
+        ApiResponse(responseCode = "401", description = "Authentication required")
+    ])
+    fun getEventById(
+        @Parameter(description = "Unique identifier of the event") @PathVariable eventId: UUID
+    ): ResponseEntity<EventDto> {
         val optionalEvent = eventRepository.findById(eventId)
         return if (optionalEvent.isPresent) {
             ResponseEntity.ok(convertToDto(optionalEvent.get()))
@@ -305,7 +349,7 @@ class EventController(
         
         targetRegistrations.forEach { registration ->
             try {
-                emailService.sendCustomEmail(registration, request.subject, request.body)
+                emailNotificationService.sendCustomEmail(registration, request.subject, request.body)
                 emailsSent++
             } catch (e: Exception) {
                 emailsFailed++

@@ -2,8 +2,7 @@ package com.eventr.controller
 
 import com.eventr.dto.*
 import com.eventr.model.*
-import com.eventr.service.CheckInService
-import com.eventr.service.WebSocketEventService
+import com.eventr.service.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -31,7 +30,19 @@ class CheckInControllerTest {
     private lateinit var mockMvc: MockMvc
 
     @MockBean
-    private lateinit var checkInService: CheckInService
+    private lateinit var qrCodeProcessingService: QRCodeProcessingService
+    
+    @MockBean
+    private lateinit var checkInOperationsService: CheckInOperationsService
+    
+    @MockBean
+    private lateinit var attendanceTrackingService: AttendanceTrackingService
+    
+    @MockBean
+    private lateinit var checkInAnalyticsService: CheckInAnalyticsService
+    
+    @MockBean
+    private lateinit var offlineCheckInSyncService: OfflineCheckInSyncService
     
     @MockBean
     private lateinit var webSocketEventService: WebSocketEventService
@@ -69,7 +80,7 @@ class CheckInControllerTest {
             type = CheckInType.SESSION
         )
         
-        whenever(checkInService.checkInWithQR(qrCheckInDto)).thenReturn(checkInDto)
+        whenever(qrCodeProcessingService.processQRCheckIn(qrCheckInDto)).thenReturn(checkInDto)
 
         // When & Then
         mockMvc.perform(
@@ -89,7 +100,7 @@ class CheckInControllerTest {
         // Given
         val qrCheckInDto = QRCheckInDto(qrCode = "invalid-qr")
         
-        whenever(checkInService.checkInWithQR(qrCheckInDto))
+        whenever(qrCodeProcessingService.processQRCheckIn(qrCheckInDto))
             .thenThrow(IllegalArgumentException("Invalid QR code"))
 
         // When & Then
@@ -120,7 +131,7 @@ class CheckInControllerTest {
             checkedInAt = LocalDateTime.now()
         )
         
-        whenever(checkInService.manualCheckIn(checkInCreateDto)).thenReturn(checkInDto)
+        whenever(checkInOperationsService.manualCheckIn(checkInCreateDto)).thenReturn(checkInDto)
 
         // When & Then
         mockMvc.perform(
@@ -154,7 +165,7 @@ class CheckInControllerTest {
             )
         )
         
-        whenever(checkInService.bulkCheckIn(bulkCheckInDto)).thenReturn(checkInResults)
+        whenever(checkInOperationsService.bulkCheckIn(bulkCheckInDto)).thenReturn(checkInResults)
 
         // When & Then
         mockMvc.perform(
@@ -180,7 +191,7 @@ class CheckInControllerTest {
             checkInRate = 85.0
         )
         
-        whenever(checkInService.getEventCheckInStats(eventId)).thenReturn(statsDto)
+        whenever(checkInAnalyticsService.getEventCheckInStats(eventId)).thenReturn(statsDto)
 
         // When & Then
         mockMvc.perform(
@@ -207,7 +218,7 @@ class CheckInControllerTest {
             )
         )
         
-        whenever(checkInService.getSessionAttendance(sessionId)).thenReturn(attendance)
+        whenever(attendanceTrackingService.getSessionAttendance(sessionId)).thenReturn(attendance)
 
         // When & Then
         mockMvc.perform(
@@ -231,7 +242,7 @@ class CheckInControllerTest {
             sessionAttendance = emptyList()
         )
         
-        whenever(checkInService.getAttendanceReport(eventId)).thenReturn(reportDto)
+        whenever(attendanceTrackingService.getAttendanceReport(eventId)).thenReturn(reportDto)
 
         // When & Then
         mockMvc.perform(
@@ -267,7 +278,7 @@ class CheckInControllerTest {
             )
         )
         
-        whenever(checkInService.syncOfflineCheckIns(offlineCheckIns)).thenReturn(syncResults)
+        whenever(offlineCheckInSyncService.syncOfflineCheckIns(offlineCheckIns)).thenReturn(syncResults)
 
         // When & Then
         mockMvc.perform(
@@ -293,7 +304,7 @@ class CheckInControllerTest {
             identifier = eventId.toString()
         )
         
-        whenever(checkInService.generateEventQRCode(eventId, userId)).thenReturn(qrCodeResponse)
+        whenever(qrCodeProcessingService.generateEventQRCode(eventId, userId)).thenReturn(qrCodeResponse)
 
         // When & Then
         mockMvc.perform(
@@ -317,7 +328,7 @@ class CheckInControllerTest {
             identifier = sessionId.toString()
         )
         
-        whenever(checkInService.generateSessionQRCode(sessionId, userId)).thenReturn(qrCodeResponse)
+        whenever(qrCodeProcessingService.generateSessionQRCode(sessionId, userId)).thenReturn(qrCodeResponse)
 
         // When & Then
         mockMvc.perform(
@@ -340,7 +351,7 @@ class CheckInControllerTest {
             identifier = eventId.toString()
         )
         
-        whenever(checkInService.generateStaffQRCode(eventId)).thenReturn(qrCodeResponse)
+        whenever(qrCodeProcessingService.generateStaffQRCode(eventId)).thenReturn(qrCodeResponse)
 
         // When & Then
         mockMvc.perform(
@@ -364,7 +375,7 @@ class CheckInControllerTest {
             identifier = eventId.toString()
         )
         
-        whenever(checkInService.generateAttendeeBadge(eventId, userId, userName)).thenReturn(badgeResponse)
+        whenever(qrCodeProcessingService.generateAttendeeBadge(eventId, userId, userName)).thenReturn(badgeResponse)
 
         // When & Then
         mockMvc.perform(
@@ -390,7 +401,7 @@ class CheckInControllerTest {
             identifier = eventId.toString()
         )
         
-        whenever(checkInService.generateAttendeeBadge(eventId, userId, userName)).thenReturn(badgeResponse)
+        whenever(qrCodeProcessingService.generateAttendeeBadge(eventId, userId, userName)).thenReturn(badgeResponse)
 
         // When & Then
         mockMvc.perform(
@@ -414,7 +425,7 @@ class CheckInControllerTest {
             identifier = eventId.toString()
         )
         
-        whenever(checkInService.generateStaffQRCode(eventId)).thenReturn(qrCodeResponse)
+        whenever(qrCodeProcessingService.generateStaffQRCode(eventId)).thenReturn(qrCodeResponse)
 
         // When & Then
         mockMvc.perform(

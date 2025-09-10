@@ -3,6 +3,7 @@ package com.eventr.service.impl
 import com.eventr.dto.*
 import com.eventr.model.*
 import com.eventr.repository.*
+import com.eventr.service.*
 import com.eventr.service.OfflineCheckInSyncService
 import com.eventr.service.CheckInOperationsService
 import org.springframework.stereotype.Service
@@ -41,7 +42,7 @@ class OfflineCheckInSyncServiceImpl(
                 }
                 
                 // Mark as processed regardless of success/failure
-                markAsSynchronized(listOf(offlineCheckIn.offlineId), syncTimestamp)
+                markAsSynchronized(listOf(offlineCheckIn.id.toString()), syncTimestamp)
                 
             } catch (e: Exception) {
                 // Log error but continue processing other check-ins
@@ -59,7 +60,7 @@ class OfflineCheckInSyncServiceImpl(
         val validationResult = validateOfflineCheckIn(offlineCheckIn)
         if (!validationResult.isValid) {
             return OfflineCheckInSyncResult(
-                offlineId = offlineCheckIn.offlineId,
+                offlineId = offlineCheckIn.id.toString(),
                 status = SyncStatus.VALIDATION_ERROR,
                 errors = validationResult.errors.map { it.message },
                 syncTimestamp = syncTimestamp
@@ -69,7 +70,7 @@ class OfflineCheckInSyncServiceImpl(
         // Check if registration exists
         val registration = registrationRepository.findById(offlineCheckIn.registrationId)
             .orElse(null) ?: return OfflineCheckInSyncResult(
-                offlineId = offlineCheckIn.offlineId,
+                offlineId = offlineCheckIn.id.toString(),
                 status = SyncStatus.REGISTRATION_NOT_FOUND,
                 errors = listOf("Registration not found: ${offlineCheckIn.registrationId}"),
                 syncTimestamp = syncTimestamp
@@ -83,7 +84,7 @@ class OfflineCheckInSyncServiceImpl(
             val conflictResult = resolveCheckInConflict(offlineCheckIn, convertToDto(existingCheckIn))
             
             OfflineCheckInSyncResult(
-                offlineId = offlineCheckIn.offlineId,
+                offlineId = offlineCheckIn.id.toString(),
                 status = SyncStatus.CONFLICT,
                 checkInDto = conflictResult.resolvedCheckIn,
                 conflictResolution = conflictResult.explanation,
@@ -96,14 +97,14 @@ class OfflineCheckInSyncServiceImpl(
                 val checkInDto = checkInOperationsService.manualCheckIn(createDto)
                 
                 OfflineCheckInSyncResult(
-                    offlineId = offlineCheckIn.offlineId,
+                    offlineId = offlineCheckIn.id.toString(),
                     status = SyncStatus.SUCCESS,
                     checkInDto = checkInDto,
                     syncTimestamp = syncTimestamp
                 )
             } catch (e: Exception) {
                 OfflineCheckInSyncResult(
-                    offlineId = offlineCheckIn.offlineId,
+                    offlineId = offlineCheckIn.id.toString(),
                     status = SyncStatus.SYNC_ERROR,
                     errors = listOf("Failed to create check-in: ${e.message}"),
                     syncTimestamp = syncTimestamp
@@ -117,24 +118,15 @@ class OfflineCheckInSyncServiceImpl(
         val warnings = mutableListOf<String>()
         
         // Required field validation
-        if (offlineCheckIn.offlineId.isBlank()) {
-            errors.add(ValidationError("offlineId", "REQUIRED", "Offline ID is required"))
+        if (offlineCheckIn.id == null) {
+            errors.add(ValidationError("id", "REQUIRED", "Offline ID is required"))
         }
         
         if (offlineCheckIn.registrationId == null) {
             errors.add(ValidationError("registrationId", "REQUIRED", "Registration ID is required"))
         }
         
-        if (offlineCheckIn.checkedInAt.isNullOrBlank()) {
-            errors.add(ValidationError("checkedInAt", "REQUIRED", "Check-in timestamp is required"))
-        } else {
-            // Validate timestamp format
-            try {
-                LocalDateTime.parse(offlineCheckIn.checkedInAt)
-            } catch (e: Exception) {
-                errors.add(ValidationError("checkedInAt", "INVALID_FORMAT", "Invalid timestamp format"))
-            }
-        }
+        // checkedInAt is non-null LocalDateTime in DTO, no need to check for null
         
         // Business rule validation
         if (offlineCheckIn.deviceId.isNullOrBlank()) {
@@ -142,15 +134,8 @@ class OfflineCheckInSyncServiceImpl(
         }
         
         // Check for future timestamp (shouldn't be possible)
-        offlineCheckIn.checkedInAt?.let { timestamp ->
-            try {
-                val checkInTime = LocalDateTime.parse(timestamp)
-                if (checkInTime.isAfter(LocalDateTime.now())) {
-                    errors.add(ValidationError("checkedInAt", "FUTURE_DATE", "Check-in time cannot be in the future"))
-                }
-            } catch (e: Exception) {
-                // Already handled above
-            }
+        if (offlineCheckIn.checkedInAt.isAfter(LocalDateTime.now())) {
+            errors.add(ValidationError("checkedInAt", "FUTURE_DATE", "Check-in time cannot be in the future"))
         }
         
         return ValidationResult(
@@ -162,20 +147,10 @@ class OfflineCheckInSyncServiceImpl(
 
     override fun resolveCheckInConflict(offlineCheckIn: OfflineCheckInDto, existingCheckIn: CheckInDto): ConflictResolutionResult {
         // Determine resolution strategy based on timestamps and data quality
-        val offlineTime = try {
-            LocalDateTime.parse(offlineCheckIn.checkedInAt)
-        } catch (e: Exception) {
-            null
-        }
-        
-        val existingTime = try {
-            LocalDateTime.parse(existingCheckIn.checkedInAt)
-        } catch (e: Exception) {
-            null
-        }
+        val offlineTime = offlineCheckIn.checkedInAt
+        val existingTime = existingCheckIn.checkedInAt
         
         val strategy = when {
-            offlineTime == null -> ConflictResolutionStrategy.KEEP_EXISTING
             existingTime == null -> ConflictResolutionStrategy.REPLACE_WITH_OFFLINE
             offlineTime.isBefore(existingTime) -> ConflictResolutionStrategy.REPLACE_WITH_OFFLINE
             else -> ConflictResolutionStrategy.KEEP_EXISTING
@@ -278,9 +253,9 @@ class OfflineCheckInSyncServiceImpl(
 
     private fun findExistingCheckIn(offlineCheckIn: OfflineCheckInDto): CheckIn? {
         return if (offlineCheckIn.sessionId != null) {
-            checkInRepository.findByRegistrationIdAndSessionId(offlineCheckIn.registrationId!!, offlineCheckIn.sessionId)
+            checkInRepository.findByRegistrationIdAndSessionId(offlineCheckIn.registrationId, offlineCheckIn.sessionId!!)
         } else {
-            checkInRepository.findByRegistrationIdAndType(offlineCheckIn.registrationId!!, offlineCheckIn.type ?: CheckInType.EVENT)
+            checkInRepository.findByRegistrationIdAndType(offlineCheckIn.registrationId, offlineCheckIn.type)
         }
     }
 
@@ -289,16 +264,11 @@ class OfflineCheckInSyncServiceImpl(
             registrationId = offlineCheckIn.registrationId!!,
             sessionId = offlineCheckIn.sessionId,
             type = offlineCheckIn.type ?: CheckInType.EVENT,
-            method = CheckInMethod.OFFLINE_SYNC,
+            method = offlineCheckIn.method,
             checkedInBy = offlineCheckIn.checkedInBy,
             deviceId = offlineCheckIn.deviceId,
-            deviceName = offlineCheckIn.deviceName,
-            ipAddress = offlineCheckIn.ipAddress,
-            userAgent = offlineCheckIn.userAgent,
-            location = offlineCheckIn.location,
-            verificationCode = offlineCheckIn.verificationCode,
-            notes = offlineCheckIn.notes,
-            metadata = offlineCheckIn.metadata
+            qrCodeUsed = offlineCheckIn.qrCodeUsed,
+            notes = offlineCheckIn.notes
         )
     }
 
@@ -308,7 +278,7 @@ class OfflineCheckInSyncServiceImpl(
             id = checkIn.id
             type = checkIn.type
             method = checkIn.method
-            checkedInAt = checkIn.checkedInAt?.toString()
+            checkedInAt = checkIn.checkedInAt
             deviceId = checkIn.deviceId
             location = checkIn.location
             notes = checkIn.notes
@@ -320,7 +290,6 @@ class OfflineCheckInSyncServiceImpl(
         return existingCheckIn.copy(
             checkedInAt = offlineCheckIn.checkedInAt,
             deviceId = offlineCheckIn.deviceId ?: existingCheckIn.deviceId,
-            location = offlineCheckIn.location ?: existingCheckIn.location,
             notes = combineNotes(existingCheckIn.notes, offlineCheckIn.notes)
         )
     }
@@ -329,7 +298,6 @@ class OfflineCheckInSyncServiceImpl(
         // Merge data from both sources, preferring offline for certain fields
         return existingCheckIn.copy(
             deviceId = offlineCheckIn.deviceId ?: existingCheckIn.deviceId,
-            location = offlineCheckIn.location ?: existingCheckIn.location,
             notes = combineNotes(existingCheckIn.notes, offlineCheckIn.notes)
         )
     }

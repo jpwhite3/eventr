@@ -1,4 +1,4 @@
-package com.eventr.config
+package com.eventr.config.integration
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration

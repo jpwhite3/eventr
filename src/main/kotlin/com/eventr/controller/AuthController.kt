@@ -8,9 +8,17 @@ import com.eventr.service.UserProfileService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.*
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "User authentication and profile management operations including registration, login, password management, and profile updates")
 class AuthController(
     private val authenticationService: UserAuthenticationService,
     private val registrationService: UserRegistrationService,
@@ -19,7 +27,19 @@ class AuthController(
 ) {
     
     @PostMapping("/register")
-    fun register(@RequestBody registerDto: RegisterRequestDto): ResponseEntity<AuthResponseDto> {
+    @Operation(
+        summary = "Register new user",
+        description = "Creates a new user account with the provided credentials and profile information"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "User registered successfully",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = AuthResponseDto::class))]),
+        ApiResponse(responseCode = "400", description = "Invalid registration data or user already exists")
+    ])
+    fun register(
+        @Parameter(description = "User registration details including email, password, and profile information")
+        @RequestBody registerDto: RegisterRequestDto
+    ): ResponseEntity<AuthResponseDto> {
         return try {
             val response = registrationService.register(registerDto)
             ResponseEntity.ok(response)
@@ -29,7 +49,20 @@ class AuthController(
     }
     
     @PostMapping("/login")
-    fun login(@RequestBody loginDto: LoginRequestDto): ResponseEntity<AuthResponseDto> {
+    @Operation(
+        summary = "User login",
+        description = "Authenticates user credentials and returns JWT access token for API authorization"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Login successful",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = AuthResponseDto::class))]),
+        ApiResponse(responseCode = "401", description = "Invalid credentials"),
+        ApiResponse(responseCode = "400", description = "Invalid login request format")
+    ])
+    fun login(
+        @Parameter(description = "User login credentials (email/username and password)")
+        @RequestBody loginDto: LoginRequestDto
+    ): ResponseEntity<AuthResponseDto> {
         return try {
             val response = authenticationService.login(loginDto)
             ResponseEntity.ok(response)

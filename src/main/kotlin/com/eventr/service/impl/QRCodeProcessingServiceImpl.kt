@@ -3,6 +3,7 @@ package com.eventr.service.impl
 import com.eventr.dto.*
 import com.eventr.model.*
 import com.eventr.repository.*
+import com.eventr.service.*
 import com.eventr.service.QRCodeProcessingService
 import com.eventr.service.QRCodeService
 import com.eventr.service.CheckInOperationsService
@@ -45,8 +46,6 @@ class QRCodeProcessingServiceImpl(
             checkedInBy = qrCheckInDto.checkedInBy,
             deviceId = qrCheckInDto.deviceId,
             deviceName = qrCheckInDto.deviceName,
-            ipAddress = qrCheckInDto.ipAddress,
-            userAgent = qrCheckInDto.userAgent,
             location = qrCheckInDto.location,
             notes = qrCheckInDto.notes
         )
@@ -63,28 +62,18 @@ class QRCodeProcessingServiceImpl(
         val event = eventRepository.findById(eventId)
             .orElseThrow { IllegalArgumentException("Event not found: $eventId") }
         
-        // Generate QR code content
-        val timestamp = System.currentTimeMillis()
-        val signature = qrCodeService.generateSignature("event", eventId.toString(), userId, timestamp)
+        // Generate QR code using service
+        val expiresAt = java.time.LocalDateTime.now().plusHours(24)
+        val qrData = qrCodeService.generateEventCheckInQR(eventId.toString(), userId, expiresAt)
         
-        val qrContent = buildQRContent(
-            type = "event",
-            identifier = eventId.toString(),
-            userId = userId,
-            timestamp = timestamp,
-            signature = signature
-        )
-        
-        val qrCodeImage = qrCodeService.generateQRCode(qrContent)
+        val qrCodeBase64 = java.util.Base64.getEncoder().encodeToString(qrData.imageBytes)
         
         return QRCodeResponseDto(
-            qrCode = qrContent,
-            qrCodeImage = qrCodeImage,
-            eventId = eventId,
-            eventName = event.name,
-            userId = userId,
-            validUntil = calculateExpirationTime(timestamp),
-            type = "event"
+            qrCodeBase64 = qrCodeBase64,
+            qrCodeUrl = qrData.content,
+            expiresAt = expiresAt,
+            type = "event",
+            identifier = eventId.toString()
         )
     }
 
@@ -95,30 +84,18 @@ class QRCodeProcessingServiceImpl(
         
         val event = session.event ?: throw IllegalArgumentException("Session has no associated event")
         
-        // Generate QR code content
-        val timestamp = System.currentTimeMillis()
-        val signature = qrCodeService.generateSignature("session", sessionId.toString(), userId, timestamp)
+        // Generate QR code using service
+        val expiresAt = java.time.LocalDateTime.now().plusHours(24)
+        val qrData = qrCodeService.generateSessionCheckInQR(sessionId.toString(), userId, expiresAt)
         
-        val qrContent = buildQRContent(
-            type = "session",
-            identifier = sessionId.toString(),
-            userId = userId,
-            timestamp = timestamp,
-            signature = signature
-        )
-        
-        val qrCodeImage = qrCodeService.generateQRCode(qrContent)
+        val qrCodeBase64 = java.util.Base64.getEncoder().encodeToString(qrData.imageBytes)
         
         return QRCodeResponseDto(
-            qrCode = qrContent,
-            qrCodeImage = qrCodeImage,
-            eventId = event.id,
-            eventName = event.name,
-            sessionId = sessionId,
-            sessionName = session.name,
-            userId = userId,
-            validUntil = calculateExpirationTime(timestamp),
-            type = "session"
+            qrCodeBase64 = qrCodeBase64,
+            qrCodeUrl = qrData.content,
+            expiresAt = expiresAt,
+            type = "session",
+            identifier = sessionId.toString()
         )
     }
 
@@ -127,31 +104,20 @@ class QRCodeProcessingServiceImpl(
         val event = eventRepository.findById(eventId)
             .orElseThrow { IllegalArgumentException("Event not found: $eventId") }
         
-        val timestamp = System.currentTimeMillis()
         val identifier = sessionId?.toString() ?: eventId.toString()
         val type = if (sessionId != null) "staff_session" else "staff_event"
         
-        val signature = qrCodeService.generateSignature(type, identifier, "staff", timestamp)
+        // Generate QR code using service
+        val qrData = qrCodeService.generateStaffCheckInQR(eventId.toString(), sessionId?.toString())
         
-        val qrContent = buildQRContent(
-            type = type,
-            identifier = identifier,
-            userId = "staff",
-            timestamp = timestamp,
-            signature = signature
-        )
-        
-        val qrCodeImage = qrCodeService.generateQRCode(qrContent)
+        val qrCodeBase64 = java.util.Base64.getEncoder().encodeToString(qrData.imageBytes)
         
         return QRCodeResponseDto(
-            qrCode = qrContent,
-            qrCodeImage = qrCodeImage,
-            eventId = eventId,
-            eventName = event.name,
-            sessionId = sessionId,
-            userId = "staff",
-            validUntil = calculateExpirationTime(timestamp),
-            type = type
+            qrCodeBase64 = qrCodeBase64,
+            qrCodeUrl = qrData.content,
+            expiresAt = java.time.LocalDateTime.now().plusHours(24),
+            type = type,
+            identifier = identifier
         )
     }
 
@@ -160,29 +126,17 @@ class QRCodeProcessingServiceImpl(
         val event = eventRepository.findById(eventId)
             .orElseThrow { IllegalArgumentException("Event not found: $eventId") }
         
-        val timestamp = System.currentTimeMillis()
-        val signature = qrCodeService.generateSignature("badge", eventId.toString(), userId, timestamp)
+        // Generate QR code using service
+        val qrData = qrCodeService.generateAttendeeBadge(eventId.toString(), userId, userName)
         
-        val qrContent = buildQRContent(
-            type = "badge",
-            identifier = eventId.toString(),
-            userId = userId,
-            timestamp = timestamp,
-            signature = signature,
-            additionalData = mapOf("userName" to userName)
-        )
-        
-        val qrCodeImage = qrCodeService.generateQRCode(qrContent)
+        val qrCodeBase64 = java.util.Base64.getEncoder().encodeToString(qrData.imageBytes)
         
         return QRCodeResponseDto(
-            qrCode = qrContent,
-            qrCodeImage = qrCodeImage,
-            eventId = eventId,
-            eventName = event.name,
-            userId = userId,
-            userName = userName,
-            validUntil = calculateExpirationTime(timestamp),
-            type = "badge"
+            qrCodeBase64 = qrCodeBase64,
+            qrCodeUrl = qrData.content,
+            expiresAt = java.time.LocalDateTime.now().plusHours(24),
+            type = "badge",
+            identifier = eventId.toString()
         )
     }
 
@@ -213,7 +167,7 @@ class QRCodeProcessingServiceImpl(
                 qrData.type,
                 qrData.identifier.toString(),
                 qrData.userId,
-                qrData.timestamp,
+                qrData.timestamp.toString(),
                 qrData.signature
             )
             
@@ -232,26 +186,4 @@ class QRCodeProcessingServiceImpl(
         }
     }
 
-    private fun buildQRContent(
-        type: String,
-        identifier: String,
-        userId: String,
-        timestamp: Long,
-        signature: String,
-        additionalData: Map<String, String> = emptyMap()
-    ): String {
-        val baseContent = "$type|$identifier|$userId|$timestamp|$signature"
-        
-        return if (additionalData.isNotEmpty()) {
-            val additional = additionalData.entries.joinToString(",") { "${it.key}:${it.value}" }
-            "$baseContent|$additional"
-        } else {
-            baseContent
-        }
-    }
-
-    private fun calculateExpirationTime(timestamp: Long): String {
-        val expirationTime = timestamp + (24 * 60 * 60 * 1000) // 24 hours
-        return java.time.Instant.ofEpochMilli(expirationTime).toString()
-    }
 }

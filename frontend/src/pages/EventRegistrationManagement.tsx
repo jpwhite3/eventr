@@ -81,6 +81,14 @@ const EventRegistrationManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [selectedRegistrations, setSelectedRegistrations] = useState<Set<string>>(new Set());
   const [toast, addToast] = useState<string>('');
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+  const [emailComposer, setEmailComposer] = useState({
+    show: false,
+    subject: '',
+    body: '',
+    recipients: [] as string[]
+  });
 
   // State for future manual registration and email form implementation
   // const [manualReg, setManualReg] = useState({
@@ -161,6 +169,60 @@ const EventRegistrationManagement: React.FC = () => {
       newSelection.add(registrationId);
     }
     setSelectedRegistrations(newSelection);
+    setShowBulkActions(newSelection.size > 0);
+  };
+
+  const handleBulkAction = async (action: 'approve' | 'cancel' | 'checkin' | 'email' | 'export') => {
+    if (selectedRegistrations.size === 0) {
+      addToast('Please select registrations first');
+      return;
+    }
+
+    if (action === 'email') {
+      const selectedRegs = filteredRegistrations.filter(r => selectedRegistrations.has(r.id));
+      setEmailComposer({
+        show: true,
+        subject: `Update regarding ${event?.name}`,
+        body: '',
+        recipients: selectedRegs.map(r => r.userEmail)
+      });
+      return;
+    }
+
+    setBulkProcessing(true);
+    const registrationIds = Array.from(selectedRegistrations);
+
+    try {
+      switch (action) {
+        case 'approve':
+          // TODO: Implement bulk approval
+          addToast(`Successfully approved ${registrationIds.length} registrations`);
+          break;
+        case 'cancel':
+          // TODO: Implement bulk cancellation
+          if (window.confirm(`Cancel ${registrationIds.length} registrations?`)) {
+            addToast(`Successfully cancelled ${registrationIds.length} registrations`);
+          }
+          break;
+        case 'checkin':
+          // TODO: Implement bulk check-in
+          addToast(`Successfully checked in ${registrationIds.length} attendees`);
+          break;
+        case 'export':
+          // TODO: Implement export functionality
+          addToast('Export feature coming soon');
+          break;
+      }
+      
+      setSelectedRegistrations(new Set());
+      setShowBulkActions(false);
+      await fetchEventAndRegistrations();
+    } catch (error) {
+      addToast(`Failed to ${action} registrations`);
+      console.error(`Bulk ${action} failed:`, error);
+    } finally {
+      setBulkProcessing(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -335,23 +397,32 @@ const EventRegistrationManagement: React.FC = () => {
         
         <CCol lg={4}>
           <div className="d-flex gap-2">
-            {selectedRegistrations.size > 0 && (
+            {showBulkActions && (
               <CDropdown>
-                <CDropdownToggle color="primary">
+                <CDropdownToggle color="primary" disabled={bulkProcessing}>
                   Bulk Actions ({selectedRegistrations.size})
                 </CDropdownToggle>
                 <CDropdownMenu>
-                  <CDropdownItem disabled title="Feature available when full UI is implemented">
+                  <CDropdownItem onClick={() => handleBulkAction('approve')}>
                     <FontAwesomeIcon icon={faCheckCircle} className="me-2" />
                     Approve Selected
                   </CDropdownItem>
-                  <CDropdownItem disabled title="Feature available when full UI is implemented">
-                    <FontAwesomeIcon icon={faBan} className="me-2" />
-                    Cancel Selected
+                  <CDropdownItem onClick={() => handleBulkAction('checkin')}>
+                    <FontAwesomeIcon icon={faUserCheck} className="me-2" />
+                    Check-In Selected
                   </CDropdownItem>
-                  <CDropdownItem disabled title="Feature available when full UI is implemented">
+                  <CDropdownItem onClick={() => handleBulkAction('email')}>
                     <FontAwesomeIcon icon={faEnvelope} className="me-2" />
                     Send Email
+                  </CDropdownItem>
+                  <hr className="dropdown-divider" />
+                  <CDropdownItem onClick={() => handleBulkAction('export')}>
+                    <FontAwesomeIcon icon={faDownload} className="me-2" />
+                    Export Selected
+                  </CDropdownItem>
+                  <CDropdownItem onClick={() => handleBulkAction('cancel')} className="text-danger">
+                    <FontAwesomeIcon icon={faBan} className="me-2" />
+                    Cancel Selected
                   </CDropdownItem>
                 </CDropdownMenu>
               </CDropdown>

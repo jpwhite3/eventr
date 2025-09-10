@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "EventR",
+  "name": "EventR - Corporate Event Management",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,29 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#2196f3",
+  "background_color": "#f8f9fa",
+  "categories": ["business", "productivity"],
+  "description": "Professional event management and check-in system for corporate events",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-US",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "QR Check-In",
+      "short_name": "Check-In",
+      "description": "Quick access to QR code check-in",
+      "url": "/mobile-checkin",
+      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Event Dashboard",
+      "short_name": "Dashboard",
+      "description": "View event statistics and management",
+      "url": "/dashboard",
+      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+    }
+  ]
 }

@@ -282,7 +282,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## 🔐 Security
 
-Security is a top priority. Please review our [Security Policy](SECURITY.md) for reporting vulnerabilities.
+Security is a top priority. Please report vulnerabilities through GitHub issues or contact the maintainers directly.
 
 ## 📄 License
 

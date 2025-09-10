@@ -25,6 +25,36 @@ root.render(
   </React.StrictMode>
 );
 
+// Register Service Worker for PWA functionality
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('SW registered: ', registration);
+        
+        // Listen for sync events
+        if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+          // Request sync when online
+          window.addEventListener('online', () => {
+            (registration as any).sync?.register('eventr-retry-requests');
+          });
+        }
+        
+        // Listen for service worker messages
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data && event.data.type === 'SYNC_SUCCESS') {
+            console.log('Sync completed successfully:', event.data.data);
+            // You could show a toast notification here
+          }
+        });
+        
+      })
+      .catch((registrationError) => {
+        console.log('SW registration failed: ', registrationError);
+      });
+  });
+}
+
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals

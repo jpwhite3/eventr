@@ -2,8 +2,12 @@ package com.eventr.service.impl
 
 import com.eventr.dto.*
 import com.eventr.model.*
+import com.eventr.model.CheckInMethod
+import com.eventr.model.CheckInType
 import com.eventr.repository.*
 import com.eventr.service.CheckInAnalyticsService
+import com.eventr.service.*
+import org.springframework.beans.BeanUtils
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -28,7 +32,7 @@ class CheckInAnalyticsServiceImpl(
 
     override fun getEventCheckInStats(eventId: UUID): CheckInStatsDto {
         val registrations = registrationRepository.findByEventId(eventId)
-        val checkIns = checkInRepository.findByEventId(eventId)
+        val checkIns = checkInRepository.findByEventIdOrderByCheckedInAtDesc(eventId)
         
         val totalRegistrations = registrations.size
         val totalCheckIns = checkIns.size
@@ -62,20 +66,19 @@ class CheckInAnalyticsServiceImpl(
         return CheckInStatsDto(
             eventId = eventId,
             totalRegistrations = totalRegistrations,
-            totalCheckIns = totalCheckIns,
-            pendingCheckIns = totalRegistrations - totalCheckIns,
-            attendanceRate = attendanceRate,
-            methodBreakdown = methodStats.mapKeys { it.key.name },
-            timeDistribution = timeDistribution,
-            peakCheckInHour = findPeakHour(timeDistribution),
-            averageCheckInTime = calculateOverallAverageCheckInTime(checkIns),
-            lastUpdated = LocalDateTime.now().toString()
+            totalCheckedIn = totalCheckIns,
+            eventCheckedIn = totalCheckIns,
+            sessionCheckedIn = 0, // Would need session-specific calculation
+            checkInRate = attendanceRate,
+            recentCheckIns = checkIns.take(10).map { convertCheckInToDto(it) },
+            checkInsByHour = timeDistribution,
+            checkInsByMethod = methodStats.mapValues { it.value.count }
         )
     }
 
     override fun getRealTimeCheckInMetrics(eventId: UUID): RealTimeCheckInMetrics {
         val registrations = registrationRepository.findByEventId(eventId)
-        val checkIns = checkInRepository.findByEventId(eventId)
+        val checkIns = checkInRepository.findByEventIdOrderByCheckedInAtDesc(eventId)
         
         val currentCheckIns = checkIns.size
         val targetCheckIns = registrations.size
@@ -97,7 +100,7 @@ class CheckInAnalyticsServiceImpl(
     }
 
     override fun analyzeCheckInPatterns(eventId: UUID): CheckInPatternAnalysis {
-        val checkIns = checkInRepository.findByEventId(eventId)
+        val checkIns = checkInRepository.findByEventIdOrderByCheckedInAtDesc(eventId)
         
         val peakTimes = identifyPeakTimes(checkIns)
         val methodDistribution = analyzeMethodDistribution(checkIns)
@@ -119,7 +122,7 @@ class CheckInAnalyticsServiceImpl(
         
         val eventId = session.event?.id ?: throw IllegalArgumentException("Session has no associated event")
         val totalRegistrations = registrationRepository.countByEventId(eventId)
-        val sessionCheckIns = checkInRepository.findBySessionId(sessionId)
+        val sessionCheckIns = checkInRepository.findBySessionIdOrderByCheckedInAtDesc(sessionId)
         
         val checkedInCount = sessionCheckIns.size
         val attendanceRate = if (totalRegistrations > 0) {
@@ -128,21 +131,21 @@ class CheckInAnalyticsServiceImpl(
         
         val onTimeCheckIns = sessionCheckIns.count { checkIn ->
             // Consider on-time if checked in before session start
-            val sessionStart = session.startDateTime
+            val sessionStart = session.startTime
             val checkInTime = checkIn.checkedInAt
             sessionStart != null && checkInTime != null && checkInTime.isBefore(sessionStart)
         }
         
         val lateCheckIns = checkedInCount - onTimeCheckIns
-        val averageCheckInTime = calculateAverageCheckInTimeBeforeSession(sessionCheckIns, session.startDateTime)
+        val averageCheckInTime = calculateAverageCheckInTimeBeforeSession(sessionCheckIns, session.startTime)
         
         val methodBreakdown = sessionCheckIns.groupBy { it.method }
             .mapValues { it.value.size }
         
         return SessionCheckInStats(
             sessionId = sessionId,
-            sessionName = session.name ?: "Unknown Session",
-            totalRegistrations = totalRegistrations,
+            sessionName = session.title ?: "Unknown Session",
+            totalRegistrations = totalRegistrations.toInt(),
             checkedInCount = checkedInCount,
             attendanceRate = attendanceRate,
             onTimeCheckIns = onTimeCheckIns,
@@ -153,7 +156,7 @@ class CheckInAnalyticsServiceImpl(
     }
 
     override fun getStaffPerformanceMetrics(eventId: UUID, timeRange: TimeRange?): StaffPerformanceMetrics {
-        val checkIns = checkInRepository.findByEventId(eventId)
+        val checkIns = checkInRepository.findByEventIdOrderByCheckedInAtDesc(eventId)
         
         // Filter by time range if provided
         val filteredCheckIns = timeRange?.let { range ->
@@ -202,7 +205,7 @@ class CheckInAnalyticsServiceImpl(
     override fun getCheckInTrends(eventIds: List<UUID>): CheckInTrendsAnalysis {
         // Simplified implementation - would require historical data analysis
         val allCheckIns = eventIds.flatMap { eventId ->
-            checkInRepository.findByEventId(eventId)
+            checkInRepository.findByEventIdOrderByCheckedInAtDesc(eventId)
         }
         
         return CheckInTrendsAnalysis(
@@ -222,7 +225,7 @@ class CheckInAnalyticsServiceImpl(
     }
 
     override fun getMethodEffectivenessAnalysis(eventId: UUID): MethodEffectivenessAnalysis {
-        val checkIns = checkInRepository.findByEventId(eventId)
+        val checkIns = checkInRepository.findByEventIdOrderByCheckedInAtDesc(eventId)
         val totalCheckIns = checkIns.size
         
         val methods = checkIns.groupBy { it.method }
@@ -253,7 +256,7 @@ class CheckInAnalyticsServiceImpl(
 
     override fun predictCheckInCompletion(eventId: UUID): CheckInPrediction {
         val registrations = registrationRepository.findByEventId(eventId)
-        val checkIns = checkInRepository.findByEventId(eventId)
+        val checkIns = checkInRepository.findByEventIdOrderByCheckedInAtDesc(eventId)
         
         val totalTarget = registrations.size
         val currentProgress = checkIns.size.toDouble() / totalTarget
@@ -401,5 +404,33 @@ class CheckInAnalyticsServiceImpl(
 
     private fun generateMitigationStrategies(bottlenecks: List<Bottleneck>): List<String> {
         return listOf("Open side entrances", "Deploy mobile check-in stations")
+    }
+    
+    private fun convertCheckInToDto(checkIn: CheckIn): CheckInDto {
+        return CheckInDto().apply {
+            BeanUtils.copyProperties(checkIn, this)
+            
+            // Set basic properties
+            this.id = checkIn.id
+            this.registrationId = checkIn.registration?.id
+            this.sessionId = checkIn.session?.id
+            this.type = checkIn.type
+            this.method = checkIn.method
+            this.checkedInAt = checkIn.checkedInAt
+            this.checkedInBy = checkIn.checkedInBy
+            this.location = checkIn.location
+            this.notes = checkIn.notes
+            
+            // Set additional display info
+            checkIn.registration?.let { reg ->
+                reg.eventInstance?.event?.let { event ->
+                    this.eventName = event.name
+                }
+            }
+            
+            checkIn.session?.let { session ->
+                this.sessionTitle = session.title
+            }
+        }
     }
 }

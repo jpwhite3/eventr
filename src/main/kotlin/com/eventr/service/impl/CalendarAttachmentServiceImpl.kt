@@ -28,13 +28,13 @@ class CalendarAttachmentServiceImpl : CalendarAttachmentService {
         validateEventForCalendar(eventInstance)
         
         val calendar = Calendar()
-        calendar.add(ProdId("-//EventR//EventR Calendar//EN"))
-        calendar.add(Version.VERSION_2_0)
-        calendar.add(CalScale.GREGORIAN)
+        calendar.properties.add(ProdId("-//EventR//EventR Calendar//EN"))
+        calendar.properties.add(Version.VERSION_2_0)
+        calendar.properties.add(CalScale.GREGORIAN)
         
-        val event = eventInstance.event
-        val startDateTime = eventInstance.startDateTime ?: event.startDateTime
-        val endDateTime = eventInstance.endDateTime ?: event.endDateTime ?: startDateTime?.plusHours(1)
+        val event = eventInstance.event ?: throw IllegalArgumentException("EventInstance must have an associated Event")
+        val startDateTime = eventInstance.dateTime ?: event.startDateTime
+        val endDateTime = event.endDateTime ?: startDateTime?.plusHours(1)
         
         if (startDateTime != null && endDateTime != null) {
             // Convert to UTC for calendar
@@ -48,25 +48,25 @@ class CalendarAttachmentServiceImpl : CalendarAttachmentService {
             )
             
             // Add event properties
-            vEvent.add(Uid(UUID.randomUUID().toString()))
-            vEvent.add(DtStamp(net.fortuna.ical4j.model.DateTime()))
+            vEvent.properties.add(Uid(UUID.randomUUID().toString()))
+            vEvent.properties.add(DtStamp(net.fortuna.ical4j.model.DateTime()))
             
             // Add location if available
             val locationStr = formatCalendarLocation(event, eventInstance)
             if (locationStr.isNotBlank()) {
-                vEvent.add(Location(locationStr))
+                vEvent.properties.add(Location(locationStr))
             }
             
             // Add description
             val description = formatCalendarDescription(event, eventInstance)
             if (description.isNotBlank()) {
-                vEvent.add(Description(description))
+                vEvent.properties.add(Description(description))
             }
             
             // Add organizer if available
             event.organizerEmail?.let { email ->
                 try {
-                    vEvent.add(Organizer("mailto:$email"))
+                    vEvent.properties.add(Organizer("mailto:$email"))
                 } catch (e: Exception) {
                     // Skip organizer if invalid email format
                 }
@@ -74,17 +74,17 @@ class CalendarAttachmentServiceImpl : CalendarAttachmentService {
             
             // Add categories
             event.category?.let { category ->
-                vEvent.add(Categories(category))
+                vEvent.properties.add(Categories(category.toString()))
             }
             
             // Add status
             when (event.status) {
-                EventStatus.PUBLISHED -> vEvent.add(Status.VEVENT_CONFIRMED)
-                EventStatus.CANCELLED -> vEvent.add(Status.VEVENT_CANCELLED)
-                else -> vEvent.add(Status.VEVENT_TENTATIVE)
+                EventStatus.PUBLISHED -> vEvent.properties.add(Status.VEVENT_CONFIRMED)
+                EventStatus.DRAFT -> vEvent.properties.add(Status.VEVENT_TENTATIVE)
+                else -> vEvent.properties.add(Status.VEVENT_TENTATIVE)
             }
             
-            calendar.add(vEvent)
+            calendar.components.add(vEvent)
         }
         
         // Convert to byte array
@@ -97,20 +97,20 @@ class CalendarAttachmentServiceImpl : CalendarAttachmentService {
     
     override fun createMultiEventIcsFile(eventInstances: List<EventInstance>, calendarName: String): ByteArray {
         val calendar = Calendar()
-        calendar.add(ProdId("-//EventR//EventR Calendar//EN"))
-        calendar.add(Version.VERSION_2_0)
-        calendar.add(CalScale.GREGORIAN)
+        calendar.properties.add(ProdId("-//EventR//EventR Calendar//EN"))
+        calendar.properties.add(Version.VERSION_2_0)
+        calendar.properties.add(CalScale.GREGORIAN)
         
         // Add calendar name
-        calendar.add(XProperty("X-WR-CALNAME", calendarName))
+        calendar.properties.add(XProperty("X-WR-CALNAME", calendarName))
         
         eventInstances.forEach { eventInstance ->
             try {
                 validateEventForCalendar(eventInstance)
                 
-                val event = eventInstance.event
-                val startDateTime = eventInstance.startDateTime ?: event.startDateTime
-                val endDateTime = eventInstance.endDateTime ?: event.endDateTime ?: startDateTime?.plusHours(1)
+                val event = eventInstance.event ?: return@forEach
+                val startDateTime = eventInstance.dateTime ?: event.startDateTime
+                val endDateTime = event.endDateTime ?: startDateTime?.plusHours(1)
                 
                 if (startDateTime != null && endDateTime != null) {
                     val startUtc = startDateTime.atZone(ZoneId.systemDefault())
@@ -122,20 +122,20 @@ class CalendarAttachmentServiceImpl : CalendarAttachmentService {
                         event.name ?: "Event"
                     )
                     
-                    vEvent.add(Uid("${event.id}-${eventInstance.id}"))
-                    vEvent.add(DtStamp(net.fortuna.ical4j.model.DateTime()))
+                    vEvent.properties.add(Uid("${event.id}-${eventInstance.id}"))
+                    vEvent.properties.add(DtStamp(net.fortuna.ical4j.model.DateTime()))
                     
                     val locationStr = formatCalendarLocation(event, eventInstance)
                     if (locationStr.isNotBlank()) {
-                        vEvent.add(Location(locationStr))
+                        vEvent.properties.add(Location(locationStr))
                     }
                     
                     val description = formatCalendarDescription(event, eventInstance)
                     if (description.isNotBlank()) {
-                        vEvent.add(Description(description))
+                        vEvent.properties.add(Description(description))
                     }
                     
-                    calendar.add(vEvent)
+                    calendar.components.add(vEvent)
                 }
             } catch (e: Exception) {
                 // Skip invalid events but continue processing others
@@ -170,15 +170,15 @@ class CalendarAttachmentServiceImpl : CalendarAttachmentService {
         }
         
         // Add meeting URL for virtual events
-        if (event.eventType == EventType.VIRTUAL && !event.meetingUrl.isNullOrBlank()) {
-            parts.add("Join online: ${event.meetingUrl}")
+        if (event.eventType == EventType.VIRTUAL && !event.virtualUrl.isNullOrBlank()) {
+            parts.add("Join online: ${event.virtualUrl}")
         }
         
         // Add registration info if available
-        if (event.requiresRegistration) {
+        if (event.maxRegistrations != null) {
             parts.add("Registration required")
             
-            event.maxCapacity?.let { capacity ->
+            event.maxRegistrations?.let { capacity ->
                 if (capacity > 0) {
                     parts.add("Capacity: $capacity attendees")
                 }
@@ -186,11 +186,8 @@ class CalendarAttachmentServiceImpl : CalendarAttachmentService {
         }
         
         // Add event instance specific details
-        eventInstance.notes?.let { notes ->
-            if (notes.isNotBlank()) {
-                parts.add("Notes: $notes")
-            }
-        }
+        // EventInstance doesn't have notes property
+        // Additional instance-specific info could be added here if needed
         
         return parts.joinToString("\n\n")
     }
@@ -200,14 +197,14 @@ class CalendarAttachmentServiceImpl : CalendarAttachmentService {
             EventType.IN_PERSON -> {
                 val locationParts = mutableListOf<String>()
                 
-                event.location?.let { location ->
-                    if (location.isNotBlank()) {
-                        locationParts.add(location)
+                event.venueName?.let { venue ->
+                    if (venue.isNotBlank()) {
+                        locationParts.add(venue)
                     }
                 }
                 
                 event.address?.let { address ->
-                    if (address.isNotBlank() && address != event.location) {
+                    if (address.isNotBlank() && address != event.venueName) {
                         locationParts.add(address)
                     }
                 }
@@ -216,53 +213,55 @@ class CalendarAttachmentServiceImpl : CalendarAttachmentService {
             }
             
             EventType.VIRTUAL -> {
-                event.meetingUrl ?: "Virtual Event"
+                event.virtualUrl ?: "Virtual Event"
             }
             
             EventType.HYBRID -> {
                 val parts = mutableListOf<String>()
                 
-                event.location?.let { location ->
-                    if (location.isNotBlank()) {
-                        parts.add(location)
+                event.venueName?.let { venue ->
+                    if (venue.isNotBlank()) {
+                        parts.add(venue)
                     }
                 }
                 
-                event.meetingUrl?.let { url ->
+                event.virtualUrl?.let { url ->
                     parts.add("Online: $url")
                 }
                 
                 parts.joinToString(" / ")
             }
+            
+            null -> "Event Location"
         }
     }
     
     override fun validateEventForCalendar(eventInstance: EventInstance) {
-        val event = eventInstance.event
+        val event = eventInstance.event ?: throw IllegalArgumentException("EventInstance must have an associated Event")
         
         if (event.name.isNullOrBlank()) {
             throw IllegalArgumentException("Event name is required for calendar generation")
         }
         
-        val startDateTime = eventInstance.startDateTime ?: event.startDateTime
+        val startDateTime = eventInstance.dateTime ?: event.startDateTime
         if (startDateTime == null) {
             throw IllegalArgumentException("Event start date/time is required for calendar generation")
         }
         
-        val endDateTime = eventInstance.endDateTime ?: event.endDateTime
+        val endDateTime = event.endDateTime
         if (endDateTime != null && endDateTime.isBefore(startDateTime)) {
             throw IllegalArgumentException("Event end date/time cannot be before start date/time")
         }
         
         // Validate location for in-person events
         if (event.eventType == EventType.IN_PERSON && 
-            event.location.isNullOrBlank() && 
+            event.venueName.isNullOrBlank() && 
             event.address.isNullOrBlank()) {
             throw IllegalArgumentException("Location or address is required for in-person events")
         }
         
         // Validate meeting URL for virtual events
-        if (event.eventType == EventType.VIRTUAL && event.meetingUrl.isNullOrBlank()) {
+        if (event.eventType == EventType.VIRTUAL && event.virtualUrl.isNullOrBlank()) {
             throw IllegalArgumentException("Meeting URL is required for virtual events")
         }
     }
