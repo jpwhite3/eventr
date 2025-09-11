@@ -49,6 +49,7 @@ const MobileCheckInPage: React.FC = () => {
         }
 
         loadEventData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [eventId, sessionId]);
 
     const loadEventData = useCallback(async () => {

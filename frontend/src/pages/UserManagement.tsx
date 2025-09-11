@@ -22,7 +22,7 @@ import {
 } from '@coreui/react';
 
 // Import Bootstrap components for compatibility
-import { Modal, Form, Alert, Toast } from 'react-bootstrap';
+import { Form, Alert, Toast } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUsers,
@@ -33,7 +33,6 @@ import {
   faTrash,
   faShield,
   faUserCheck,
-  faUserTimes,
   faEye,
   faEnvelope,
   faDownload,
@@ -46,7 +45,7 @@ import {
   faTimesCircle,
   faSync,
 } from '@fortawesome/free-solid-svg-icons';
-import apiClient from '../api/apiClient';
+// import apiClient from '../api/apiClient';
 
 interface User {
   id: string;

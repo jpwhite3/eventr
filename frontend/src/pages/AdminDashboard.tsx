@@ -24,7 +24,7 @@ import {
 } from '@coreui/react';
 
 // Import Bootstrap modal components directly from react-bootstrap for compatibility
-import { Modal, Button, Form, Alert, Toast } from 'react-bootstrap';
+import { Form, Alert, Toast } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCalendarAlt,
@@ -42,12 +42,9 @@ import {
   faSort,
   faDownload,
   faSync,
-  faList,
   faCheckSquare,
-  faSquare,
   faEllipsisV,
   faCalendarCheck,
-  faCalendarTimes,
   faShare,
   faCogs,
   faFileExport,

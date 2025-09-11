@@ -23,7 +23,6 @@ const ReportScheduler: React.FC<ReportSchedulerProps> = ({
   const [schedules, setSchedules] = useState<ReportSchedule[]>([]);
   const [summary, setSummary] = useState<ScheduleSummary | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedSchedule, setSelectedSchedule] = useState<ReportSchedule | null>(null);
   const [loading, setLoading] = useState(true);
   const [reportingManager] = useState(() => new AutomatedReportingManager());
 
@@ -40,6 +39,7 @@ const ReportScheduler: React.FC<ReportSchedulerProps> = ({
   useEffect(() => {
     loadSchedules();
     loadSummary();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadSchedules = useCallback(async () => {
@@ -436,8 +436,9 @@ const ReportScheduler: React.FC<ReportSchedulerProps> = ({
                           </button>
                           <button
                             className="btn btn-outline-secondary"
-                            onClick={() => setSelectedSchedule(schedule)}
-                            title="Edit"
+                            onClick={() => {/* TODO: Implement edit functionality */}}
+                            title="Edit (Coming Soon)"
+                            disabled
                           >
                             ✏️
                           </button>

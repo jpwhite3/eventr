@@ -83,12 +83,6 @@ const EventRegistrationManagement: React.FC = () => {
   const [toast, addToast] = useState<string>('');
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkProcessing, setBulkProcessing] = useState(false);
-  const [emailComposer, setEmailComposer] = useState({
-    show: false,
-    subject: '',
-    body: '',
-    recipients: [] as string[]
-  });
 
   // State for future manual registration and email form implementation
   // const [manualReg, setManualReg] = useState({
@@ -180,12 +174,8 @@ const EventRegistrationManagement: React.FC = () => {
 
     if (action === 'email') {
       const selectedRegs = filteredRegistrations.filter(r => selectedRegistrations.has(r.id));
-      setEmailComposer({
-        show: true,
-        subject: `Update regarding ${event?.name}`,
-        body: '',
-        recipients: selectedRegs.map(r => r.userEmail)
-      });
+      // TODO: Implement email composer modal
+      addToast(`Email feature coming soon for ${selectedRegs.length} recipients`);
       return;
     }
 

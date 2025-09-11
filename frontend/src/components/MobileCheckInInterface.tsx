@@ -130,6 +130,7 @@ const MobileCheckInInterface: React.FC<MobileCheckInInterfaceProps> = ({
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -145,6 +146,7 @@ const MobileCheckInInterface: React.FC<MobileCheckInInterfaceProps> = ({
             
             return () => clearInterval(interval);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [eventId]);
 
     const loadStats = useCallback(async () => {

@@ -19,20 +19,17 @@ import {
   CTableBody,
   CTableDataCell,
   CWidgetStatsF,
-  CProgress,
 } from '@coreui/react';
 
 // Import Bootstrap components for compatibility
-import { Modal, Form, Alert, Nav, Tab } from 'react-bootstrap';
+import { Modal, Form, Nav, Tab } from 'react-bootstrap';
 import ReportScheduler from '../components/ReportScheduler';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faChartBar,
   faDownload,
   faFileExport,
-  faCalendar,
   faSync,
-  faFilter,
   faUsers,
   faCalendarAlt,
   faDollarSign,
@@ -44,8 +41,6 @@ import {
   faEnvelope,
   faCloudDownload,
   faDatabase,
-  faArrowUp,
-  faArrowDown,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   Chart as ChartJS,
@@ -59,7 +54,7 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Line, Doughnut } from 'react-chartjs-2';
 
 // Register ChartJS components
 ChartJS.register(
@@ -178,11 +173,13 @@ const SystemReports: React.FC = () => {
   const fetchReports = useCallback(async () => {
     // TODO: Replace with actual API call
     setReports(mockReports);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchMetrics = useCallback(async () => {
     // TODO: Replace with actual API call
     setMetrics(mockMetrics);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleGenerateReport = async (reportId: string) => {

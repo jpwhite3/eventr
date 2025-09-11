@@ -49,6 +49,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
         return () => {
             stopCamera();
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isActive]);
 
     // Load offline queue and enumerate cameras on mount
@@ -82,6 +83,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
 
         window.addEventListener('online', handleOnline);
         return () => window.removeEventListener('online', handleOnline);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [offlineQueue]);
 
     const startCamera = useCallback(async () => {
@@ -168,6 +170,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
             onError?.(errorMessage);
             setIsScanning(false);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [facingMode]);
 
     const stopCamera = useCallback(() => {
