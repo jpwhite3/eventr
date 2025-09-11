@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.net.URL
+import java.net.URI
 
 @DisplayName("S3 Service Tests")
 class S3ServiceTest {
@@ -34,7 +35,7 @@ class S3ServiceTest {
         // Given
         val key = "test-file.jpg"
         val inputStream: InputStream = ByteArrayInputStream("test content".toByteArray())
-        val expectedUrl = URL("https://eventr-images.s3.amazonaws.com/test-file.jpg")
+        val expectedUrl = URI.create("https://eventr-images.s3.amazonaws.com/test-file.jpg").toURL()
         
         `when`(mockS3Client.putObject(any(PutObjectRequest::class.java), any(RequestBody::class.java)))
             .thenReturn(mockPutObjectResponse)
@@ -57,7 +58,7 @@ class S3ServiceTest {
         // Given
         val key = "documents/report.pdf"
         val inputStream: InputStream = ByteArrayInputStream("pdf content".toByteArray())
-        val expectedUrl = URL("https://eventr-images.s3.amazonaws.com/documents/report.pdf")
+        val expectedUrl = URI.create("https://eventr-images.s3.amazonaws.com/documents/report.pdf").toURL()
         
         `when`(mockS3Client.putObject(any(PutObjectRequest::class.java), any(RequestBody::class.java)))
             .thenReturn(mockPutObjectResponse)
@@ -80,7 +81,7 @@ class S3ServiceTest {
         // Given
         val key = "images/photo.png"
         val inputStream: InputStream = ByteArrayInputStream("image data".toByteArray())
-        val expectedUrl = URL("https://eventr-images.s3.amazonaws.com/images/photo.png")
+        val expectedUrl = URI.create("https://eventr-images.s3.amazonaws.com/images/photo.png").toURL()
         
         `when`(mockS3Client.putObject(any(PutObjectRequest::class.java), any(RequestBody::class.java)))
             .thenReturn(mockPutObjectResponse)
@@ -103,7 +104,7 @@ class S3ServiceTest {
         // Given
         val key = "empty-file.txt"
         val inputStream: InputStream = ByteArrayInputStream(byteArrayOf())
-        val expectedUrl = URL("https://eventr-images.s3.amazonaws.com/empty-file.txt")
+        val expectedUrl = URI.create("https://eventr-images.s3.amazonaws.com/empty-file.txt").toURL()
         
         `when`(mockS3Client.putObject(any(PutObjectRequest::class.java), any(RequestBody::class.java)))
             .thenReturn(mockPutObjectResponse)
@@ -126,7 +127,7 @@ class S3ServiceTest {
         // Given
         val key = "test-key"
         val inputStream: InputStream = ByteArrayInputStream("content".toByteArray())
-        val expectedUrl = URL("https://eventr-images.s3.amazonaws.com/test-key")
+        val expectedUrl = URI.create("https://eventr-images.s3.amazonaws.com/test-key").toURL()
         
         `when`(mockS3Client.putObject(any(PutObjectRequest::class.java), any(RequestBody::class.java)))
             .thenReturn(mockPutObjectResponse)

@@ -62,7 +62,7 @@ class EventDtoTest {
         assertEquals(EventType.VIRTUAL, createDto.eventType)
         assertEquals(EventCategory.TECHNOLOGY, createDto.category)
         assertEquals("https://zoom.us/meeting", createDto.virtualUrl)
-        assertFalse(createDto.requiresApproval ?: true)
+        assertFalse(createDto.requiresApproval)
         assertEquals(100, createDto.maxRegistrations)
         assertEquals("Tech Team", createDto.organizerName)
         assertEquals(3, createDto.tags?.size)
@@ -104,7 +104,7 @@ class EventDtoTest {
         assertNull(eventDto.venueName)
         assertNull(eventDto.virtualUrl)
         assertNull(eventDto.organizerName)
-        assertFalse(eventDto.requiresApproval ?: true) // default value
+        assertFalse(eventDto.requiresApproval) // default value
     }
 
     @Test

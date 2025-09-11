@@ -248,13 +248,13 @@ class PrerequisiteValidationServiceTest {
         val toSessionId = UUID.randomUUID()
         val intermediateSession = createSession(UUID.randomUUID(), "Intermediate Session")
         
-        val pathResults = listOf(
+        val pathResults: List<Array<Any>> = listOf(
             arrayOf("path_id", fromSessionId.toString()),
             arrayOf("path_id", intermediateSession.id.toString()),
             arrayOf("path_id", toSessionId.toString())
         )
         
-        whenever(sessionDependencyRepository.findDependencyPath(fromSessionId, toSessionId)).thenReturn(pathResults as List<Array<Any>>)
+        whenever(sessionDependencyRepository.findDependencyPath(fromSessionId, toSessionId)).thenReturn(pathResults)
         whenever(sessionRepository.findById(fromSessionId)).thenReturn(Optional.of(createSession(fromSessionId, "From Session")))
         whenever(sessionRepository.findById(intermediateSession.id!!)).thenReturn(Optional.of(intermediateSession))
         whenever(sessionRepository.findById(toSessionId)).thenReturn(Optional.of(createSession(toSessionId, "To Session")))

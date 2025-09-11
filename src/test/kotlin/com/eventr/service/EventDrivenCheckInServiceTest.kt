@@ -85,7 +85,7 @@ class EventDrivenCheckInServiceTest {
 
         // Assert
         assertNotNull(result)
-        assertEquals(testCheckInId, result!!.id)
+        assertEquals(testCheckInId, result?.id)
         assertEquals(testRegistrationId, result.registrationId)
         assertEquals(testSessionId, result.sessionId)
         assertEquals(CheckInType.SESSION, result.type)
@@ -287,7 +287,7 @@ class EventDrivenCheckInServiceTest {
 
         // Assert
         assertNotNull(result)
-        assertEquals(testCheckInId, result!!.id)
+        assertEquals(testCheckInId, result?.id)
         verify(checkInRepository).findById(testCheckInId)
     }
 

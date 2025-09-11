@@ -70,7 +70,7 @@ class CapacityManagementServiceTest {
         assertEquals(sessionId, result.sessionId)
         assertEquals(50, result.maximumCapacity)
         assertEquals(10, result.minimumCapacity)
-        assertTrue(result.enableWaitlist ?: false)
+        assertTrue(result.enableWaitlist)
         verify(sessionCapacityRepository).save(any<SessionCapacity>())
     }
 
@@ -277,7 +277,7 @@ class CapacityManagementServiceTest {
         )
     }
 
-    private fun createSessionCapacity(sessionId: UUID, session: Session): SessionCapacity {
+    private fun createSessionCapacity(@Suppress("UNUSED_PARAMETER") sessionId: UUID, session: Session): SessionCapacity {
         return SessionCapacity(
             id = UUID.randomUUID()
         ).apply {

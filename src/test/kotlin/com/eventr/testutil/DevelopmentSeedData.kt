@@ -581,7 +581,7 @@ object DevelopmentSeedData {
     private fun createStartupPitchRegistrations(count: Int): List<Registration> = 
         TestFixtures.generateRegistrations(count)
     
-    private fun createGlobalSummitSessions(event: Event, startTime: LocalDateTime): List<Session> = 
+    private fun createGlobalSummitSessions(event: Event, @Suppress("UNUSED_PARAMETER") startTime: LocalDateTime): List<Session> = 
         TestDataBuilders.multipleSessions(8).map { it.withEvent(event).build() }
     
     private fun createGlobalRegistrations(count: Int): List<Registration> = 
@@ -590,7 +590,7 @@ object DevelopmentSeedData {
     private fun createCorporateTrainingRegistrations(count: Int): List<Registration> =
         TestFixtures.generateRegistrations(count)
         
-    private fun createHackathonSessions(event: Event, startTime: LocalDateTime): List<Session> =
+    private fun createHackathonSessions(event: Event, @Suppress("UNUSED_PARAMETER") startTime: LocalDateTime): List<Session> =
         TestDataBuilders.multipleSessions(6).map { it.withEvent(event).build() }
         
     private fun createHackathonRegistrations(count: Int): List<Registration> =
