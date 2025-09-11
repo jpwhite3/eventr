@@ -6,10 +6,11 @@ import { useAuth } from '../hooks/useAuth';
 import webSocketService from '../services/WebSocketService';
 
 // Mock dependencies
-jest.mock('../hooks/useAuth');
+const mockUseAuth = jest.fn();
+jest.mock('../hooks/useAuth', () => ({
+  useAuth: () => mockUseAuth()
+}));
 jest.mock('../services/WebSocketService');
-
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 const mockWebSocketService = webSocketService as jest.Mocked<typeof webSocketService>;
 
 // Mock WebSocket subscription function
