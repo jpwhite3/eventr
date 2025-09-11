@@ -145,7 +145,7 @@ class CheckInAnalyticsServiceImpl(
         
         return SessionCheckInStats(
             sessionId = sessionId,
-            sessionName = session.title ?: "Unknown Session",
+            sessionName = session.title,
             totalRegistrations = totalRegistrations.toInt(),
             checkedInCount = checkedInCount,
             attendanceRate = attendanceRate,
@@ -295,7 +295,7 @@ class CheckInAnalyticsServiceImpl(
         val firstCheckIn = sortedCheckIns.first().checkedInAt
         val lastCheckIn = sortedCheckIns.last().checkedInAt
         
-        if (firstCheckIn == null || lastCheckIn == null) return 0.0 // These conditions are always false but kept for safety
+        // firstCheckIn and lastCheckIn are guaranteed to be non-null from sorted list
         
         val durationMinutes = ChronoUnit.MINUTES.between(firstCheckIn, lastCheckIn).toDouble()
         return if (durationMinutes > 0) checkIns.size / durationMinutes else 0.0

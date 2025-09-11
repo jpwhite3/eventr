@@ -3,8 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import CoreUILayout from './components/layout/CoreUILayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
-// Core pages - keep synchronous for immediate loading
-import HomePage from './pages/HomePage';
+// Core pages - keep synchronous for immediate loading  
 import EventListPage from './pages/EventListPage';
 import EventDetailsPage from './pages/EventDetailsPage';
 
@@ -48,7 +47,7 @@ function App(): React.JSX.Element {
       <CoreUILayout>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<EventListPage />} />
           <Route path="/events" element={<EventListPage />} />
           <Route path="/events/:id" element={<EventDetailsPage />} />
           

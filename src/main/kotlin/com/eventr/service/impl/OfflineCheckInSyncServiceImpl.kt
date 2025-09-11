@@ -124,11 +124,7 @@ class OfflineCheckInSyncServiceImpl(
             errors.add(ValidationError("id", "REQUIRED", "Offline ID is required"))
         }
         
-        // Note: This condition is always false since registrationId is non-null in the DTO
-        // Keeping for safety in case the model changes
-        if (offlineCheckIn.registrationId == null) {
-            errors.add(ValidationError("registrationId", "REQUIRED", "Registration ID is required"))
-        }
+        // registrationId is guaranteed to be non-null in the DTO
         
         // checkedInAt is non-null LocalDateTime in DTO, no need to check for null
         

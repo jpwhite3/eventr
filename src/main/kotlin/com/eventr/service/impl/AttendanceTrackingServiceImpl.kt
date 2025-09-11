@@ -64,7 +64,7 @@ class AttendanceTrackingServiceImpl(
                 
                 AttendanceSessionSummary(
                     sessionId = sessionId,
-                    sessionName = session.title ?: "Unknown Session",
+                    sessionName = session.title,
                     registrations = sessionRegistrations,
                     checkIns = sessionCheckIns.size,
                     attendanceRate = if (sessionRegistrations > 0) {
@@ -151,7 +151,7 @@ class AttendanceTrackingServiceImpl(
                 
                 AttendanceSessionSummary(
                     sessionId = sessionId,
-                    sessionName = session.title ?: "Unknown Session",
+                    sessionName = session.title,
                     registrations = sessionRegistrations,
                     checkIns = sessionCheckIns.size,
                     attendanceRate = if (sessionRegistrations > 0) {

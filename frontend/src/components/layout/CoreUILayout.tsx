@@ -42,32 +42,27 @@ interface CoreUILayoutProps {
 }
 
 const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
-  const [sidebarShow, setSidebarShow] = useState(window.innerWidth >= 992); // Show on desktop, hide on mobile by default
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+  const [sidebarShow, setSidebarShow] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const location = useLocation();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
 
-  // Handle responsive behavior
+  // Check if screen is mobile and set initial sidebar state
   useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 992;
+    const checkScreenSize = () => {
+      const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      // On desktop, show sidebar by default; on mobile, hide by default
-      if (!mobile && !sidebarShow) {
-        setSidebarShow(true);
-      } else if (mobile && sidebarShow) {
-        setSidebarShow(false);
-      }
+      // On desktop, sidebar should always be visible
+      // On mobile, sidebar should be hidden by default
+      setSidebarShow(!mobile);
     };
 
-    // Add event listener
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', handleResize);
-  }, [sidebarShow]);
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const handleLogin = () => {
     setAuthModalMode('login');
@@ -178,8 +173,8 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
 
   return (
     <div className="d-flex">
-      {/* Mobile backdrop */}
-      {sidebarShow && isMobile && (
+      {/* Backdrop for sidebar overlay - only on mobile */}
+      {isMobile && sidebarShow && (
         <div 
           className="position-fixed w-100 h-100"
           style={{ 
@@ -194,8 +189,13 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
       
       <CSidebar
         visible={sidebarShow}
-        onVisibleChange={(visible) => setSidebarShow(visible)}
-        className={`sidebar-dark sidebar-fixed ${sidebarShow ? 'show' : ''}`}
+        onVisibleChange={(visible) => {
+          // Only allow toggling on mobile
+          if (isMobile) {
+            setSidebarShow(visible);
+          }
+        }}
+        className={`sidebar-dark ${!isMobile ? 'sidebar-fixed' : ''} ${sidebarShow ? 'show' : ''}`}
         colorScheme="dark"
       >
         <div className="sidebar-brand d-flex align-items-center justify-content-center py-3">
@@ -231,22 +231,33 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
           })}
         </CSidebarNav>
         
-        <CSidebarToggler
-          className="d-none d-lg-flex"
-          onClick={() => setSidebarShow(!sidebarShow)}
-        />
+        {/* Only show sidebar toggler on mobile */}
+        {isMobile && (
+          <CSidebarToggler
+            className="d-flex"
+            onClick={() => setSidebarShow(!sidebarShow)}
+          />
+        )}
       </CSidebar>
 
       <div 
-        className={`wrapper d-flex flex-column min-vh-100 ${sidebarShow && !isMobile ? 'sidebar-open' : 'sidebar-closed'}`}
+        className="wrapper d-flex flex-column min-vh-100"
+        style={{
+          marginLeft: !isMobile && sidebarShow ? '280px' : '0',
+          transition: 'margin-left 0.15s ease-in-out',
+          width: !isMobile && sidebarShow ? 'calc(100% - 280px)' : '100%'
+        }}
       >
         <CHeader className="header header-sticky mb-4">
-          <CHeaderToggler
-            className="ps-1"
-            onClick={() => setSidebarShow(!sidebarShow)}
-          >
-            <FontAwesomeIcon icon={faBars} size="lg" />
-          </CHeaderToggler>
+          {/* Only show header toggle button on mobile */}
+          {isMobile && (
+            <CHeaderToggler
+              className="ps-1"
+              onClick={() => setSidebarShow(!sidebarShow)}
+            >
+              <FontAwesomeIcon icon={faBars} size="lg" />
+            </CHeaderToggler>
+          )}
           
           <CHeaderNav className="ms-auto">
             <div className="d-flex align-items-center gap-3">
