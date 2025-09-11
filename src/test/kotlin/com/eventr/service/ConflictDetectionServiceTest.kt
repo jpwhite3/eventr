@@ -163,7 +163,7 @@ class ConflictDetectionServiceTest {
     fun shouldDetectUserConflicts() {
         // Given
         val eventId = UUID.randomUUID()
-        whenever(registrationRepository.findByEventId(eventId)).thenReturn(emptyList<Registration>() as java.util.List<Registration>)
+        whenever(registrationRepository.findByEventId(eventId)).thenReturn(emptyList<Registration>() )
 
         // When
         val conflicts = conflictDetectionService.detectUserConflicts(eventId)

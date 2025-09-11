@@ -12,8 +12,6 @@ import {
   CDropdownMenu,
   CDropdownItem,
   CBadge,
-  CFormSelect,
-  CFormInput,
   CTable,
   CTableHead,
   CTableRow,
@@ -22,20 +20,10 @@ import {
   CTableDataCell,
   CWidgetStatsF,
   CProgress,
-  CModal,
-  CModalHeader,
-  CModalTitle,
-  CModalBody,
-  CModalFooter,
-  CFormTextarea,
-  CFormLabel,
-  CAlert,
-  CNav,
-  CNavItem,
-  CNavLink,
-  CTabContent,
-  CTabPane,
 } from '@coreui/react';
+
+// Import Bootstrap components for compatibility
+import { Modal, Form, Alert, Nav, Tab } from 'react-bootstrap';
 import ReportScheduler from '../components/ReportScheduler';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -56,8 +44,8 @@ import {
   faEnvelope,
   faCloudDownload,
   faDatabase,
-  faTrendingUp,
-  faTrendingDown,
+  faArrowUp,
+  faArrowDown,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   Chart as ChartJS,
@@ -345,9 +333,9 @@ const SystemReports: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <CNav variant="tabs" className="mb-4">
-        <CNavItem>
-          <CNavLink
+      <Nav variant="tabs" className="mb-4">
+        <Nav.Item>
+          <Nav.Link
             href="#"
             active={activeTab === 'reports'}
             onClick={(e) => {
@@ -357,10 +345,10 @@ const SystemReports: React.FC = () => {
           >
             <FontAwesomeIcon icon={faChartBar} className="me-2" />
             Report Templates
-          </CNavLink>
-        </CNavItem>
-        <CNavItem>
-          <CNavLink
+          </Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
+          <Nav.Link
             href="#"
             active={activeTab === 'scheduler'}
             onClick={(e) => {
@@ -370,13 +358,14 @@ const SystemReports: React.FC = () => {
           >
             <FontAwesomeIcon icon={faClock} className="me-2" />
             Automated Scheduling
-          </CNavLink>
-        </CNavItem>
-      </CNav>
+          </Nav.Link>
+        </Nav.Item>
+      </Nav>
 
       {/* Tab Content */}
-      <CTabContent>
-        <CTabPane role="tabpanel" visible={activeTab === 'reports'}>
+      <Tab.Content>
+        {activeTab === 'reports' && (
+        <Tab.Pane role="tabpanel">
           {/* System Overview */}
           {metrics && (
             <CRow className="mb-4">
@@ -501,7 +490,7 @@ const SystemReports: React.FC = () => {
             <CCardBody>
               <CRow>
                 <CCol md={4}>
-                  <CFormSelect
+                  <Form.Select
                     value={filters.category}
                     onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
                   >
@@ -511,10 +500,10 @@ const SystemReports: React.FC = () => {
                     <option value="registrations">Registrations</option>
                     <option value="financial">Financial</option>
                     <option value="system">System</option>
-                  </CFormSelect>
+                  </Form.Select>
                 </CCol>
                 <CCol md={4}>
-                  <CFormSelect
+                  <Form.Select
                     value={filters.dateRange}
                     onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
                   >
@@ -523,10 +512,10 @@ const SystemReports: React.FC = () => {
                     <option value="90d">Last 90 Days</option>
                     <option value="1y">Last Year</option>
                     <option value="all">All Time</option>
-                  </CFormSelect>
+                  </Form.Select>
                 </CCol>
                 <CCol md={4}>
-                  <CFormSelect
+                  <Form.Select
                     value={filters.format}
                     onChange={(e) => setFilters(prev => ({ ...prev, format: e.target.value }))}
                   >
@@ -534,7 +523,7 @@ const SystemReports: React.FC = () => {
                     <option value="pdf">PDF</option>
                     <option value="excel">Excel</option>
                     <option value="csv">CSV</option>
-                  </CFormSelect>
+                  </Form.Select>
                 </CCol>
               </CRow>
             </CCardBody>
@@ -672,26 +661,29 @@ const SystemReports: React.FC = () => {
           </CCard>
         </CCol>
       </CRow>
-        </CTabPane>
+        </Tab.Pane>
+        )}
 
-        <CTabPane role="tabpanel" visible={activeTab === 'scheduler'}>
+        {activeTab === 'scheduler' && (
+        <Tab.Pane role="tabpanel">
           <ReportScheduler 
             onScheduleCreated={() => console.log('Schedule created')}
             onScheduleUpdated={() => console.log('Schedule updated')}
             onScheduleDeleted={() => console.log('Schedule deleted')}
           />
-        </CTabPane>
-      </CTabContent>
+        </Tab.Pane>
+        )}
+      </Tab.Content>
 
       {/* Schedule Modal */}
-      <CModal visible={showScheduleModal} onClose={() => setShowScheduleModal(false)}>
-        <CModalHeader>
-          <CModalTitle>Schedule Report: {selectedReport?.name}</CModalTitle>
-        </CModalHeader>
-        <CModalBody>
+      <Modal show={showScheduleModal} onHide={() => setShowScheduleModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Schedule Report: {selectedReport?.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
           <div className="mb-3">
-            <CFormLabel>Frequency</CFormLabel>
-            <CFormSelect
+            <Form.Label>Frequency</Form.Label>
+            <Form.Select
               value={scheduleSettings.frequency}
               onChange={(e) => setScheduleSettings(prev => ({ ...prev, frequency: e.target.value }))}
             >
@@ -700,12 +692,12 @@ const SystemReports: React.FC = () => {
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
               <option value="quarterly">Quarterly</option>
-            </CFormSelect>
+            </Form.Select>
           </div>
           
           <div className="mb-3">
-            <CFormLabel>Email Recipients</CFormLabel>
-            <CFormInput
+            <Form.Label>Email Recipients</Form.Label>
+            <Form.Control
               type="email"
               placeholder="Enter email addresses (comma-separated)"
               value={scheduleSettings.email}
@@ -714,24 +706,24 @@ const SystemReports: React.FC = () => {
           </div>
           
           <div className="mb-3">
-            <CFormLabel>Notes</CFormLabel>
-            <CFormTextarea
+            <Form.Label>Notes</Form.Label>
+            <Form.Control as="textarea"
               placeholder="Optional description or special instructions"
               value={scheduleSettings.description}
               onChange={(e) => setScheduleSettings(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
             />
           </div>
-        </CModalBody>
-        <CModalFooter>
+        </Modal.Body>
+        <Modal.Footer>
           <CButton color="secondary" onClick={() => setShowScheduleModal(false)}>
             Cancel
           </CButton>
           <CButton color="primary" onClick={saveScheduleSettings}>
             Save Schedule
           </CButton>
-        </CModalFooter>
-      </CModal>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

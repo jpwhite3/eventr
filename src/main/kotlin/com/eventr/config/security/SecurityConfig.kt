@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter
 import java.time.Duration
@@ -56,9 +57,7 @@ class SecurityConfig {
                     .contentTypeOptions { }
                     
                     // Enable XSS protection with blocking mode
-                    .xssProtection { xss ->
-                        xss.and()
-                    }
+                    .xssProtection { }
                     
                     // HTTP Strict Transport Security (HSTS)
                     // Forces HTTPS connections and prevents downgrade attacks
@@ -131,6 +130,11 @@ class SecurityConfig {
      * Configure secure cookies for production environment.
      * Ensures cookies are only sent over HTTPS and are not accessible via JavaScript.
      */
+    @Bean
+    fun passwordEncoder(): BCryptPasswordEncoder {
+        return BCryptPasswordEncoder()
+    }
+
     @Bean
     @Profile("prod")
     fun secureCookieProcessor(): org.apache.tomcat.util.http.Rfc6265CookieProcessor {

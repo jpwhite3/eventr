@@ -165,10 +165,11 @@ const ReportScheduler: React.FC<ReportSchedulerProps> = ({
         onScheduleUpdated?.(updatedSchedule);
       } else {
         // Fallback to local manager
-        const updated = reportingManager.updateSchedule(schedule.id!, { active: !schedule.active });
-        if (updated) {
-          setSchedules(prev => prev.map(s => s.id === schedule.id ? updated : s));
-          onScheduleUpdated?.(updated);
+        const wasUpdated = reportingManager.updateSchedule(schedule.id!, { active: !schedule.active });
+        if (wasUpdated) {
+          const updatedSchedule = { ...schedule, active: !schedule.active };
+          setSchedules(prev => prev.map(s => s.id === schedule.id ? updatedSchedule : s));
+          onScheduleUpdated?.(updatedSchedule);
         }
       }
       
@@ -194,7 +195,7 @@ const ReportScheduler: React.FC<ReportSchedulerProps> = ({
   };
 
   const handleDeleteSchedule = async (schedule: ReportSchedule) => {
-    if (!schedule.id || !confirm(`Are you sure you want to delete "${schedule.name}"?`)) {
+    if (!schedule.id || !window.confirm(`Are you sure you want to delete "${schedule.name}"?`)) {
       return;
     }
 

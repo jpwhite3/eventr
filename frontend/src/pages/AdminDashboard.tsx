@@ -20,19 +20,11 @@ import {
   CDropdownToggle,
   CDropdownMenu,
   CDropdownItem,
-  CFormSelect,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-  CAlert,
   CProgress,
-  CToast,
-  CToastBody,
-  CToastClose,
-  CToaster,
 } from '@coreui/react';
+
+// Import Bootstrap modal components directly from react-bootstrap for compatibility
+import { Modal, Button, Form, Alert, Toast } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCalendarAlt,
@@ -50,7 +42,7 @@ import {
   faSort,
   faDownload,
   faSync,
-  faBulk,
+  faList,
   faCheckSquare,
   faSquare,
   faEllipsisV,
@@ -453,12 +445,11 @@ const AdminDashboard: React.FC = () => {
     return (
         <div className="animated fadeIn">
             {/* Toast Notifications */}
-            <CToaster className="p-3" placement="top-end">
-                <CToast visible={toast.visible} color={toast.color}>
-                    <CToastBody>{toast.message}</CToastBody>
-                    <CToastClose onClick={() => setToast(prev => ({ ...prev, visible: false }))} />
-                </CToast>
-            </CToaster>
+            <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 1050 }}>
+                <Toast show={toast.visible} onClose={() => setToast(prev => ({ ...prev, visible: false }))} bg={toast.color}>
+                    <Toast.Body>{toast.message}</Toast.Body>
+                </Toast>
+            </div>
 
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -748,7 +739,7 @@ const AdminDashboard: React.FC = () => {
                             {showFilters && (
                                 <CRow className="mb-3">
                                     <CCol md={3}>
-                                        <CFormSelect
+                                        <Form.Select
                                             value={filters.status}
                                             onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                                         >
@@ -757,10 +748,10 @@ const AdminDashboard: React.FC = () => {
                                             <option value="PUBLISHED">Published</option>
                                             <option value="ACTIVE">Active</option>
                                             <option value="CANCELLED">Cancelled</option>
-                                        </CFormSelect>
+                                        </Form.Select>
                                     </CCol>
                                     <CCol md={3}>
-                                        <CFormSelect
+                                        <Form.Select
                                             value={filters.eventType}
                                             onChange={(e) => setFilters(prev => ({ ...prev, eventType: e.target.value }))}
                                         >
@@ -769,10 +760,10 @@ const AdminDashboard: React.FC = () => {
                                             <option value="WORKSHOP">Workshop</option>
                                             <option value="SEMINAR">Seminar</option>
                                             <option value="WEBINAR">Webinar</option>
-                                        </CFormSelect>
+                                        </Form.Select>
                                     </CCol>
                                     <CCol md={3}>
-                                        <CFormSelect
+                                        <Form.Select
                                             value={filters.dateRange}
                                             onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
                                         >
@@ -780,11 +771,11 @@ const AdminDashboard: React.FC = () => {
                                             <option value="TODAY">Today</option>
                                             <option value="WEEK">This Week</option>
                                             <option value="MONTH">This Month</option>
-                                        </CFormSelect>
+                                        </Form.Select>
                                     </CCol>
                                     <CCol md={3}>
                                         <div className="d-flex">
-                                            <CFormSelect
+                                            <Form.Select
                                                 value={filters.sortBy}
                                                 onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
                                                 className="me-1"
@@ -794,7 +785,7 @@ const AdminDashboard: React.FC = () => {
                                                 <option value="status">Status</option>
                                                 <option value="eventType">Type</option>
                                                 <option value="capacity">Capacity</option>
-                                            </CFormSelect>
+                                            </Form.Select>
                                             <CButton
                                                 color="outline-secondary"
                                                 onClick={() => setFilters(prev => ({ 
@@ -814,7 +805,7 @@ const AdminDashboard: React.FC = () => {
 
                             {/* Bulk Actions Bar */}
                             {showBulkActions && (
-                                <CAlert color="info" className="d-flex justify-content-between align-items-center">
+                                <Alert color="info" className="d-flex justify-content-between align-items-center">
                                     <div>
                                         <FontAwesomeIcon icon={faCheckSquare} className="me-2" />
                                         {selectedEvents.size} event{selectedEvents.size !== 1 ? 's' : ''} selected
@@ -857,7 +848,7 @@ const AdminDashboard: React.FC = () => {
                                             Delete
                                         </CButton>
                                     </CButtonGroup>
-                                </CAlert>
+                                </Alert>
                             )}
                         </CCardBody>
                     </CCard>

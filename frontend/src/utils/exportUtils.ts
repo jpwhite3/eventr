@@ -500,7 +500,7 @@ export class ExcelExporter {
     const pivotReady = rawData.map(item => ({
       ...item,
       Month: new Date(item.date || Date.now()).toLocaleString('default', { month: 'long' }),
-      Quarter: this.getQuarter(new Date(item.date || Date.now())),
+      Quarter: ExportManager.getQuarter(new Date(item.date || Date.now())),
       Year: new Date(item.date || Date.now()).getFullYear()
     }));
 
@@ -515,7 +515,7 @@ export class ExcelExporter {
     const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
     
     // Set column widths based on content
-    const colWidths = [];
+    const colWidths: Array<{ wch: number }> = [];
     for (let C = range.s.c; C <= range.e.c; ++C) {
       let maxWidth = 10;
       for (let R = range.s.r; R <= range.e.r; ++R) {
@@ -587,7 +587,7 @@ export class ExcelExporter {
     return average.toFixed(2);
   }
 
-  private getQuarter(date: Date): string {
+  public static getQuarter(date: Date): string {
     const month = date.getMonth() + 1;
     if (month <= 3) return 'Q1';
     if (month <= 6) return 'Q2';
@@ -1274,7 +1274,7 @@ export class ExportManager {
     // Add key metrics in professional format
     if (data.totalRegistrations !== undefined || data.totalCheckIns !== undefined) {
       pdf.addSection('📊 Performance Metrics');
-      const metricsData = [];
+      const metricsData: Array<(string | number)[]> = [];
       
       if (data.totalRegistrations !== undefined) {
         metricsData.push(['Total Registrations', data.totalRegistrations, data.targetRegistrations || 'N/A', this.getPerformanceIndicator(data.totalRegistrations, data.targetRegistrations)]);
@@ -1556,7 +1556,7 @@ export class ExportManager {
   }
 
   private static preparePivotData(data: any): any[] {
-    const pivotData = [];
+    const pivotData: Array<Record<string, any>> = [];
     
     // Add session-based records
     if (data.sessionAnalytics && data.sessionAnalytics.length > 0) {
@@ -1639,9 +1639,9 @@ export class ExportManager {
           'Cumulative_Total': cumulative,
           'Growth_Rate_Percent': growthRate,
           'Day_of_Week': new Date(day.date || Date.now()).toLocaleDateString('en-US', { weekday: 'long' }),
-          'Week_Number': this.getWeekNumber(new Date(day.date || Date.now())),
+          'Week_Number': ExportManager.getWeekNumber(new Date(day.date || Date.now())),
           'Month': new Date(day.date || Date.now()).toLocaleDateString('en-US', { month: 'long' }),
-          'Quarter': this.getQuarter(new Date(day.date || Date.now()))
+          'Quarter': ExportManager.getQuarter(new Date(day.date || Date.now()))
         };
       });
       
@@ -1714,7 +1714,15 @@ export class ExportManager {
     onProgress?.({ step: 'Professional CSV export completed', progress: 3, total: 3 });
   }
 
-  private static getWeekNumber(date: Date): number {
+  public static getQuarter(date: Date): string {
+    const month = date.getMonth() + 1;
+    if (month <= 3) return 'Q1';
+    if (month <= 6) return 'Q2';
+    if (month <= 9) return 'Q3';
+    return 'Q4';
+  }
+
+  public static getWeekNumber(date: Date): number {
     const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
     const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
     return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);

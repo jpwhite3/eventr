@@ -18,20 +18,11 @@ import {
   CDropdownToggle,
   CDropdownMenu,
   CDropdownItem,
-  CFormInput,
-  CFormSelect,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-  CAlert,
   CWidgetStatsF,
-  CToast,
-  CToastBody,
-  CToastClose,
-  CToaster,
 } from '@coreui/react';
+
+// Import Bootstrap components for compatibility
+import { Modal, Form, Alert, Toast } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUsers,
@@ -367,12 +358,11 @@ const UserManagement: React.FC = () => {
   return (
     <div className="animated fadeIn">
       {/* Toast Notifications */}
-      <CToaster className="p-3" placement="top-end">
-        <CToast visible={toast.visible} color={toast.color}>
-          <CToastBody>{toast.message}</CToastBody>
-          <CToastClose onClick={() => setToast(prev => ({ ...prev, visible: false }))} />
-        </CToast>
-      </CToaster>
+      <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 1050 }}>
+        <Toast show={toast.visible} onClose={() => setToast(prev => ({ ...prev, visible: false }))} bg={toast.color}>
+          <Toast.Body>{toast.message}</Toast.Body>
+        </Toast>
+      </div>
 
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -484,7 +474,7 @@ const UserManagement: React.FC = () => {
                     <span className="input-group-text">
                       <FontAwesomeIcon icon={faSearch} />
                     </span>
-                    <CFormInput
+                    <Form.Control
                       placeholder="Search users by name or email..."
                       value={filters.search}
                       onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
@@ -519,7 +509,7 @@ const UserManagement: React.FC = () => {
               {showFilters && (
                 <CRow className="mb-3">
                   <CCol md={3}>
-                    <CFormSelect
+                    <Form.Select
                       value={filters.role}
                       onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
                     >
@@ -528,10 +518,10 @@ const UserManagement: React.FC = () => {
                       <option value="ORGANIZER">Organizer</option>
                       <option value="ADMIN">Admin</option>
                       <option value="SUPER_ADMIN">Super Admin</option>
-                    </CFormSelect>
+                    </Form.Select>
                   </CCol>
                   <CCol md={3}>
-                    <CFormSelect
+                    <Form.Select
                       value={filters.status}
                       onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                     >
@@ -539,10 +529,10 @@ const UserManagement: React.FC = () => {
                       <option value="ACTIVE">Active</option>
                       <option value="INACTIVE">Inactive</option>
                       <option value="SUSPENDED">Suspended</option>
-                    </CFormSelect>
+                    </Form.Select>
                   </CCol>
                   <CCol md={3}>
-                    <CFormSelect
+                    <Form.Select
                       value={filters.dateRange}
                       onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
                     >
@@ -550,11 +540,11 @@ const UserManagement: React.FC = () => {
                       <option value="WEEK">This Week</option>
                       <option value="MONTH">This Month</option>
                       <option value="QUARTER">This Quarter</option>
-                    </CFormSelect>
+                    </Form.Select>
                   </CCol>
                   <CCol md={3}>
                     <div className="d-flex">
-                      <CFormSelect
+                      <Form.Select
                         value={filters.sortBy}
                         onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
                         className="me-1"
@@ -565,7 +555,7 @@ const UserManagement: React.FC = () => {
                         <option value="role">Role</option>
                         <option value="status">Status</option>
                         <option value="lastLogin">Last Login</option>
-                      </CFormSelect>
+                      </Form.Select>
                       <CButton
                         color="outline-secondary"
                         onClick={() => setFilters(prev => ({ 
@@ -585,7 +575,7 @@ const UserManagement: React.FC = () => {
 
               {/* Bulk Actions Bar */}
               {showBulkActions && (
-                <CAlert color="info" className="d-flex justify-content-between align-items-center">
+                <Alert color="info" className="d-flex justify-content-between align-items-center">
                   <div>
                     <FontAwesomeIcon icon={faUsers} className="me-2" />
                     {selectedUsers.size} user{selectedUsers.size !== 1 ? 's' : ''} selected
@@ -628,7 +618,7 @@ const UserManagement: React.FC = () => {
                       Delete
                     </CButton>
                   </CButtonGroup>
-                </CAlert>
+                </Alert>
               )}
             </CCardBody>
           </CCard>

@@ -222,7 +222,7 @@ class EventDrivenCheckInServiceTest {
         whenever(eventRepository.findById(testEventId))
             .thenReturn(Optional.of(event))
         whenever(registrationRepository.findByEventId(testEventId))
-            .thenReturn(registrations as java.util.List<Registration>)
+            .thenReturn(registrations )
         whenever(checkInRepository.findByEventIdOrderByCheckedInAtDesc(testEventId))
             .thenReturn(checkIns)
 

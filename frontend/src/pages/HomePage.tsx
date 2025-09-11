@@ -263,7 +263,7 @@ const HomePage: React.FC = () => {
             )}
             
             {/* Header Section */}
-            <div className="bg-primary text-white py-5">
+            <div className="bg-primary text-white homepage-hero">
                 <div className="container">
                     <div className="row align-items-center">
                         <div className="col-md-8">
@@ -271,7 +271,7 @@ const HomePage: React.FC = () => {
                             <p className="lead">Browse and register for company events</p>
                         </div>
                         <div className="col-md-4">
-                            <div className="bg-white p-4 rounded shadow">
+                            <div className="bg-white p-4 rounded shadow text-dark">
                                 <form onSubmit={handleSearch}>
                                     <div className="mb-3">
                                         <input
@@ -509,9 +509,9 @@ const HomePage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="row g-4">
+                <div className="row g-4 event-grid">
                     {events.map(event => (
-                        <div className="col-md-6 col-lg-4" key={event.id}>
+                        <div className="col-12 col-md-6 col-lg-4" key={event.id}>
                             <Link to={`/events/${event.id}`} className="text-decoration-none">
                                 <div className="card h-100 shadow-sm hover-shadow transition-all">
                                     <div className="position-relative">

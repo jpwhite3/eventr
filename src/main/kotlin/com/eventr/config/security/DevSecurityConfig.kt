@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 
 /**
@@ -17,6 +18,11 @@ import org.springframework.security.web.SecurityFilterChain
 class DevSecurityConfig {
 
     @Bean
+    fun passwordEncoder(): BCryptPasswordEncoder {
+        return BCryptPasswordEncoder()
+    }
+
+    @Bean
     fun devSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
         return http
             .cors { it.disable() } // CORS is handled by WebConfig
@@ -26,9 +32,7 @@ class DevSecurityConfig {
             .headers { headers ->
                 headers
                     // Basic XSS protection
-                    .xssProtection { xss ->
-                        xss.and()
-                    }
+                    .xssProtection { }
                     // Prevent MIME sniffing
                     .contentTypeOptions { }
                     // Allow frames for development tools

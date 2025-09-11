@@ -131,7 +131,7 @@ class CheckInStatsServiceTest {
         
         whenever(eventRepository.findById(TEST_EVENT_ID)).thenReturn(Optional.of(event))
         whenever(registrationRepository.countByEventId(TEST_EVENT_ID)).thenReturn(3L)
-        whenever(registrationRepository.findByEventId(TEST_EVENT_ID)).thenReturn(registrations as java.util.List<Registration>)
+        whenever(registrationRepository.findByEventId(TEST_EVENT_ID)).thenReturn(registrations )
         whenever(sessionRepository.findByEventIdAndIsActiveTrue(TEST_EVENT_ID)).thenReturn(sessions)
         whenever(sessionRegistrationRepository.countBySessionIdAndStatus(any(), eq(SessionRegistrationStatus.REGISTERED))).thenReturn(15L)
         whenever(sessionRegistrationRepository.countBySessionIdAndStatus(any(), eq(SessionRegistrationStatus.ATTENDED))).thenReturn(10L)
@@ -188,7 +188,7 @@ class CheckInStatsServiceTest {
         
         whenever(eventRepository.findById(TEST_EVENT_ID)).thenReturn(Optional.of(event))
         whenever(registrationRepository.countByEventId(TEST_EVENT_ID)).thenReturn(0L)
-        whenever(registrationRepository.findByEventId(TEST_EVENT_ID)).thenReturn(emptyList<Registration>() as java.util.List<Registration>)
+        whenever(registrationRepository.findByEventId(TEST_EVENT_ID)).thenReturn(emptyList<Registration>() )
         whenever(sessionRepository.findByEventIdAndIsActiveTrue(TEST_EVENT_ID)).thenReturn(emptyList())
 
         // Act
@@ -516,7 +516,7 @@ class CheckInStatsServiceTest {
             )
         )
         
-        whenever(registrationRepository.findByEventId(TEST_EVENT_ID)).thenReturn(registrations as java.util.List<Registration>)
+        whenever(registrationRepository.findByEventId(TEST_EVENT_ID)).thenReturn(registrations )
 
         // Act
         val result = checkInStatsService.getEventAttendees(TEST_EVENT_ID)
@@ -547,7 +547,7 @@ class CheckInStatsServiceTest {
     @Test
     fun `getEventAttendees should return empty list when no registrations`() {
         // Arrange
-        whenever(registrationRepository.findByEventId(TEST_EVENT_ID)).thenReturn(emptyList<Registration>() as java.util.List<Registration>)
+        whenever(registrationRepository.findByEventId(TEST_EVENT_ID)).thenReturn(emptyList<Registration>() )
 
         // Act
         val result = checkInStatsService.getEventAttendees(TEST_EVENT_ID)

@@ -42,8 +42,8 @@ interface CoreUILayoutProps {
 }
 
 const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
-  const [sidebarShow, setSidebarShow] = useState(false); // Start hidden on mobile
-  const [isMobile, setIsMobile] = useState(true);
+  const [sidebarShow, setSidebarShow] = useState(window.innerWidth >= 992); // Show on desktop, hide on mobile by default
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const location = useLocation();
@@ -54,22 +54,20 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
     const handleResize = () => {
       const mobile = window.innerWidth < 992;
       setIsMobile(mobile);
-      if (!mobile) {
+      // On desktop, show sidebar by default; on mobile, hide by default
+      if (!mobile && !sidebarShow) {
         setSidebarShow(true);
-      } else {
+      } else if (mobile && sidebarShow) {
         setSidebarShow(false);
       }
     };
-
-    // Set initial state
-    handleResize();
 
     // Add event listener
     window.addEventListener('resize', handleResize);
 
     // Cleanup
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [sidebarShow]);
 
   const handleLogin = () => {
     setAuthModalMode('login');
@@ -197,7 +195,7 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
       <CSidebar
         visible={sidebarShow}
         onVisibleChange={(visible) => setSidebarShow(visible)}
-        className="sidebar-dark sidebar-fixed"
+        className={`sidebar-dark sidebar-fixed ${sidebarShow ? 'show' : ''}`}
         colorScheme="dark"
       >
         <div className="sidebar-brand d-flex align-items-center justify-content-center py-3">
@@ -239,7 +237,9 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
         />
       </CSidebar>
 
-      <div className="wrapper d-flex flex-column min-vh-100 w-100">
+      <div 
+        className={`wrapper d-flex flex-column min-vh-100 ${sidebarShow && !isMobile ? 'sidebar-open' : 'sidebar-closed'}`}
+      >
         <CHeader className="header header-sticky mb-4">
           <CHeaderToggler
             className="ps-1"
