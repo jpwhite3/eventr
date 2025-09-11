@@ -506,14 +506,14 @@ class ResourceManagementService(
         }
     }
 
-    private fun calculateCostEfficiency(resource: Resource, bookings: List<SessionResource>): BigDecimal? {
+    private fun calculateCostEfficiency(@Suppress("UNUSED_PARAMETER") resource: Resource, bookings: List<SessionResource>): BigDecimal? {
         val totalCost = bookings.mapNotNull { it.actualCost ?: it.estimatedCost }.fold(BigDecimal.ZERO) { acc, cost -> acc.add(cost) }
         val totalHours = bookings.sumOf { ChronoUnit.HOURS.between(it.bookingStart, it.bookingEnd).toInt() }
         
         return if (totalHours > 0) totalCost.divide(BigDecimal(totalHours)) else null
     }
 
-    private fun findNextAvailableSlot(resource: Resource, conflicts: List<SessionResource>): LocalDateTime? {
+    private fun findNextAvailableSlot(@Suppress("UNUSED_PARAMETER") resource: Resource, conflicts: List<SessionResource>): LocalDateTime? {
         // Find the earliest time when resource becomes available
         val now = LocalDateTime.now()
         val sortedConflicts = conflicts.sortedBy { it.bookingEnd }

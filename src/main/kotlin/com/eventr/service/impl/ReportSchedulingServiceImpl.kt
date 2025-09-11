@@ -37,7 +37,7 @@ class ReportSchedulingServiceImpl(
     override fun getDueSchedules(): List<ReportScheduleDto> {
         val now = LocalDateTime.now()
         return schedules.values.filter { 
-            it.active && it.nextScheduled != null && it.nextScheduled!! <= now 
+            it.active && it.nextScheduled != null && it.nextScheduled <= now 
         }.sortedBy { it.nextScheduled }
     }
 

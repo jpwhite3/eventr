@@ -42,7 +42,7 @@ class CheckInAnalyticsServiceImpl(
         
         // Method breakdown
         val methodStats = checkIns.groupBy { it.method }
-            .mapValues { (method, methodCheckIns) ->
+            .mapValues { (_, methodCheckIns) ->
                 val count = methodCheckIns.size
                 val percentage = if (totalCheckIns > 0) (count.toDouble() / totalCheckIns) * 100 else 0.0
                 val avgProcessingTime = calculateAverageProcessingTime(methodCheckIns)
@@ -57,10 +57,11 @@ class CheckInAnalyticsServiceImpl(
         
         // Time distribution
         val timeDistribution = checkIns.groupBy { checkIn ->
-            checkIn.checkedInAt?.hour?.toString() ?: "Unknown"
+            checkIn.checkedInAt.hour.toString()
         }.mapValues { it.value.size }
         
         // Peak times
+        @Suppress("UNUSED_VARIABLE")
         val peakTimes = identifyPeakTimes(checkIns)
         
         return CheckInStatsDto(
@@ -133,7 +134,7 @@ class CheckInAnalyticsServiceImpl(
             // Consider on-time if checked in before session start
             val sessionStart = session.startTime
             val checkInTime = checkIn.checkedInAt
-            sessionStart != null && checkInTime != null && checkInTime.isBefore(sessionStart)
+            sessionStart != null && checkInTime.isBefore(sessionStart)
         }
         
         val lateCheckIns = checkedInCount - onTimeCheckIns
@@ -162,7 +163,6 @@ class CheckInAnalyticsServiceImpl(
         val filteredCheckIns = timeRange?.let { range ->
             checkIns.filter { checkIn ->
                 val checkInTime = checkIn.checkedInAt
-                checkInTime != null && 
                 checkInTime.isAfter(LocalDateTime.parse(range.start)) &&
                 checkInTime.isBefore(LocalDateTime.parse(range.end))
             }
@@ -204,6 +204,7 @@ class CheckInAnalyticsServiceImpl(
 
     override fun getCheckInTrends(eventIds: List<UUID>): CheckInTrendsAnalysis {
         // Simplified implementation - would require historical data analysis
+        @Suppress("UNUSED_VARIABLE")
         val allCheckIns = eventIds.flatMap { eventId ->
             checkInRepository.findByEventIdOrderByCheckedInAtDesc(eventId)
         }
@@ -285,7 +286,7 @@ class CheckInAnalyticsServiceImpl(
     }
 
     // Helper methods (simplified implementations)
-    private fun calculateAverageProcessingTime(checkIns: List<CheckIn>): Double = 30.0 // Seconds
+    private fun calculateAverageProcessingTime(@Suppress("UNUSED_PARAMETER") checkIns: List<CheckIn>): Double = 30.0 // Seconds
 
     private fun calculateCheckInRate(checkIns: List<CheckIn>): Double {
         if (checkIns.isEmpty()) return 0.0
@@ -294,7 +295,7 @@ class CheckInAnalyticsServiceImpl(
         val firstCheckIn = sortedCheckIns.first().checkedInAt
         val lastCheckIn = sortedCheckIns.last().checkedInAt
         
-        if (firstCheckIn == null || lastCheckIn == null) return 0.0
+        if (firstCheckIn == null || lastCheckIn == null) return 0.0 // These conditions are always false but kept for safety
         
         val durationMinutes = ChronoUnit.MINUTES.between(firstCheckIn, lastCheckIn).toDouble()
         return if (durationMinutes > 0) checkIns.size / durationMinutes else 0.0
@@ -308,15 +309,15 @@ class CheckInAnalyticsServiceImpl(
         return LocalDateTime.now().plusMinutes(estimatedMinutes.toLong()).toString()
     }
 
-    private fun identifyBottlenecks(checkIns: List<CheckIn>): List<String> {
+    private fun identifyBottlenecks(@Suppress("UNUSED_PARAMETER") checkIns: List<CheckIn>): List<String> {
         return listOf("Location congestion", "Slow manual check-in process")
     }
 
-    private fun generateRecommendations(checkIns: List<CheckIn>, bottlenecks: List<String>): List<String> {
+    private fun generateRecommendations(@Suppress("UNUSED_PARAMETER") checkIns: List<CheckIn>, @Suppress("UNUSED_PARAMETER") bottlenecks: List<String>): List<String> {
         return listOf("Add more QR scanning stations", "Deploy additional staff")
     }
 
-    private fun identifyPeakTimes(checkIns: List<CheckIn>): List<PeakTimeWindow> {
+    private fun identifyPeakTimes(@Suppress("UNUSED_PARAMETER") checkIns: List<CheckIn>): List<PeakTimeWindow> {
         // Simplified implementation
         return listOf(
             PeakTimeWindow("09:00", "10:00", 50, "HIGH"),
@@ -349,7 +350,7 @@ class CheckInAnalyticsServiceImpl(
             }
     }
 
-    private fun generateUserBehaviorInsights(checkIns: List<CheckIn>): List<String> {
+    private fun generateUserBehaviorInsights(@Suppress("UNUSED_PARAMETER") checkIns: List<CheckIn>): List<String> {
         return listOf(
             "Users prefer QR code check-in over manual",
             "Peak check-in time is 30 minutes before event start",
@@ -361,9 +362,9 @@ class CheckInAnalyticsServiceImpl(
         return timeDistribution.maxByOrNull { it.value }?.key ?: "Unknown"
     }
 
-    private fun calculateOverallAverageCheckInTime(checkIns: List<CheckIn>): Double = 25.0
+    private fun calculateOverallAverageCheckInTime(@Suppress("UNUSED_PARAMETER") checkIns: List<CheckIn>): Double = 25.0
 
-    private fun calculateAverageCheckInTimeBeforeSession(checkIns: List<CheckIn>, sessionStart: LocalDateTime?): Double = 15.0
+    private fun calculateAverageCheckInTimeBeforeSession(@Suppress("UNUSED_PARAMETER") checkIns: List<CheckIn>, @Suppress("UNUSED_PARAMETER") sessionStart: LocalDateTime?): Double = 15.0
 
     private fun determineEfficiency(avgProcessingTime: Double, checkInsProcessed: Int): String {
         return when {
@@ -373,13 +374,13 @@ class CheckInAnalyticsServiceImpl(
         }
     }
 
-    private fun calculateOverallEfficiency(staffStats: Collection<StaffStats>): Double = 85.0
+    private fun calculateOverallEfficiency(@Suppress("UNUSED_PARAMETER") staffStats: Collection<StaffStats>): Double = 85.0
 
-    private fun generateStaffRecommendations(staffMetrics: Map<String, StaffStats>): List<String> {
+    private fun generateStaffRecommendations(@Suppress("UNUSED_PARAMETER") staffMetrics: Map<String, StaffStats>): List<String> {
         return listOf("Provide additional training for slower staff", "Redistribute workload evenly")
     }
 
-    private fun generateMethodRecommendations(methods: Map<CheckInMethod, MethodEffectiveness>): List<MethodRecommendation> {
+    private fun generateMethodRecommendations(@Suppress("UNUSED_PARAMETER") methods: Map<CheckInMethod, MethodEffectiveness>): List<MethodRecommendation> {
         return listOf(
             MethodRecommendation(
                 method = CheckInMethod.QR_CODE,
@@ -390,7 +391,7 @@ class CheckInAnalyticsServiceImpl(
         )
     }
 
-    private fun identifySystemBottlenecks(checkIns: List<CheckIn>): List<Bottleneck> {
+    private fun identifySystemBottlenecks(@Suppress("UNUSED_PARAMETER") checkIns: List<CheckIn>): List<Bottleneck> {
         return listOf(
             Bottleneck(
                 type = "LOCATION",
@@ -402,7 +403,7 @@ class CheckInAnalyticsServiceImpl(
         )
     }
 
-    private fun generateMitigationStrategies(bottlenecks: List<Bottleneck>): List<String> {
+    private fun generateMitigationStrategies(@Suppress("UNUSED_PARAMETER") bottlenecks: List<Bottleneck>): List<String> {
         return listOf("Open side entrances", "Deploy mobile check-in stations")
     }
     

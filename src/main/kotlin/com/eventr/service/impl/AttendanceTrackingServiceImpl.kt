@@ -48,6 +48,7 @@ class AttendanceTrackingServiceImpl(
         } else 0.0
         
         // Group check-ins by method
+        @Suppress("UNUSED_VARIABLE")
         val methodBreakdown = checkIns.groupBy { it.method }
             .mapValues { it.value.size }
         
@@ -73,12 +74,14 @@ class AttendanceTrackingServiceImpl(
             }
         
         // Time distribution (simplified - group by hour)
+        @Suppress("UNUSED_VARIABLE")
         val timeDistribution = checkIns.groupBy { checkIn ->
-            checkIn.checkedInAt?.hour?.toString() ?: "Unknown"
+            checkIn.checkedInAt.hour.toString()
         }.mapValues { it.value.size }
         
         // No-shows calculation
         val checkedInRegistrationIds = checkIns.map { it.registration?.id }.toSet()
+        @Suppress("UNUSED_VARIABLE")
         val noShows = registrations.filter { it.id !in checkedInRegistrationIds }
         
         return AttendanceReportDto(
@@ -90,7 +93,7 @@ class AttendanceTrackingServiceImpl(
             overallAttendanceRate = attendanceRate,
             sessionAttendance = sessionBreakdown.map { (sessionId, summary) ->
                 SessionAttendanceDto(
-                    sessionId = sessionId?.toString() ?: "",
+                    sessionId = sessionId.toString(),
                     sessionTitle = summary.sessionName,
                     eventName = event.name ?: "Unknown Event",
                     registrations = summary.registrations,
@@ -163,7 +166,7 @@ class AttendanceTrackingServiceImpl(
         
         // Time distribution (by hour)
         val timeDistribution = checkIns.groupBy { checkIn ->
-            checkIn.checkedInAt?.hour?.toString() ?: "Unknown"
+            checkIn.checkedInAt.hour.toString()
         }.mapValues { it.value.size }
         
         return AttendanceSummaryDto(
@@ -207,7 +210,7 @@ class AttendanceTrackingServiceImpl(
             csv.append("${checkIn.userEmail ?: ""},")
             csv.append("${checkIn.registrationId ?: ""},")
             csv.append("${checkIn.checkedInAt ?: ""},")
-            csv.append("${checkIn.method ?: ""},")
+            csv.append("${checkIn.method},")
             csv.append("${checkIn.location ?: ""},")
             csv.append("${checkIn.notes ?: ""}\n")
         }
@@ -230,6 +233,7 @@ class AttendanceTrackingServiceImpl(
     }
 
     private fun convertToDto(checkIn: CheckIn): CheckInDto {
+        @Suppress("UNUSED_VARIABLE")
         val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
         
         return CheckInDto().apply {
@@ -261,7 +265,7 @@ class AttendanceTrackingServiceImpl(
             // Add event instance information
             registration.eventInstance?.let { eventInstance ->
                 this.eventInstanceId = eventInstance.id
-                eventInstance.event?.let { event ->
+                eventInstance.event?.let { _ ->
                     // RegistrationDto doesn't have eventId/eventName properties
                     // These would be accessed through the eventInstance relationship
                 }

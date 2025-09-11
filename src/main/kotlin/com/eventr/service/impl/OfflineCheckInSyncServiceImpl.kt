@@ -30,6 +30,7 @@ class OfflineCheckInSyncServiceImpl(
 
     override fun syncOfflineCheckIns(offlineCheckIns: List<OfflineCheckInDto>): List<CheckInDto> {
         val results = mutableListOf<CheckInDto>()
+        @Suppress("UNUSED_VARIABLE")
         val batchId = UUID.randomUUID().toString()
         val syncTimestamp = LocalDateTime.now().toString()
         
@@ -68,6 +69,7 @@ class OfflineCheckInSyncServiceImpl(
         }
         
         // Check if registration exists
+        @Suppress("UNUSED_VARIABLE")
         val registration = registrationRepository.findById(offlineCheckIn.registrationId)
             .orElse(null) ?: return OfflineCheckInSyncResult(
                 offlineId = offlineCheckIn.id.toString(),
@@ -122,6 +124,8 @@ class OfflineCheckInSyncServiceImpl(
             errors.add(ValidationError("id", "REQUIRED", "Offline ID is required"))
         }
         
+        // Note: This condition is always false since registrationId is non-null in the DTO
+        // Keeping for safety in case the model changes
         if (offlineCheckIn.registrationId == null) {
             errors.add(ValidationError("registrationId", "REQUIRED", "Registration ID is required"))
         }
@@ -212,6 +216,7 @@ class OfflineCheckInSyncServiceImpl(
 
     override fun cleanupSynchronizedRecords(olderThanDays: Int): Int {
         // Clean up old synchronized offline records
+        @Suppress("UNUSED_VARIABLE")
         val cutoffDate = LocalDateTime.now().minusDays(olderThanDays.toLong())
         
         // Would query offline storage and delete old records
@@ -261,9 +266,9 @@ class OfflineCheckInSyncServiceImpl(
 
     private fun convertToCheckInCreateDto(offlineCheckIn: OfflineCheckInDto): CheckInCreateDto {
         return CheckInCreateDto(
-            registrationId = offlineCheckIn.registrationId!!,
+            registrationId = offlineCheckIn.registrationId,
             sessionId = offlineCheckIn.sessionId,
-            type = offlineCheckIn.type ?: CheckInType.EVENT,
+            type = offlineCheckIn.type,
             method = offlineCheckIn.method,
             checkedInBy = offlineCheckIn.checkedInBy,
             deviceId = offlineCheckIn.deviceId,

@@ -307,8 +307,10 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
         </CHeader>
 
         <div className="body flex-grow-1">
-          <CContainer fluid className="h-auto px-4">
-            {children}
+          <CContainer fluid className="h-auto px-0">
+            <div className="content-wrapper">
+              {children}
+            </div>
           </CContainer>
         </div>
       </div>

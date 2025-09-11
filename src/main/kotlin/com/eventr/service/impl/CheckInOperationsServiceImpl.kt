@@ -189,7 +189,7 @@ class CheckInOperationsServiceImpl(
         }
     }
 
-    private fun updateSessionRegistrationStatus(registration: Registration, sessionId: UUID) {
+    private fun updateSessionRegistrationStatus(registration: Registration, @Suppress("UNUSED_PARAMETER") sessionId: UUID) {
         // Find and update session registration status
         // This would typically involve a SessionRegistration entity
         // For now, we'll just ensure the main registration status is updated
@@ -211,6 +211,7 @@ class CheckInOperationsServiceImpl(
     }
 
     private fun convertToDto(checkIn: CheckIn): CheckInDto {
+        @Suppress("UNUSED_VARIABLE")
         val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
         
         return CheckInDto().apply {

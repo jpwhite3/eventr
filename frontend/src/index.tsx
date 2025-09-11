@@ -9,6 +9,8 @@ import reportWebVitals from './reportWebVitals';
 import '@coreui/coreui/dist/css/coreui.min.css';
 // FontAwesome styles
 import '@fortawesome/fontawesome-free/css/all.min.css';
+// Modern Design System
+import './styles/modern-design-system.css';
 
 // FontAwesome library setup
 import { library } from '@fortawesome/fontawesome-svg-core';

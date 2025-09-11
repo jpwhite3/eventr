@@ -59,6 +59,7 @@ class QRCodeProcessingServiceImpl(
 
     override fun generateEventQRCode(eventId: UUID, userId: String): QRCodeResponseDto {
         // Verify event exists
+        @Suppress("UNUSED_VARIABLE")
         val event = eventRepository.findById(eventId)
             .orElseThrow { IllegalArgumentException("Event not found: $eventId") }
         
@@ -82,6 +83,7 @@ class QRCodeProcessingServiceImpl(
         val session = sessionRepository.findById(sessionId)
             .orElseThrow { IllegalArgumentException("Session not found: $sessionId") }
         
+        @Suppress("UNUSED_VARIABLE")
         val event = session.event ?: throw IllegalArgumentException("Session has no associated event")
         
         // Generate QR code using service
@@ -101,6 +103,7 @@ class QRCodeProcessingServiceImpl(
 
     override fun generateStaffQRCode(eventId: UUID, sessionId: UUID?): QRCodeResponseDto {
         // Verify event exists
+        @Suppress("UNUSED_VARIABLE")
         val event = eventRepository.findById(eventId)
             .orElseThrow { IllegalArgumentException("Event not found: $eventId") }
         
@@ -123,6 +126,7 @@ class QRCodeProcessingServiceImpl(
 
     override fun generateAttendeeBadge(eventId: UUID, userId: String, userName: String): QRCodeResponseDto {
         // Verify event exists
+        @Suppress("UNUSED_VARIABLE")
         val event = eventRepository.findById(eventId)
             .orElseThrow { IllegalArgumentException("Event not found: $eventId") }
         

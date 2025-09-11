@@ -91,6 +91,7 @@ class EventDrivenCheckInService(
         logger.info("Processing bulk check-in for {} registrations", registrationIds.size)
         
         val results = mutableListOf<CheckInDto>()
+        @Suppress("UNUSED_VARIABLE")
         val session = sessionId?.let { sessionRepository.findById(it).orElse(null) }
         
         registrationIds.forEach { registrationId ->
@@ -262,17 +263,17 @@ class EventDrivenCheckInService(
     // Placeholder methods for QR code processing - these would need to be implemented
     // based on the existing CheckInService implementation
     
-    private fun parseQRCode(qrContent: String): QRData {
+    private fun parseQRCode(@Suppress("UNUSED_PARAMETER") qrContent: String): QRData {
         // This is a placeholder - implement based on existing logic
         return QRData("event", UUID.randomUUID().toString(), "", "", "")
     }
     
-    private fun checkInToEvent(qrData: QRData, qrCheckInDto: QRCheckInDto): CheckInDto {
+    private fun checkInToEvent(@Suppress("UNUSED_PARAMETER") qrData: QRData, @Suppress("UNUSED_PARAMETER") qrCheckInDto: QRCheckInDto): CheckInDto {
         // Placeholder - implement based on existing logic
         throw NotImplementedError("QR check-in implementation needed")
     }
     
-    private fun checkInToSession(qrData: QRData, qrCheckInDto: QRCheckInDto): CheckInDto {
+    private fun checkInToSession(@Suppress("UNUSED_PARAMETER") qrData: QRData, @Suppress("UNUSED_PARAMETER") qrCheckInDto: QRCheckInDto): CheckInDto {
         // Placeholder - implement based on existing logic  
         throw NotImplementedError("QR check-in implementation needed")
     }

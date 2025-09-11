@@ -355,7 +355,7 @@ class ConflictDetectionService(
                         .toInt()
                     
                     SessionConflictSummaryDto(
-                        sessionId = session.id!!,
+                        sessionId = session.id,
                         sessionTitle = session.title,
                         conflictCount = entry.value,
                         conflictTypes = sessionConflicts.map { it.type }.distinct(),
