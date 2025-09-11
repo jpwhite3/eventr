@@ -486,7 +486,7 @@ class ConflictDetectionService(
             }
             
             return resolveConflict(conflict.id!!, ConflictResolutionDto(
-                conflictId = conflict.id!!,
+                conflictId = conflict.id,
                 resolutionType = "AUTO_CAPACITY_ADJUSTMENT",
                 description = "Moved $excessCount excess registrations to waitlist",
                 implementedBy = "SYSTEM_AUTO_RESOLVE",

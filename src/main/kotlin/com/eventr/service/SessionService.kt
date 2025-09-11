@@ -95,7 +95,7 @@ class SessionService(
         val attendeeCount = sessionRegistrationRepository.countBySessionIdAndStatus(this.id!!, com.eventr.model.SessionRegistrationStatus.REGISTERED)
         
         return SessionDto(
-            id = this.id!!,
+            id = this.id,
             eventId = this.event?.id!!,
             title = this.title,
             description = this.description,

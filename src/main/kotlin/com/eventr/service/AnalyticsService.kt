@@ -107,7 +107,6 @@ class AnalyticsService(
     }
 
     fun getChartData(timeframe: String = "30d"): ChartDataDto {
-        val registrations = registrationRepository.findAll()
         val days = getDaysFromTimeframe(timeframe)
         val checkIns = checkInRepository.findAll()
         val endDate = LocalDateTime.now()
@@ -148,7 +147,6 @@ class AnalyticsService(
     fun getRegistrationTrends(timeframe: String = "30d"): RegistrationTrendsDto {
         val registrations = registrationRepository.findAll()
         val events = eventRepository.findAll()
-        val checkIns = checkInRepository.findAll()
 
         val totalRegistrations = registrations.size
         val dailyAvg = totalRegistrations / 30.0 // Approximate daily average
@@ -264,7 +262,7 @@ class AnalyticsService(
         return registrations.size * 100.0 // Simplified
     }
 
-    private fun calculateRegistrationTrend(registrations: List<Registration>, timeframe: String): Double {
+    private fun calculateRegistrationTrend(@Suppress("UNUSED_PARAMETER") registrations: List<Registration>, timeframe: String): Double {
         // Since Registration doesn't have timestamps, return a reasonable default trend
         return when (timeframe) {
             "7d" -> 15.2
@@ -297,7 +295,7 @@ class AnalyticsService(
         else -> 30
     }
 
-    private fun getDemographicBreakdown(registrations: List<Registration>): DemographicBreakdownDto {
+    private fun getDemographicBreakdown(@Suppress("UNUSED_PARAMETER") registrations: List<Registration>): DemographicBreakdownDto {
         // Simplified demographic data - would need to parse form data
         return DemographicBreakdownDto(
             ageGroups = listOf(

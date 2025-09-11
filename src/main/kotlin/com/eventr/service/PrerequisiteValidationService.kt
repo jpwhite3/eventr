@@ -282,12 +282,14 @@ class PrerequisiteValidationService(
         return sessionReg?.status == SessionRegistrationStatus.REGISTERED
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun validateProfileRequirement(ruleDefinition: String?, registrationId: UUID): Boolean {
         // Placeholder for profile-based validation
         // Would parse JSON rule and validate against user profile
         return true
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun validateCustomRule(ruleDefinition: String?, registrationId: UUID): Boolean {
         // Placeholder for custom rule validation
         // Would implement custom business logic evaluation

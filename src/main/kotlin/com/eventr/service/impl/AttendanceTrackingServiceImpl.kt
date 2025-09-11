@@ -53,7 +53,7 @@ class AttendanceTrackingServiceImpl(
         
         // Group check-ins by session
         val sessionBreakdown = checkIns.filter { it.session != null }
-            .groupBy { it.session!!.id }
+            .groupBy { it.session!!.id!! }
             .mapValues { (sessionId, sessionCheckIns) ->
                 val session = sessionCheckIns.first().session!!
                 val sessionRegistrations = registrations.filter { 
@@ -62,7 +62,7 @@ class AttendanceTrackingServiceImpl(
                 }.size
                 
                 AttendanceSessionSummary(
-                    sessionId = sessionId!!,
+                    sessionId = sessionId,
                     sessionName = session.title ?: "Unknown Session",
                     registrations = sessionRegistrations,
                     checkIns = sessionCheckIns.size,

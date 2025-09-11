@@ -228,7 +228,7 @@ class CheckInService(
             val actualAttendees = checkInRepository.countUniqueAttendeesBySessionId(session.id!!).toInt()
             
             SessionAttendanceDto(
-                sessionId = session.id!!.toString(),
+                sessionId = session.id.toString(),
                 sessionTitle = session.title,
                 eventName = event.name ?: "Unknown Event",
                 registrations = expectedAttendees,
@@ -330,7 +330,7 @@ class CheckInService(
 
     private fun parseQRCode(qrContent: String): QRData {
         // Parse URL and extract parameters
-        val url = java.net.URL(qrContent)
+        val url = java.net.URI.create(qrContent).toURL()
         val params = url.query.split("&").associate {
             val (key, value) = it.split("=")
             key to URLDecoder.decode(value, "UTF-8")

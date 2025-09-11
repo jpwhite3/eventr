@@ -21,8 +21,9 @@ class CheckInStatsService(
 
 
     fun getEventCheckInStats(eventId: UUID): Map<String, Any> {
-        val event = eventRepository.findById(eventId).orElse(null)
-            ?: return mapOf(
+        // Check if event exists
+        if (!eventRepository.existsById(eventId)) {
+            return mapOf(
                 "eventId" to eventId.toString(),
                 "totalRegistrations" to 0,
                 "totalCheckedIn" to 0,
@@ -30,13 +31,13 @@ class CheckInStatsService(
                 "lastUpdated" to LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
                 "sessions" to emptyList<Map<String, Any>>()
             )
+        }
         
         val totalRegistrations = registrationRepository.countByEventId(eventId)
         val totalCheckedInCount = registrationRepository.findByEventId(eventId).count { it.checkedIn }
         val checkInRate = if (totalRegistrations > 0) (totalCheckedInCount.toDouble() / totalRegistrations.toDouble()) * 100 else 0.0
         
         val sessions = sessionRepository.findByEventIdAndIsActiveTrue(eventId).map { session ->
-            val sessionRegistrations = sessionRegistrationRepository.countBySessionIdAndStatus(session.id!!, SessionRegistrationStatus.REGISTERED)
             val sessionCheckedIn = sessionRegistrationRepository.countBySessionIdAndStatus(session.id!!, SessionRegistrationStatus.ATTENDED)
             
             mapOf(

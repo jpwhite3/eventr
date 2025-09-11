@@ -28,7 +28,6 @@ class EmailReminderService(
     
     private fun sendRemindersForDaysAhead(daysAhead: Int) {
         val now = ZonedDateTime.now()
-        val targetDate = now.plusDays(daysAhead.toLong())
         
         // Find events starting in exactly N days
         val upcomingEvents = eventRepository.findAll().filter { event ->
@@ -55,8 +54,9 @@ class EmailReminderService(
     
     // Manual reminder trigger for admin use
     fun sendManualReminder(eventId: java.util.UUID, daysUntilEvent: Int) {
-        val event = eventRepository.findById(eventId).orElseThrow {
-            IllegalArgumentException("Event not found")
+        // Verify event exists
+        if (!eventRepository.existsById(eventId)) {
+            throw IllegalArgumentException("Event not found")
         }
         
         val registrations = registrationRepository.findByEventId(eventId)

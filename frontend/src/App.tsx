@@ -1,35 +1,53 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import CoreUILayout from './components/layout/CoreUILayout';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+
+// Core pages - keep synchronous for immediate loading
 import HomePage from './pages/HomePage';
 import EventListPage from './pages/EventListPage';
-import DashboardPage from './pages/DashboardPage';
-import RegistrationHistoryPage from './pages/RegistrationHistoryPage';
 import EventDetailsPage from './pages/EventDetailsPage';
-import RegistrationPage from './pages/RegistrationPage';
-import AdminDashboard from './pages/AdminDashboard';
-import AttendancePage from './pages/AttendancePage';
-import EventBuilder from './pages/EventBuilder';
-import ExecutiveDashboard from './components/analytics/ExecutiveDashboard';
-import RegistrationTrends from './components/analytics/RegistrationTrends';
-import AttendanceAnalytics from './components/analytics/AttendanceAnalytics';
-import EventAnalytics from './components/analytics/EventAnalytics';
-import ResourceManagement from './components/ResourceManagement';
-import CheckInPage from './pages/CheckInPage';
-import UserProfilePage from './pages/UserProfilePage';
-import UserSettingsPage from './pages/UserSettingsPage';
-import CalendarViewPage from './pages/CalendarViewPage';
-import EventRegistrationManagement from './pages/EventRegistrationManagement';
-import UserManagement from './pages/UserManagement';
-import SystemReports from './pages/SystemReports';
-import MobileCheckInPage from './pages/MobileCheckInPage';
-import ProtectedRoute from './components/auth/ProtectedRoute';
+
+// Lazy load other pages for code splitting
+const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
+const RegistrationHistoryPage = React.lazy(() => import('./pages/RegistrationHistoryPage'));
+const RegistrationPage = React.lazy(() => import('./pages/RegistrationPage'));
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const AttendancePage = React.lazy(() => import('./pages/AttendancePage'));
+const EventBuilder = React.lazy(() => import('./pages/EventBuilder'));
+const CheckInPage = React.lazy(() => import('./pages/CheckInPage'));
+const UserProfilePage = React.lazy(() => import('./pages/UserProfilePage'));
+const UserSettingsPage = React.lazy(() => import('./pages/UserSettingsPage'));
+const CalendarViewPage = React.lazy(() => import('./pages/CalendarViewPage'));
+const EventRegistrationManagement = React.lazy(() => import('./pages/EventRegistrationManagement'));
+const UserManagement = React.lazy(() => import('./pages/UserManagement'));
+const SystemReports = React.lazy(() => import('./pages/SystemReports'));
+const MobileCheckInPage = React.lazy(() => import('./pages/MobileCheckInPage'));
+
+// Lazy load analytics components
+const ExecutiveDashboard = React.lazy(() => import('./components/analytics/ExecutiveDashboard'));
+const RegistrationTrends = React.lazy(() => import('./components/analytics/RegistrationTrends'));
+const AttendanceAnalytics = React.lazy(() => import('./components/analytics/AttendanceAnalytics'));
+const EventAnalytics = React.lazy(() => import('./components/analytics/EventAnalytics'));
+
+// Lazy load other components
+const ResourceManagement = React.lazy(() => import('./components/ResourceManagement'));
+
+// Loading component for Suspense fallback
+const LoadingFallback = () => (
+  <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
+    <div className="spinner-border text-primary" role="status">
+      <span className="visually-hidden">Loading...</span>
+    </div>
+  </div>
+);
 
 function App(): React.JSX.Element {
   return (
     <Router>
       <CoreUILayout>
-        <Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/events" element={<EventListPage />} />
           <Route path="/events/:id" element={<EventDetailsPage />} />
@@ -66,7 +84,8 @@ function App(): React.JSX.Element {
           {/* Mobile Check-In Routes - Staff Access */}
           <Route path="/mobile-checkin/:eventId" element={<MobileCheckInPage />} />
           <Route path="/mobile-checkin" element={<MobileCheckInPage />} />
-        </Routes>
+          </Routes>
+        </Suspense>
       </CoreUILayout>
     </Router>
   );

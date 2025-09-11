@@ -13,6 +13,7 @@ import java.time.LocalDate
 object EventSpecification {
     
     @JvmStatic
+    @Suppress("UNUSED_PARAMETER")
     fun filterBy(
         category: String? = null,
         eventType: String? = null,

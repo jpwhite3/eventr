@@ -103,7 +103,7 @@ class FileUploadService(
 
     private fun extractFileNameFromUrl(url: String): String {
         return try {
-            val urlObj = URL(url)
+            val urlObj = java.net.URI.create(url).toURL()
             val path = urlObj.path
             path.substringAfterLast("/")
         } catch (e: Exception) {

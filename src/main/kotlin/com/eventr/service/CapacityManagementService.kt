@@ -266,12 +266,12 @@ class CapacityManagementService(
 
     private fun recordCapacityChange(capacity: SessionCapacity, reason: String?) {
         // This could store capacity history in JSON format or separate audit table
-        val changeRecord = mapOf(
+        mapOf(
             "timestamp" to LocalDateTime.now(),
             "maximumCapacity" to capacity.maximumCapacity,
             "currentRegistrations" to capacity.currentRegistrations,
             "reason" to reason
-        )
+        ) // TODO: Implement capacity change audit logging
         // For now, just update the timestamp. In production, you'd store in history
         capacity.lastCapacityUpdate = LocalDateTime.now()
     }
