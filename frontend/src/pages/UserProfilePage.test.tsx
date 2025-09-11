@@ -5,10 +5,12 @@ import UserProfilePage from './UserProfilePage';
 import { useAuth } from '../hooks/useAuth';
 
 // Mock the useAuth hook
-jest.mock('../hooks/useAuth');
-const mockUpdateProfile = jest.fn();
+const mockUseAuth = jest.fn();
+jest.mock('../hooks/useAuth', () => ({
+  useAuth: () => mockUseAuth()
+}));
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockUpdateProfile = jest.fn();
 
 const mockAuthBase = {
   error: null,
