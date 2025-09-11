@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CRow,
@@ -129,15 +129,15 @@ const AdminDashboard: React.FC = () => {
     // Real-time notifications
     const { notifications, clearNotifications, isConnected } = useRealTimeNotifications();
 
-    const fetchEvents = (): void => {
+    const fetchEvents = useCallback((): void => {
         apiClient.get('/events', { params: { publishedOnly: false } })
             .then(response => {
                 setEvents(response.data);
             })
             .catch(error => console.error("Failed to fetch events", error));
-    };
+    }, []);
 
-    const fetchStats = async (): Promise<void> => {
+    const fetchStats = useCallback(async (): Promise<void> => {
         try {
             const response = await apiClient.get('/analytics/executive');
             setStats({
@@ -150,10 +150,10 @@ const AdminDashboard: React.FC = () => {
         } catch (error) {
             console.error("Failed to fetch admin stats", error);
         }
-    };
+    }, [events]);
 
     // Enhanced filtering functionality
-    const applyFilters = () => {
+    const applyFilters = useCallback(() => {
         let filtered = [...events];
 
         // Search filter
@@ -239,7 +239,7 @@ const AdminDashboard: React.FC = () => {
         });
 
         setFilteredEvents(filtered);
-    };
+    }, [events, filters]);
 
     // Bulk action handlers
     const handleBulkAction = async (action: BulkAction['action']) => {
@@ -366,12 +366,12 @@ const AdminDashboard: React.FC = () => {
             // Clean up subscriptions
             subscriptions.forEach(sub => sub.unsubscribe());
         };
-    }, []);
+    }, [fetchEvents, fetchStats]);
 
     // Apply filters whenever events or filter options change
     useEffect(() => {
         applyFilters();
-    }, [events, filters]);
+    }, [applyFilters]);
 
     const handlePublish = (eventId: string): void => {
         apiClient.post(`/events/${eventId}/publish`)

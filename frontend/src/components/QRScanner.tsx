@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import jsQR from 'jsqr';
 import apiClient from '../api/apiClient';
 
@@ -84,7 +84,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
         return () => window.removeEventListener('online', handleOnline);
     }, [offlineQueue]);
 
-    const startCamera = async () => {
+    const startCamera = useCallback(async () => {
         try {
             setError(null);
             setIsScanning(true);
@@ -168,9 +168,9 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
             onError?.(errorMessage);
             setIsScanning(false);
         }
-    };
+    }, [facingMode]);
 
-    const stopCamera = () => {
+    const stopCamera = useCallback(() => {
         if (scanIntervalRef.current) {
             clearInterval(scanIntervalRef.current);
             scanIntervalRef.current = null;
@@ -182,7 +182,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
         }
 
         setIsScanning(false);
-    };
+    }, [stream]);
 
     const startScanning = () => {
         if (!videoRef.current || !canvasRef.current) return;
@@ -315,7 +315,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
     };
 
     // Sync offline queue
-    const syncOfflineQueue = async () => {
+    const syncOfflineQueue = useCallback(async () => {
         if (offlineQueue.length === 0) return;
 
         try {
@@ -335,7 +335,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, isActive, eventId, onErro
         } catch (err) {
             console.error('Failed to sync offline check-ins:', err);
         }
-    };
+    }, [offlineQueue, eventId]);
 
     // Get device ID for tracking
     const getDeviceId = (): string => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   CRow,
   CCol,
@@ -105,7 +105,7 @@ const UserManagement: React.FC = () => {
     visible: false,
   });
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       // TODO: Replace with actual API endpoint
       const mockUsers: User[] = [
@@ -140,9 +140,9 @@ const UserManagement: React.FC = () => {
       console.error('Failed to fetch users:', error);
       showToast('Failed to load users', 'danger');
     }
-  };
+  }, []);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       // TODO: Replace with actual API endpoint
       const mockStats: UserStats = {
@@ -158,9 +158,9 @@ const UserManagement: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch user stats:', error);
     }
-  };
+  }, [users]);
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...users];
 
     // Search filter
@@ -219,7 +219,7 @@ const UserManagement: React.FC = () => {
     });
 
     setFilteredUsers(filtered);
-  };
+  }, [users, filters]);
 
   const handleSelectUser = (userId: string) => {
     const newSelection = new Set(selectedUsers);
@@ -335,15 +335,15 @@ const UserManagement: React.FC = () => {
       setLoading(false);
     };
     loadData();
-  }, []);
+  }, [fetchUsers, fetchStats]);
 
   useEffect(() => {
     applyFilters();
-  }, [users, filters]);
+  }, [applyFilters]);
 
   useEffect(() => {
     fetchStats();
-  }, [users]);
+  }, [fetchStats]);
 
   if (loading) {
     return (

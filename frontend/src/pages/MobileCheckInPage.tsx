@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import MobileCheckInInterface from '../components/MobileCheckInInterface';
 import apiClient from '../api/apiClient';
@@ -51,7 +51,7 @@ const MobileCheckInPage: React.FC = () => {
         loadEventData();
     }, [eventId, sessionId]);
 
-    const loadEventData = async () => {
+    const loadEventData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -83,7 +83,7 @@ const MobileCheckInPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [eventId, sessionId, staffName, staffRole]);
 
     const handleCheckInSuccess = (checkInData: any) => {
         // Analytics tracking for mobile check-ins

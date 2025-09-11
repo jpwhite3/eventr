@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   CRow,
   CCol,
@@ -175,15 +175,15 @@ const SystemReports: React.FC = () => {
     errorRate: 0.02,
   };
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     // TODO: Replace with actual API call
     setReports(mockReports);
-  };
+  }, []);
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     // TODO: Replace with actual API call
     setMetrics(mockMetrics);
-  };
+  }, []);
 
   const handleGenerateReport = async (reportId: string) => {
     setGenerating(prev => new Set(prev).add(reportId));
@@ -304,7 +304,7 @@ const SystemReports: React.FC = () => {
   useEffect(() => {
     fetchReports();
     fetchMetrics();
-  }, []);
+  }, [fetchReports, fetchMetrics]);
 
   return (
     <div className="animated fadeIn">

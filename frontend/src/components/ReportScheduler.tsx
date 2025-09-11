@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AutomatedReportingManager, ReportSchedule } from '../utils/exportUtils';
 import apiClient from '../api/apiClient';
 
@@ -42,7 +42,7 @@ const ReportScheduler: React.FC<ReportSchedulerProps> = ({
     loadSummary();
   }, []);
 
-  const loadSchedules = async () => {
+  const loadSchedules = useCallback(async () => {
     try {
       const response = await apiClient.get('/reports/schedules');
       const backendSchedules = response.data.map((s: any) => ({
@@ -67,9 +67,9 @@ const ReportScheduler: React.FC<ReportSchedulerProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [reportingManager]);
 
-  const loadSummary = async () => {
+  const loadSummary = useCallback(async () => {
     try {
       // In a real implementation, this would call the backend
       const mockSummary: ScheduleSummary = {
@@ -87,7 +87,7 @@ const ReportScheduler: React.FC<ReportSchedulerProps> = ({
     } catch (error) {
       console.error('Failed to load schedule summary:', error);
     }
-  };
+  }, [schedules]);
 
   const handleCreateSchedule = async () => {
     if (!newSchedule.name || !newSchedule.emailRecipients?.length) {

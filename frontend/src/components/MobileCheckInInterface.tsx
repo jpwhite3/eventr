@@ -97,8 +97,16 @@ const MobileCheckInInterface: React.FC<MobileCheckInInterfaceProps> = ({
         const handleOnline = () => {
             setOfflineMode(false);
             // Auto-sync when coming back online
-            if (offlineQueue.length > 0) {
-                syncOfflineQueue();
+            const savedQueue = localStorage.getItem('mobile_checkin_offline_queue');
+            if (savedQueue) {
+                try {
+                    const queue = JSON.parse(savedQueue);
+                    if (queue.length > 0) {
+                        syncOfflineQueue();
+                    }
+                } catch (error) {
+                    console.error('Failed to load offline queue:', error);
+                }
             }
         };
         const handleOffline = () => setOfflineMode(true);
@@ -122,7 +130,7 @@ const MobileCheckInInterface: React.FC<MobileCheckInInterfaceProps> = ({
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
         };
-    }, [offlineQueue]);
+    }, []);
 
     useEffect(() => {
         if (eventId) {
@@ -139,7 +147,7 @@ const MobileCheckInInterface: React.FC<MobileCheckInInterfaceProps> = ({
         }
     }, [eventId]);
 
-    const loadStats = async () => {
+    const loadStats = useCallback(async () => {
         if (!eventId) return;
 
         try {
@@ -148,9 +156,9 @@ const MobileCheckInInterface: React.FC<MobileCheckInInterfaceProps> = ({
         } catch (error) {
             console.error('Failed to load stats:', error);
         }
-    };
+    }, [eventId]);
 
-    const loadRecentCheckIns = async () => {
+    const loadRecentCheckIns = useCallback(async () => {
         if (!eventId) return;
 
         try {
@@ -164,7 +172,7 @@ const MobileCheckInInterface: React.FC<MobileCheckInInterfaceProps> = ({
         } catch (error) {
             console.error('Failed to load recent check-ins:', error);
         }
-    };
+    }, [eventId, sessionId]);
 
     // Offline queue management functions
     const addToOfflineQueue = (checkInData: any) => {
@@ -185,7 +193,7 @@ const MobileCheckInInterface: React.FC<MobileCheckInInterfaceProps> = ({
         setTimeout(() => setSuccess(null), 4000);
     };
 
-    const syncOfflineQueue = async () => {
+    const syncOfflineQueue = useCallback(async () => {
         if (offlineQueue.length === 0 || !navigator.onLine) return;
         
         setLoading(true);
@@ -225,7 +233,7 @@ const MobileCheckInInterface: React.FC<MobileCheckInInterfaceProps> = ({
         }
         
         setLoading(false);
-    };
+    }, [offlineQueue, hapticFeedback, loadStats, loadRecentCheckIns]);
 
     const clearOfflineQueue = () => {
         setOfflineQueue([]);
