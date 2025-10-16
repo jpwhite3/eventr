@@ -115,7 +115,7 @@ describe('EventListPage', () => {
     const searchInput = screen.getByPlaceholderText('Search events...');
     fireEvent.change(searchInput, { target: { value: 'Tech' } });
     
-    const searchButton = screen.getByRole('button', { name: /search/i });
+    const searchButton = screen.getByTestId('hero-search-button');
     fireEvent.click(searchButton);
 
     await waitFor(() => {
@@ -300,7 +300,7 @@ describe('EventListPage', () => {
       })
     );
 
-    const searchButton = screen.getByRole('button', { name: /search/i });
+    const searchButton = screen.getByTestId('hero-search-button');
     fireEvent.click(searchButton);
 
     // Should show loading state immediately

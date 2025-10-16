@@ -137,6 +137,7 @@ const EventListPage: React.FC = () => {
 
   return (
     <div>
+      <h1 className="visually-hidden">Events</h1>
       {/* Modern Hero Section */}
       <div className="hero-section">
         <div className="container-fluid">
@@ -164,9 +165,10 @@ const EventListPage: React.FC = () => {
                   className="w-100" 
                   onClick={fetchEvents} 
                   disabled={loading}
+                  data-testid="hero-search-button"
                 >
                   <FontAwesomeIcon icon={faSearch} className="me-2" />
-                  Search Events
+                  {loading ? 'Searching...' : 'Search Events'}
                 </CButton>
               </div>
             </div>
@@ -222,7 +224,7 @@ const EventListPage: React.FC = () => {
               value={filters.city}
               onChange={(e) => handleFilterChange('city', e.target.value)}
             >
-              <option value="">Browse All Cities</option>
+              <option value="">All Cities</option>
               {cities.map(city => (
                 <option key={city} value={city}>{city}</option>
               ))}
@@ -247,9 +249,10 @@ const EventListPage: React.FC = () => {
               className="w-100 d-block" 
               onClick={fetchEvents} 
               disabled={loading}
+              data-testid="filter-search-button"
             >
-              <FontAwesomeIcon icon={loading ? faFilter : faSearch} className="me-1" spin={loading} />
-              Apply Filters
+              <FontAwesomeIcon icon={faSearch} className="me-2" />
+              {loading ? 'Applying Filters...' : 'Apply Filters'}
             </CButton>
           </CCol>
         </form>
@@ -350,7 +353,7 @@ const EventListPage: React.FC = () => {
                     {event.status === 'PUBLISHED' && event.currentRegistrations < event.maxCapacity ? (
                       <Link to={`/events/${event.id}/register`} className="btn btn-success btn-sm">
                         <FontAwesomeIcon icon={faUserCheck} className="me-1" />
-                        Register Now
+                        Register
                       </Link>
                     ) : (
                       <button className="btn btn-secondary btn-sm" disabled>
