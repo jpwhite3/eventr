@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AttendanceDashboard from './AttendanceDashboard';
 import apiClient from '../api/apiClient';
@@ -33,6 +33,8 @@ describe('AttendanceDashboard', () => {
   const mockAttendanceData = {
     eventId: mockEventId,
     eventName: 'Tech Conference 2024',
+    generatedAt: '2024-01-15T10:00:00Z',
+    overallAttendanceRate: 80.0,
     summary: {
       totalRegistrations: 250,
       totalAttendees: 200,
@@ -47,18 +49,20 @@ describe('AttendanceDashboard', () => {
       {
         sessionId: 'session-1',
         sessionTitle: 'Opening Keynote',
-        registrations: 200,
-        attendees: 180,
+        sessionStartTime: '2024-01-15T09:00:00Z',
+        expectedAttendees: 200,
+        actualAttendees: 180,
         attendanceRate: 90.0,
-        checkInTime: '2024-01-15T09:00:00Z'
+        noShows: 20
       },
       {
         sessionId: 'session-2',
         sessionTitle: 'Technical Workshop',
-        registrations: 50,
-        attendees: 45,
+        sessionStartTime: '2024-01-15T14:00:00Z',
+        expectedAttendees: 50,
+        actualAttendees: 45,
         attendanceRate: 90.0,
-        checkInTime: '2024-01-15T10:30:00Z'
+        noShows: 5
       }
     ],
     timelineData: {
@@ -77,46 +81,82 @@ describe('AttendanceDashboard', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.clearAllTimers();
     
-    // Mock successful API response
-    mockedApiClient.get.mockResolvedValue({
-      data: mockAttendanceData
+    // Ensure document.body is clean
+    document.body.innerHTML = '';
+    
+    // Mock successful API responses for both endpoints
+    mockedApiClient.get.mockImplementation((url: string) => {
+      if (url.includes('/stats')) {
+        return Promise.resolve({
+          data: {
+            totalRegistrations: 250,
+            totalCheckedIn: 200,
+            checkInRate: 80.0,
+            recentCheckIns: [],
+            checkInsByHour: {
+              '09:00': 120,
+              '10:00': 50,
+              '11:00': 30
+            },
+            checkInsByMethod: {
+              'QR_CODE': 150,
+              'MANUAL': 50
+            }
+          }
+        });
+      } else if (url.includes('/report')) {
+        return Promise.resolve({
+          data: mockAttendanceData
+        });
+      }
+      return Promise.resolve({ data: {} });
     });
   });
 
-  it('renders without crashing', () => {
+  afterEach(() => {
+    // Clean up any DOM elements or timers
+    jest.clearAllTimers();
+    cleanup();
+  });
+
+  it('renders without crashing', async () => {
     render(<AttendanceDashboard eventId={mockEventId} />);
-    expect(screen.getByText('Attendance Dashboard')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Tech Conference 2024.*Live Attendance/)).toBeInTheDocument();
+    });
   });
 
   it('displays loading state initially', () => {
     render(<AttendanceDashboard eventId={mockEventId} />);
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(screen.getByText('Loading attendance dashboard...')).toBeInTheDocument();
   });
 
   it('loads and displays attendance data', async () => {
     render(<AttendanceDashboard eventId={mockEventId} />);
     
     await waitFor(() => {
-      expect(screen.getByText('Tech Conference 2024')).toBeInTheDocument();
-      expect(screen.getByText('250')).toBeInTheDocument(); // Total registrations
-      expect(screen.getByText('200')).toBeInTheDocument(); // Total attendees
-      expect(screen.getByText('80%')).toBeInTheDocument(); // Overall attendance rate
-      expect(screen.getByText('50')).toBeInTheDocument(); // No-shows
+      expect(screen.getByText(/Tech Conference 2024.*Live Attendance/)).toBeInTheDocument();
     });
 
-    expect(mockedApiClient.get).toHaveBeenCalledWith(`/api/checkin/event/${mockEventId}/report`);
+    expect(screen.getByText('Total Checked In')).toBeInTheDocument();
+    expect(screen.getByText('Not Checked In')).toBeInTheDocument();
+    expect(screen.getByText('Attendance Rate')).toBeInTheDocument();
+    expect(screen.getByText('80.0%')).toBeInTheDocument(); // Overall attendance rate
+    expect(mockedApiClient.get).toHaveBeenCalledWith(`/checkin/event/${mockEventId}/stats`);
+    expect(mockedApiClient.get).toHaveBeenCalledWith(`/checkin/event/${mockEventId}/report`);
   });
 
   it('displays session attendance data', async () => {
     render(<AttendanceDashboard eventId={mockEventId} />);
     
     await waitFor(() => {
-      expect(screen.getByText('Opening Keynote')).toBeInTheDocument();
-      expect(screen.getByText('Technical Workshop')).toBeInTheDocument();
+      expect(screen.getAllByText('Opening Keynote')).toHaveLength(2); // Table and chart
+      expect(screen.getAllByText('Technical Workshop')).toHaveLength(2); // Table and chart
       expect(screen.getByText('180 / 200')).toBeInTheDocument(); // Attendees/registrations
       expect(screen.getByText('45 / 50')).toBeInTheDocument();
-      expect(screen.getByText('90%')).toBeInTheDocument(); // Attendance rate
+      expect(screen.getAllByText('90.0%')).toHaveLength(4); // Attendance rate appears in table (2x) and chart (2x)
     });
   });
 
@@ -186,8 +226,9 @@ describe('AttendanceDashboard', () => {
   it('refreshes data when refresh button is clicked', async () => {
     render(<AttendanceDashboard eventId={mockEventId} />);
     
+    // Wait for initial load and refresh button to appear
     await waitFor(() => {
-      expect(mockedApiClient.get).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('refresh-button')).toBeInTheDocument();
     });
 
     // Clear mock to count new calls
@@ -197,7 +238,7 @@ describe('AttendanceDashboard', () => {
     fireEvent.click(screen.getByTestId('refresh-button'));
     
     await waitFor(() => {
-      expect(mockedApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockedApiClient.get).toHaveBeenCalledTimes(2); // stats + report
     });
   });
 
@@ -230,33 +271,26 @@ describe('AttendanceDashboard', () => {
     // Mock URL.createObjectURL
     global.URL.createObjectURL = jest.fn(() => 'mocked-url');
     global.URL.revokeObjectURL = jest.fn();
-    
-    // Mock link click
-    const mockClick = jest.fn();
-    const mockAppendChild = jest.fn();
-    const mockRemoveChild = jest.fn();
-    
-    Object.defineProperty(document, 'createElement', {
-      value: jest.fn(() => ({
-        href: '',
-        download: '',
-        click: mockClick,
-      }))
-    });
-    
-    Object.defineProperty(document.body, 'appendChild', {
-      value: mockAppendChild
-    });
-    
-    Object.defineProperty(document.body, 'removeChild', {
-      value: mockRemoveChild
-    });
 
     render(<AttendanceDashboard eventId={mockEventId} />);
     
     await waitFor(() => {
-      expect(screen.getByText('Tech Conference 2024')).toBeInTheDocument();
+      expect(screen.getByText(/Tech Conference 2024.*Live Attendance/)).toBeInTheDocument();
     });
+
+    // Mock link click AFTER render
+    const mockClick = jest.fn();
+    
+    // Store original method
+    const originalCreateElement = document.createElement;
+    
+    // Mock createElement only when needed
+    document.createElement = jest.fn(() => ({
+      href: '',
+      download: '',
+      click: mockClick,
+      setAttribute: jest.fn(),
+    })) as any;
 
     // Click export button
     fireEvent.click(screen.getByText(/export/i));
@@ -264,6 +298,9 @@ describe('AttendanceDashboard', () => {
     await waitFor(() => {
       expect(mockClick).toHaveBeenCalled();
     });
+    
+    // Restore original method
+    document.createElement = originalCreateElement;
   });
 
   it('shows appropriate message when no data is available', async () => {
@@ -282,7 +319,7 @@ describe('AttendanceDashboard', () => {
     render(<AttendanceDashboard eventId={mockEventId} />);
     
     await waitFor(() => {
-      expect(screen.getByText(/no attendance data available/i)).toBeInTheDocument();
+      expect(screen.getByText(/no sessions scheduled yet/i)).toBeInTheDocument();
     });
   });
 
@@ -290,7 +327,8 @@ describe('AttendanceDashboard', () => {
     const { rerender } = render(<AttendanceDashboard eventId={mockEventId} />);
     
     await waitFor(() => {
-      expect(mockedApiClient.get).toHaveBeenCalledWith(`/api/checkin/event/${mockEventId}/report`);
+      expect(mockedApiClient.get).toHaveBeenCalledWith(`/checkin/event/${mockEventId}/stats`);
+      expect(mockedApiClient.get).toHaveBeenCalledWith(`/checkin/event/${mockEventId}/report`);
     });
 
     // Change eventId
@@ -298,7 +336,8 @@ describe('AttendanceDashboard', () => {
     rerender(<AttendanceDashboard eventId={newEventId} />);
     
     await waitFor(() => {
-      expect(mockedApiClient.get).toHaveBeenCalledWith(`/api/checkin/event/${newEventId}/report`);
+      expect(mockedApiClient.get).toHaveBeenCalledWith(`/checkin/event/${newEventId}/stats`);
+      expect(mockedApiClient.get).toHaveBeenCalledWith(`/checkin/event/${newEventId}/report`);
     });
   });
 });

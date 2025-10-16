@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Profile
 import org.springframework.core.io.ClassPathResource
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -25,7 +26,9 @@ class FixtureDataLoader(
     private val registrationRepository: RegistrationRepository,
     private val sessionRegistrationRepository: SessionRegistrationRepository,
     private val resourceRepository: ResourceRepository,
-    private val checkInRepository: CheckInRepository
+    private val checkInRepository: CheckInRepository,
+    private val userRepository: UserRepository,
+    private val passwordEncoder: BCryptPasswordEncoder
 ) : CommandLineRunner {
     
     private val logger = LoggerFactory.getLogger(FixtureDataLoader::class.java)
@@ -41,6 +44,7 @@ class FixtureDataLoader(
             clearExistingData()
             
             // Load fixtures in order of dependencies
+            loadUsers()
             loadEvents()
             loadEventInstances()
             loadSessions()
@@ -48,6 +52,9 @@ class FixtureDataLoader(
             loadSessionRegistrations()
             loadResources()
             loadCheckIns()
+            
+            // Display development login info
+            displayDevelopmentLoginInfo()
             
             logger.info("Fixture data loading completed successfully!")
         } catch (e: Exception) {
@@ -64,6 +71,7 @@ class FixtureDataLoader(
         sessionRepository.deleteAll()
         eventInstanceRepository.deleteAll()
         eventRepository.deleteAll()
+        userRepository.deleteAll()
         logger.info("Existing data cleared")
     }
     
@@ -330,5 +338,68 @@ class FixtureDataLoader(
             }
         }
         logger.info("Loaded ${checkIns.size()} check-ins")
+    }
+    
+    private fun loadUsers() {
+        logger.info("Loading users...")
+        val resource = ClassPathResource("fixtures/users.json")
+        val users = objectMapper.readTree(resource.inputStream)
+        
+        users.forEach { userNode ->
+            val user = User().apply {
+                id = UUID.fromString(userNode["id"].asText())
+                email = userNode["email"].asText()
+                firstName = userNode["firstName"].asText()
+                lastName = userNode["lastName"].asText()
+                passwordHash = passwordEncoder.encode(userNode["password"].asText())
+                phone = userNode["phone"]?.asText()
+                company = userNode["company"]?.asText()
+                jobTitle = userNode["jobTitle"]?.asText()
+                bio = userNode["bio"]?.asText()
+                profileImageUrl = userNode["profileImageUrl"]?.asText()
+                role = UserRole.valueOf(userNode["role"].asText())
+                status = UserStatus.valueOf(userNode["status"].asText())
+                emailVerified = userNode["emailVerified"]?.asBoolean() ?: true
+                timezone = userNode["timezone"]?.asText() ?: "UTC"
+                language = userNode["language"]?.asText() ?: "en"
+                marketingEmails = userNode["marketingEmails"]?.asBoolean() ?: true
+                eventReminders = userNode["eventReminders"]?.asBoolean() ?: true
+                weeklyDigest = userNode["weeklyDigest"]?.asBoolean() ?: true
+                createdAt = userNode["createdAt"]?.asText()?.let { LocalDateTime.parse(it) } ?: LocalDateTime.now()
+                lastLoginAt = userNode["lastLoginAt"]?.asText()?.let { LocalDateTime.parse(it) }
+            }
+            userRepository.save(user)
+        }
+        logger.info("Loaded ${users.size()} users")
+    }
+    
+    private fun displayDevelopmentLoginInfo() {
+        logger.info("╔═══════════════════════════════════════════════════════════════════════════════╗")
+        logger.info("║                        🚀 DEVELOPMENT LOGIN INFO 🚀                          ║")
+        logger.info("╠═══════════════════════════════════════════════════════════════════════════════╣")
+        logger.info("║                                                                               ║")
+        logger.info("║  👤 TEST USERS AVAILABLE FOR LOGIN:                                          ║")
+        logger.info("║                                                                               ║")
+        logger.info("║  📧 Admin User:                                                              ║")
+        logger.info("║     Email:    admin@eventr.dev                                               ║")
+        logger.info("║     Password: DevPassword123                                                 ║")
+        logger.info("║     Role:     ADMIN                                                          ║")
+        logger.info("║                                                                               ║")
+        logger.info("║  📧 Organizer User:                                                          ║")
+        logger.info("║     Email:    organizer@eventr.dev                                           ║")
+        logger.info("║     Password: DevPassword123                                                 ║")
+        logger.info("║     Role:     ORGANIZER                                                      ║")
+        logger.info("║                                                                               ║")
+        logger.info("║  📧 Regular User:                                                            ║")
+        logger.info("║     Email:    user@eventr.dev                                                ║")
+        logger.info("║     Password: DevPassword123                                                 ║")
+        logger.info("║     Role:     ATTENDEE                                                       ║")
+        logger.info("║                                                                               ║")
+        logger.info("║  🌐 Login URL: http://localhost:3002/login                                   ║")
+        logger.info("║                                                                               ║")
+        logger.info("║  ⚠️  These credentials are for DEVELOPMENT ONLY!                            ║")
+        logger.info("║     Do not use in production environments.                                   ║")
+        logger.info("║                                                                               ║")
+        logger.info("╚═══════════════════════════════════════════════════════════════════════════════╝")
     }
 }

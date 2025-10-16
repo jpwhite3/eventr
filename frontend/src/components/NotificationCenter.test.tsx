@@ -181,12 +181,12 @@ describe('NotificationCenter', () => {
         type: 'info',
         title: 'Personal Notification',
         message: 'Test message',
-        timestamp: Date.now() - 60000 // 1 minute ago
+        timestamp: Date.now() - 120000 // 2 minutes ago
       });
     });
     
     await waitFor(() => {
-      expect(screen.getByText('1m ago')).toBeInTheDocument();
+      expect(screen.getByText('2m ago')).toBeInTheDocument();
     });
   });
 
@@ -342,7 +342,8 @@ describe('NotificationCenter', () => {
       });
       
       eventCallback({
-        type: 'EVENT_STATUS_CHANGE',
+        type: 'EVENT_UPDATE',
+        updateType: 'STATUS_CHANGE',
         eventId: 'event-123',
         newStatus: 'CANCELLED',
         timestamp: Date.now()

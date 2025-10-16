@@ -58,8 +58,17 @@
     "moduleNameMapper": {
       "^react-markdown$": "<rootDir>/src/__mocks__/react-markdown.js",
       "^axios$": "<rootDir>/src/__mocks__/axios.js",
-      "^../api/apiClient$": "<rootDir>/src/__mocks__/apiClient.js"
-    }
+      "^../api/apiClient$": "<rootDir>/src/__mocks__/apiClient.js",
+      "^../hooks/useAuth$": "<rootDir>/src/__mocks__/useAuth.ts"
+    },
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/index.tsx",
+      "!src/reportWebVitals.ts",
+      "!src/__mocks__/**"
+    ],
+    "coverageReporters": ["text", "lcov", "html"]
   },
   "browserslist": {
     "production": [

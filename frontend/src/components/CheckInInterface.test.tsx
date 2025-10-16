@@ -190,14 +190,22 @@ describe('CheckInInterface', () => {
   });
 
   it('shows loading state', async () => {
-    // Mock a slow API response
-    mockedApiClient.get.mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve({ data: mockStats }), 100))
+    // Mock a slow check-in API response
+    mockedApiClient.post.mockImplementation(() => 
+      new Promise(resolve => setTimeout(() => resolve({ 
+        data: { userName: 'Test User', id: 'check-123' }
+      }), 100))
     );
     
     render(<CheckInInterface {...defaultProps} />);
     
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    // Fill form and submit to trigger loading state
+    fireEvent.change(screen.getByPlaceholderText('Enter attendee email address'), {
+      target: { value: 'test@example.com' }
+    });
+    fireEvent.click(screen.getByText('✅ Check In'));
+    
+    expect(screen.getByText(/checking in/i)).toBeInTheDocument();
   });
 
   it('refreshes data when refresh button is clicked', async () => {
@@ -243,7 +251,7 @@ describe('CheckInInterface', () => {
     fireEvent.click(screen.getByText('✅ Check In'));
     
     await waitFor(() => {
-      expect(screen.getByText(/successfully checked in/i)).toBeInTheDocument();
+      expect(screen.getByText(/checked in manually/i)).toBeInTheDocument();
     });
   });
 

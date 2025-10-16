@@ -54,11 +54,11 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'> & { timestamp?: number }) => {
     const newNotification: Notification = {
       ...notification,
       id: `${Date.now()}-${Math.random()}`,
-      timestamp: Date.now(),
+      timestamp: notification.timestamp || Date.now(),
       read: false
     };
 
@@ -84,12 +84,13 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       // User-specific notifications
       webSocketService.subscribeToUserNotifications(user.id, (message) => {
         addNotification({
-          type: 'info',
-          title: 'Personal Notification',
+          type: (message.type as 'info' | 'success' | 'warning' | 'error') || 'info',
+          title: message.title || 'Personal Notification',
           message: message.message || 'You have a new notification',
           eventId: message.eventId,
           eventName: message.eventName,
-          persistent: true
+          persistent: true,
+          timestamp: message.timestamp
         });
       }),
 
@@ -214,6 +215,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
           className="btn btn-outline-secondary position-relative"
           onClick={() => setIsOpen(!isOpen)}
           title="Notifications"
+          aria-label="Notifications"
         >
           <FontAwesomeIcon icon={faBell} />
           {showBadge && unreadCount > 0 && (

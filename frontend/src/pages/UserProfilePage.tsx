@@ -23,12 +23,13 @@ const UserProfilePage: React.FC = () => {
   const { user, updateProfile, isLoading, error, clearError } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UpdateProfileData>({});
+  const [originalData, setOriginalData] = useState<UpdateProfileData>({});
   const [localError, setLocalError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
-      setFormData({
+      const userData = {
         firstName: user.firstName,
         lastName: user.lastName,
         phone: user.phone || '',
@@ -40,7 +41,9 @@ const UserProfilePage: React.FC = () => {
         marketingEmails: user.marketingEmails,
         eventReminders: user.eventReminders,
         weeklyDigest: user.weeklyDigest
-      });
+      };
+      setFormData(userData);
+      setOriginalData(userData);
     }
   }, [user]);
 
@@ -65,16 +68,27 @@ const UserProfilePage: React.FC = () => {
       setLocalError(null);
       setSuccessMessage(null);
       
-      // Remove empty strings and convert to null for optional fields
-      const cleanedData: UpdateProfileData = {};
+      // Find only the fields that have changed
+      const changedData: UpdateProfileData = {};
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== '' && value !== undefined) {
-          cleanedData[key as keyof UpdateProfileData] = value as any;
+        const originalValue = originalData[key as keyof UpdateProfileData];
+        if (value !== originalValue) {
+          // Remove empty strings and convert to null for optional fields
+          if (value !== '' && value !== undefined) {
+            changedData[key as keyof UpdateProfileData] = value as any;
+          }
         }
       });
       
-      await updateProfile(cleanedData);
-      setSuccessMessage('Profile updated successfully!');
+      // Only call updateProfile if there are actual changes
+      if (Object.keys(changedData).length > 0) {
+        await updateProfile(changedData);
+        setSuccessMessage('Profile updated successfully!');
+        
+        // Update originalData to reflect the saved state
+        setOriginalData(formData);
+      }
+      
       setIsEditing(false);
       
       // Clear success message after 3 seconds
@@ -89,7 +103,7 @@ const UserProfilePage: React.FC = () => {
 
   const handleCancel = () => {
     if (user) {
-      setFormData({
+      const userData = {
         firstName: user.firstName,
         lastName: user.lastName,
         phone: user.phone || '',
@@ -101,7 +115,9 @@ const UserProfilePage: React.FC = () => {
         marketingEmails: user.marketingEmails,
         eventReminders: user.eventReminders,
         weeklyDigest: user.weeklyDigest
-      });
+      };
+      setFormData(userData);
+      setOriginalData(userData);
     }
     setIsEditing(false);
     setLocalError(null);
@@ -118,14 +134,25 @@ const UserProfilePage: React.FC = () => {
     });
   };
 
-  if (!user) {
+  if (isLoading) {
     return (
       <div className="profile-container">
         <div className="loading-state">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="mt-3">Loading your profile...</p>
+          <p className="mt-3">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="profile-container">
+        <div className="text-center mt-5">
+          <h2>Authentication Required</h2>
+          <p className="text-muted">Please sign in to view your profile</p>
         </div>
       </div>
     );

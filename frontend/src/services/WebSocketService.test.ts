@@ -11,9 +11,8 @@ jest.mock('sockjs-client', () => {
 const MockedClient = Client as jest.MockedClass<typeof Client>;
 
 describe('WebSocketService', () => {
-  let mockStompClient: jest.Mocked<Client>;
+  let mockStompClient: any;
   let mockSubscription: { unsubscribe: jest.MockedFunction<() => void> };
-  let WebSocketService: any;
   let webSocketService: any;
 
   beforeEach(() => {
@@ -28,15 +27,13 @@ describe('WebSocketService', () => {
       deactivate: jest.fn(),
       subscribe: jest.fn().mockReturnValue(mockSubscription),
       publish: jest.fn(),
-      get connected() { return this._connected; },
-      set connected(value) { this._connected = value; },
-      _connected: false,
+      connected: false,
       active: false,
-      onConnect: jest.fn(),
-      onStompError: jest.fn(),
-      onWebSocketError: jest.fn(),
-      onWebSocketClose: jest.fn()
-    } as any;
+      onConnect: null,
+      onStompError: null,
+      onWebSocketError: null,
+      onWebSocketClose: null
+    };
 
     MockedClient.mockImplementation(() => mockStompClient);
     
@@ -59,36 +56,60 @@ describe('WebSocketService', () => {
     });
 
     it('should connect to WebSocket server', async () => {
+      console.log('Test starting');
+      
+      // Mock activate to immediately trigger the onConnect callback
+      mockStompClient.activate.mockImplementation(() => {
+        console.log('Activate called, onConnect is:', typeof mockStompClient.onConnect);
+        // Call onConnect immediately if it exists
+        if (mockStompClient.onConnect) {
+          console.log('Calling onConnect');
+          mockStompClient.onConnect({});
+        } else {
+          console.log('onConnect is not set yet');
+        }
+      });
+      
+      console.log('Calling connect');
       const connectPromise = webSocketService.connect();
+      console.log('Connect called, awaiting...');
       
-      // Simulate successful connection
-      Object.defineProperty(mockStompClient, 'connected', { value: true, writable: true });
-      const connectCallback = mockStompClient.onConnect;
-      if (connectCallback) {
-        connectCallback({} as any);
+      // Wait for the promise to resolve
+      try {
+        await connectPromise;
+        console.log('Connect promise resolved');
+      } catch (error) {
+        console.log('Connect promise rejected:', error);
+        throw error;
       }
-      
-      await connectPromise;
       
       expect(mockStompClient.activate).toHaveBeenCalled();
     });
 
     it('should handle connection errors', async () => {
-      const connectPromise = webSocketService.connect();
+      // Set up activate to trigger onStompError callback immediately
+      mockStompClient.activate.mockImplementation(() => {
+        if (mockStompClient.onStompError) {
+          const errorFrame = { headers: { message: 'Connection failed' } };
+          mockStompClient.onStompError(errorFrame as any);
+        }
+      });
       
-      // Simulate connection error
-      const errorFrame = { headers: { message: 'Connection failed' } };
-      const errorCallback = mockStompClient.onStompError;
-      if (errorCallback) {
-        errorCallback(errorFrame as any);
-      }
-      
-      await expect(connectPromise).rejects.toThrow('WebSocket connection failed: Connection failed');
+      await expect(webSocketService.connect()).rejects.toThrow('WebSocket connection failed: Connection failed');
+      expect(mockStompClient.onStompError).toBeDefined(); // Should be set by connect method
     });
 
-    it('should disconnect from WebSocket server', () => {
-      Object.defineProperty(mockStompClient, 'connected', { value: true, writable: true });
+    it('should disconnect from WebSocket server', async () => {
+      // First establish a connection
+      mockStompClient.activate.mockImplementation(() => {
+        if (mockStompClient.onConnect) {
+          mockStompClient.onConnect({} as any);
+        }
+      });
       
+      await webSocketService.connect();
+      
+      // Now disconnect
       webSocketService.disconnect();
       
       expect(mockStompClient.deactivate).toHaveBeenCalled();
@@ -107,16 +128,17 @@ describe('WebSocketService', () => {
 
     it('should handle reconnection attempts', () => {
       jest.useFakeTimers();
+      const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
       
-      // Simulate connection loss
-      const closeCallback = mockStompClient.onWebSocketClose;
-      if (closeCallback) {
-        closeCallback({} as any);
+      // Simulate connection loss which triggers reconnection
+      if (mockStompClient.onWebSocketClose) {
+        mockStompClient.onWebSocketClose({} as any);
       }
       
       // Should attempt to reconnect after delay
-      expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), expect.any(Number));
+      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), expect.any(Number));
       
+      setTimeoutSpy.mockRestore();
       jest.useRealTimers();
     });
   });

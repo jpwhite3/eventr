@@ -44,6 +44,11 @@ const CheckInInterface: React.FC<CheckInInterfaceProps> = ({
         }
     }, [eventId]);
 
+    const refreshData = () => {
+        loadStats();
+        loadRecentCheckIns();
+    };
+
     const loadStats = async () => {
         if (!eventId) return;
 
@@ -52,6 +57,7 @@ const CheckInInterface: React.FC<CheckInInterfaceProps> = ({
             setStats(response.data);
         } catch (error) {
             console.error('Failed to load stats:', error);
+            setError('Failed to load statistics');
         }
     };
 
@@ -64,10 +70,11 @@ const CheckInInterface: React.FC<CheckInInterfaceProps> = ({
                 : `/checkin/event/${eventId}/stats`;
             
             const response = await apiClient.get(endpoint);
-            const checkIns = sessionId ? response.data : response.data.recentCheckIns;
+            const checkIns = sessionId ? response.data : response.data.recentCheckIns || [];
             setRecentCheckIns(checkIns);
         } catch (error) {
             console.error('Failed to load recent check-ins:', error);
+            setError('Failed to load check-in data');
         }
     };
 
@@ -274,7 +281,10 @@ const CheckInInterface: React.FC<CheckInInterfaceProps> = ({
                                 <QRScanner
                                     isActive={isScanning}
                                     onScan={handleQRScan}
-                                    onError={(error) => setError(error)}
+                                    onError={(error) => {
+                                        setError(error);
+                                        onCheckInError?.(error);
+                                    }}
                                 />
                             ) : (
                                 <div className="py-5 text-muted">
@@ -336,20 +346,20 @@ const CheckInInterface: React.FC<CheckInInterfaceProps> = ({
                             <h6 className="mb-0">🕒 Recent Check-ins</h6>
                             <button 
                                 className="btn btn-sm btn-outline-secondary"
-                                onClick={loadRecentCheckIns}
+                                onClick={refreshData}
                             >
                                 🔄
                             </button>
                         </div>
                         <div className="card-body p-0">
-                            {recentCheckIns.length === 0 ? (
+                            {recentCheckIns?.length === 0 ? (
                                 <div className="p-4 text-center text-muted">
                                     <div className="h3">👥</div>
                                     <p className="mb-0">No recent check-ins</p>
                                 </div>
                             ) : (
                                 <div className="list-group list-group-flush">
-                                    {recentCheckIns.map((checkIn, index) => (
+                                    {recentCheckIns?.map((checkIn, index) => (
                                         <div key={checkIn.id || index} className="list-group-item">
                                             <div className="d-flex justify-content-between align-items-start">
                                                 <div className="flex-grow-1">

@@ -29,7 +29,8 @@ interface FormData {
 }
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId, onSuccess }) => {
-    const { user, isAuthenticated } = useAuth();
+    const authResult = useAuth();
+    const { user, isAuthenticated } = authResult || { user: null, isAuthenticated: false };
     const [formDefinition, setFormDefinition] = useState<FormDefinition | null>(null);
     const [formData, setFormData] = useState<FormData>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -112,6 +113,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ eventId, instanceId
 
     if (error) {
         return <div className="alert alert-danger">{error}</div>;
+    }
+
+    // Show loading if auth is not ready
+    if (!authResult) {
+        return <div>Loading authentication...</div>;
     }
 
     if (!isAuthenticated || !user) {

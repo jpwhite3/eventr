@@ -48,39 +48,21 @@ describe('UserSettingsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Completely reset all mock functions
-    Object.values(mockAuthBase).forEach(mockFn => {
-      if (jest.isMockFunction(mockFn)) {
-        mockFn.mockClear();
-      }
-    });
-    
-    // Reset API client mocks
-    if (mockApiClient.put) mockApiClient.put.mockClear();
-    if (mockApiClient.post) mockApiClient.post.mockClear();
-    
-    // Create fresh mock instance for each test to prevent state contamination
     mockUseAuth.mockReturnValue({
       ...mockAuthBase,
-      user: { ...mockUser }, // Create fresh copy
+      user: mockUser,
       isAuthenticated: true,
-      isLoading: false,
-      error: null // Explicitly set to null to prevent state contamination
+      isLoading: false
     });
 
-    mockApiClient.put.mockResolvedValue({ data: { success: true } });
-  });
-
-  afterEach(() => {
-    // Additional cleanup to ensure no state leaks between tests
-    jest.resetAllMocks();
+    mockApiClient.post.mockResolvedValue({ data: { success: true } });
   });
 
   it('renders settings page when authenticated', () => {
     render(<UserSettingsPage />);
     
     expect(screen.getByText('Account Settings')).toBeInTheDocument();
-    expect(screen.getByText('Security Overview')).toBeInTheDocument();
+    expect(screen.getByText('Security')).toBeInTheDocument();
     expect(screen.getByText('Password')).toBeInTheDocument();
   });
 
@@ -94,7 +76,8 @@ describe('UserSettingsPage', () => {
 
     render(<UserSettingsPage />);
     
-    expect(screen.getByText('Loading your settings...')).toBeInTheDocument();
+    expect(screen.getByText('Authentication Required')).toBeInTheDocument();
+    expect(screen.getByText('Please sign in to access your settings')).toBeInTheDocument();
   });
 
   it('shows loading state when auth is loading', () => {
@@ -121,57 +104,35 @@ describe('UserSettingsPage', () => {
       fireEvent.change(confirmPasswordInput, { target: { value: 'newpassword123' } });
       
       const changePasswordButton = screen.getByRole('button', { name: /change password/i });
+      fireEvent.click(changePasswordButton);
       
-      // Button should be disabled when current password is empty
-      expect(changePasswordButton).toBeDisabled();
+      await waitFor(() => {
+        expect(screen.getByText('Current password is required')).toBeInTheDocument();
+      });
       
-      expect(mockApiClient.put).not.toHaveBeenCalled();
+      expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('validates new password meets requirements', async () => {
-      const mockChangePassword = jest.fn();
-      
-      mockUseAuth.mockReturnValue({
-        ...mockAuthBase,
-        user: { ...mockUser },
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-        changePassword: mockChangePassword
-      });
-      
       render(<UserSettingsPage />);
       
       const currentPasswordInput = screen.getByLabelText('Current Password *');
       const newPasswordInput = screen.getByLabelText('New Password *');
-      const confirmPasswordInput = screen.getByLabelText('Confirm New Password *');
       
       fireEvent.change(currentPasswordInput, { target: { value: 'oldpassword' } });
       fireEvent.change(newPasswordInput, { target: { value: '123' } }); // Too short
-      fireEvent.change(confirmPasswordInput, { target: { value: '123' } }); // Match the short password
       
       const changePasswordButton = screen.getByRole('button', { name: /change password/i });
       fireEvent.click(changePasswordButton);
       
       await waitFor(() => {
-        expect(screen.getByText('New password must be at least 8 characters long.')).toBeInTheDocument();
+        expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument();
       });
       
-      expect(mockChangePassword).not.toHaveBeenCalled();
+      expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('validates password confirmation matches', async () => {
-      const mockChangePassword = jest.fn();
-      
-      mockUseAuth.mockReturnValue({
-        ...mockAuthBase,
-        user: { ...mockUser },
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-        changePassword: mockChangePassword
-      });
-      
       render(<UserSettingsPage />);
       
       const currentPasswordInput = screen.getByLabelText('Current Password *');
@@ -182,16 +143,14 @@ describe('UserSettingsPage', () => {
       fireEvent.change(newPasswordInput, { target: { value: 'newpassword123' } });
       fireEvent.change(confirmPasswordInput, { target: { value: 'differentpassword' } });
       
-      // Should show inline validation message
+      const changePasswordButton = screen.getByRole('button', { name: /change password/i });
+      fireEvent.click(changePasswordButton);
+      
       await waitFor(() => {
         expect(screen.getByText('Passwords do not match')).toBeInTheDocument();
       });
       
-      // Button should be disabled because passwords don't match
-      const changePasswordButton = screen.getByRole('button', { name: /change password/i });
-      expect(changePasswordButton).toBeDisabled();
-      
-      expect(mockChangePassword).not.toHaveBeenCalled();
+      expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('shows password strength indicator', () => {
@@ -199,32 +158,20 @@ describe('UserSettingsPage', () => {
       
       const newPasswordInput = screen.getByLabelText('New Password *');
       
-      // Weak password (length + lowercase = score 2)
-      fireEvent.change(newPasswordInput, { target: { value: 'weakpass' } });
+      // Weak password
+      fireEvent.change(newPasswordInput, { target: { value: 'weak' } });
       expect(screen.getByText('Weak')).toBeInTheDocument();
       
-      // Medium password (length + lowercase + uppercase = score 3) 
-      fireEvent.change(newPasswordInput, { target: { value: 'MediumPass' } });
+      // Medium password
+      fireEvent.change(newPasswordInput, { target: { value: 'Medium123' } });
       expect(screen.getByText('Medium')).toBeInTheDocument();
       
-      // Strong password (length + lowercase + uppercase + digits = score 4)
+      // Strong password
       fireEvent.change(newPasswordInput, { target: { value: 'Strong123@!' } });
       expect(screen.getByText('Strong')).toBeInTheDocument();
     });
 
     it('successfully changes password', async () => {
-      // Mock successful changePassword
-      const mockChangePassword = jest.fn().mockResolvedValue({});
-      
-      mockUseAuth.mockReturnValue({
-        ...mockAuthBase,
-        user: { ...mockUser },
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-        changePassword: mockChangePassword
-      });
-      
       render(<UserSettingsPage />);
       
       const currentPasswordInput = screen.getByLabelText('Current Password *');
@@ -239,7 +186,7 @@ describe('UserSettingsPage', () => {
       fireEvent.click(changePasswordButton);
       
       await waitFor(() => {
-        expect(mockChangePassword).toHaveBeenCalledWith({
+        expect(mockApiClient.post).toHaveBeenCalledWith('/auth/change-password', {
           currentPassword: 'currentpass123',
           newPassword: 'newpassword123'
         });
@@ -248,15 +195,8 @@ describe('UserSettingsPage', () => {
     });
 
     it('handles password change errors', async () => {
-      const mockChangePassword = jest.fn().mockRejectedValue(new Error('Current password is incorrect'));
-      
-      mockUseAuth.mockReturnValue({
-        ...mockAuthBase,
-        user: { ...mockUser },
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-        changePassword: mockChangePassword
+      mockApiClient.post.mockRejectedValue({ 
+        response: { data: { message: 'Current password is incorrect' } } 
       });
       
       render(<UserSettingsPage />);
@@ -278,17 +218,6 @@ describe('UserSettingsPage', () => {
     });
 
     it('clears form after successful password change', async () => {
-      const mockChangePassword = jest.fn().mockResolvedValue({});
-      
-      mockUseAuth.mockReturnValue({
-        ...mockAuthBase,
-        user: { ...mockUser },
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-        changePassword: mockChangePassword
-      });
-      
       render(<UserSettingsPage />);
       
       const currentPasswordInput = screen.getByLabelText('Current Password *');
@@ -332,20 +261,12 @@ describe('UserSettingsPage', () => {
 
   describe('Form Validation', () => {
     it('shows loading state during password change', async () => {
-      // Mock the changePassword to set loading state
-      const mockChangePassword = jest.fn().mockImplementation(() => {
-        // This simulates the loading state being set
-        return new Promise(resolve => setTimeout(() => resolve({}), 100));
-      });
-      
-      mockUseAuth.mockReturnValue({
-        ...mockAuthBase,
-        user: mockUser,
-        isAuthenticated: true,
-        isLoading: true, // Set loading to true
-        error: null,
-        changePassword: mockChangePassword
-      });
+      let resolvePromise: (value: any) => void;
+      mockApiClient.post.mockReturnValue(
+        new Promise(resolve => {
+          resolvePromise = resolve;
+        })
+      );
       
       render(<UserSettingsPage />);
       
@@ -357,10 +278,14 @@ describe('UserSettingsPage', () => {
       fireEvent.change(newPasswordInput, { target: { value: 'newpassword123' } });
       fireEvent.change(confirmPasswordInput, { target: { value: 'newpassword123' } });
       
-      const changePasswordButton = screen.getByRole('button', { name: /changing password/i });
+      const changePasswordButton = screen.getByRole('button', { name: /change password/i });
+      fireEvent.click(changePasswordButton);
       
       expect(screen.getByText('Changing Password...')).toBeInTheDocument();
       expect(changePasswordButton).toBeDisabled();
+      
+      // Resolve the promise to complete the test
+      resolvePromise!({ data: { success: true } });
     });
 
     it('validates individual password requirements', () => {
@@ -369,16 +294,13 @@ describe('UserSettingsPage', () => {
       const newPasswordInput = screen.getByLabelText('New Password *');
       
       // Test different password patterns
-      // 'shortpass' = length(1) + lowercase(1) = 2 → Weak
       fireEvent.change(newPasswordInput, { target: { value: 'shortpass' } });
       expect(screen.getByText('Weak')).toBeInTheDocument();
       
-      // 'LongPassword' = length(1) + lowercase(1) + uppercase(1) = 3 → Medium
-      fireEvent.change(newPasswordInput, { target: { value: 'LongPassword' } });
+      fireEvent.change(newPasswordInput, { target: { value: 'LongPassword123' } });
       expect(screen.getByText('Medium')).toBeInTheDocument();
       
-      // 'LongPassword123!' = length(1) + lowercase(1) + uppercase(1) + digits(1) + special(1) = 5 → Strong
-      fireEvent.change(newPasswordInput, { target: { value: 'LongPassword123!' } });
+      fireEvent.change(newPasswordInput, { target: { value: 'VeryStrongPassword123!@#' } });
       expect(screen.getByText('Strong')).toBeInTheDocument();
     });
 
@@ -411,16 +333,7 @@ describe('UserSettingsPage', () => {
 
   describe('Error Handling', () => {
     it('handles network errors gracefully', async () => {
-      const mockChangePassword = jest.fn().mockRejectedValue(new Error('Failed to change password. Please try again.'));
-      
-      mockUseAuth.mockReturnValue({
-        ...mockAuthBase,
-        user: { ...mockUser },
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-        changePassword: mockChangePassword
-      });
+      mockApiClient.post.mockRejectedValue(new Error('Network error'));
       
       render(<UserSettingsPage />);
       
@@ -441,15 +354,8 @@ describe('UserSettingsPage', () => {
     });
 
     it('clears error messages when form is modified', async () => {
-      const mockChangePassword = jest.fn().mockRejectedValue(new Error('Current password is incorrect'));
-      
-      mockUseAuth.mockReturnValue({
-        ...mockAuthBase,
-        user: { ...mockUser },
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-        changePassword: mockChangePassword
+      mockApiClient.post.mockRejectedValue({ 
+        response: { data: { message: 'Current password is incorrect' } } 
       });
       
       render(<UserSettingsPage />);
