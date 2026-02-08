@@ -29,7 +29,6 @@ import {
   faTimesCircle,
   faMobile
 } from '@fortawesome/free-solid-svg-icons';
-import MobileCheckInLink from '../components/MobileCheckInLink';
 
 interface Event {
   id: string;
@@ -346,19 +345,6 @@ const CheckInPage: React.FC = () => {
         </CRow>
       )}
 
-      {/* Mobile Check-In Link Generator */}
-      {selectedEvent && (
-        <CRow className="mb-4">
-          <CCol>
-            <MobileCheckInLink
-              eventId={selectedEvent}
-              eventName={selectedEventData?.name || 'Selected Event'}
-              sessionId={selectedSession}
-              sessionName={sessions.find(s => s.id === selectedSession)?.title}
-            />
-          </CCol>
-        </CRow>
-      )}
 
       {/* Registrations Table */}
       <CRow>

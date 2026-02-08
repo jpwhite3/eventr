@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 import RegistrationForm from '../components/RegistrationForm';
-import QRCodeDisplay from '../components/QRCodeDisplay';
 
 interface Event {
     id: string;
@@ -163,12 +162,14 @@ const RegistrationPage: React.FC = () => {
                                         </div>
                                         
                                         {registrationData && (
-                                            <QRCodeDisplay
-                                                eventId={id!}
-                                                registrationId={registrationData.id}
-                                                userName={registrationData.userName}
-                                                userEmail={registrationData.userEmail}
-                                            />
+                                            <div className="card bg-light mb-4">
+                                                <div className="card-body text-center">
+                                                    <h5>Your Registration Details</h5>
+                                                    <p><strong>Name:</strong> {registrationData.userName}</p>
+                                                    <p><strong>Email:</strong> {registrationData.userEmail}</p>
+                                                    <p className="text-muted">Registration ID: {registrationData.id}</p>
+                                                </div>
+                                            </div>
                                         )}
                                         
                                         <div className="text-center mt-4">

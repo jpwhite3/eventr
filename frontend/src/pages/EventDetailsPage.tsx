@@ -2,11 +2,6 @@ import React, { useState, useEffect, ChangeEvent, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import apiClient from '../api/apiClient';
-import RealTimeStats from '../components/RealTimeStats';
-import { useWebSocket } from '../hooks/useWebSocket';
-import webSocketService, { WebSocketMessage } from '../services/WebSocketService';
-import CalendarIntegration from '../components/CalendarIntegration';
-import { useAuth } from '../hooks/useAuth';
 
 interface EventInstance {
     id: string;
@@ -48,18 +43,9 @@ interface EventData {
 const EventDetailsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { user } = useAuth();
     const [event, setEvent] = useState<EventData | null>(null);
     const [selectedInstance, setSelectedInstance] = useState('');
     const [showFullDescription, setShowFullDescription] = useState(false);
-    const [liveNotifications, setLiveNotifications] = useState<WebSocketMessage[]>([]);
-    const [showNotifications, setShowNotifications] = useState(false);
-    
-    // WebSocket integration for real-time updates
-    const webSocket = useWebSocket({
-        eventId: id,
-        autoConnect: true
-    });
 
     const fetchEventDetails = useCallback(() => {
         if (!id) return;
@@ -79,31 +65,6 @@ const EventDetailsPage: React.FC = () => {
     useEffect(() => {
         fetchEventDetails();
     }, [fetchEventDetails]);
-
-    // Set up WebSocket subscriptions manually
-    useEffect(() => {
-        if (!id) return;
-
-        const subscriptions = [
-            webSocketService.subscribeToEventUpdates(id, (message: WebSocketMessage) => {
-                setLiveNotifications(prev => [...prev.slice(-4), message]);
-                if (message.updateType === 'DETAILS_CHANGED' || message.updateType === 'TIME_CHANGED') {
-                    fetchEventDetails();
-                }
-            }),
-            webSocketService.subscribeToEventRegistrations(id, (message: WebSocketMessage) => {
-                setLiveNotifications(prev => [...prev.slice(-4), message]);
-            }),
-            webSocketService.subscribeToEventStatus(id, (message: WebSocketMessage) => {
-                setLiveNotifications(prev => [...prev.slice(-4), message]);
-                fetchEventDetails();
-            })
-        ];
-
-        return () => {
-            subscriptions.forEach(sub => sub.unsubscribe());
-        };
-    }, [id, fetchEventDetails]);
 
     if (!event) {
         return (
@@ -351,65 +312,6 @@ const EventDetailsPage: React.FC = () => {
                     </div>
 
                     <div className="col-lg-4">
-                        {/* Connection Status */}
-                        <div className="mb-3">
-                            <div className="d-flex align-items-center justify-content-between">
-                                <small className={`badge ${webSocket.isConnected ? 'bg-success' : 'bg-secondary'}`}>
-                                    {webSocket.isConnected ? '🟢 Live Updates Active' : '⚫ Offline'}
-                                </small>
-                                {liveNotifications.length > 0 && (
-                                    <button
-                                        className="btn btn-sm btn-outline-info"
-                                        onClick={() => setShowNotifications(!showNotifications)}
-                                    >
-                                        🔔 {liveNotifications.length} notifications
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Live Notifications */}
-                        {showNotifications && liveNotifications.length > 0 && (
-                            <div className="card mb-4">
-                                <div className="card-header d-flex justify-content-between align-items-center">
-                                    <h6 className="mb-0">📡 Live Updates</h6>
-                                    <button
-                                        className="btn btn-sm btn-outline-secondary"
-                                        onClick={() => setLiveNotifications([])}
-                                    >
-                                        Clear
-                                    </button>
-                                </div>
-                                <div className="card-body">
-                                    {liveNotifications.map((notification, index) => (
-                                        <div key={index} className="alert alert-info alert-sm mb-2">
-                                            <div className="d-flex align-items-center">
-                                                <span className="me-2">
-                                                    {notification.type === 'REGISTRATION_UPDATE' ? '👥' :
-                                                     notification.type === 'EVENT_UPDATE' ? '📝' :
-                                                     notification.type === 'EVENT_STATUS_CHANGE' ? '🔄' : '📡'}
-                                                </span>
-                                                <div className="flex-grow-1">
-                                                    <small>
-                                                        <strong>
-                                                            {notification.type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
-                                                        </strong>
-                                                        <br />
-                                                        {new Date(notification.timestamp).toLocaleString()}
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Real-time Stats */}
-                        <div className="mb-4">
-                            <RealTimeStats eventId={id!} />
-                        </div>
-
                         {/* Registration Card */}
                         <div className="card mb-4 sticky-top" style={{ top: '20px' }}>
                             <div className="card-header bg-primary text-white">
@@ -432,13 +334,6 @@ const EventDetailsPage: React.FC = () => {
                                     >
                                         🎯 Register Now
                                     </button>
-                                    
-                                    <CalendarIntegration
-                                        event={event}
-                                        userId={user?.id}
-                                        options={['google', 'outlook', 'ics', 'subscribe', 'apple']}
-                                        userTimezone={Intl.DateTimeFormat().resolvedOptions().timeZone}
-                                    />
                                 </div>
 
                                 {event.instances && event.instances.length > 0 && (

@@ -50,8 +50,6 @@ import {
   faShield,
 } from '@fortawesome/free-solid-svg-icons';
 import apiClient from '../api/apiClient';
-import { useRealTimeNotifications } from '../hooks/useWebSocket';
-import webSocketService from '../services/WebSocketService';
 
 // Interface for event data
 interface Event {
@@ -98,8 +96,6 @@ const AdminDashboard: React.FC = () => {
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [cloning, setCloning] = useState<string | null>(null);
-    const [realtimeActivity, setRealtimeActivity] = useState<any[]>([]);
-    const [showActivity, setShowActivity] = useState(false);
     
     // Enhanced Admin Features
     const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
@@ -120,9 +116,6 @@ const AdminDashboard: React.FC = () => {
         color: 'success',
         visible: false,
     });
-    
-    // Real-time notifications
-    const { notifications, clearNotifications, isConnected } = useRealTimeNotifications();
 
     const fetchEvents = useCallback((): void => {
         apiClient.get('/events', { params: { publishedOnly: false } })
@@ -226,59 +219,6 @@ const AdminDashboard: React.FC = () => {
             setLoading(false);
         };
         loadData();
-
-        // Subscribe to global real-time updates (gracefully handle if WebSocket is unavailable)
-        const subscriptions: Array<{ unsubscribe: () => void }> = [];
-        
-        try {
-            subscriptions.push(
-                webSocketService.subscribeToAllRegistrations((message) => {
-                    setRealtimeActivity(prev => [...prev.slice(-9), {
-                        ...message,
-                        icon: '👥',
-                        title: 'New Registration'
-                    }]);
-                    
-                    // Refresh stats when registrations change
-                    fetchStats();
-                }),
-                
-                webSocketService.subscribeToAllCheckIns((message) => {
-                    setRealtimeActivity(prev => [...prev.slice(-9), {
-                        ...message,
-                        icon: '✅',
-                        title: 'Check-in Activity'
-                    }]);
-                }),
-                
-                webSocketService.subscribeToAllEvents((message) => {
-                    setRealtimeActivity(prev => [...prev.slice(-9), {
-                        ...message,
-                        icon: '🔄',
-                        title: 'Event Updated'
-                    }]);
-                    
-                    // Refresh events list when events are updated
-                    if (message.updateType === 'DETAILS_CHANGED' || message.updateType === 'STATUS_CHANGE') {
-                        fetchEvents();
-                    }
-                })
-            );
-        } catch (error) {
-            console.warn('WebSocket connection not available:', error);
-            // Dashboard will work fine without real-time updates
-        }
-
-        return () => {
-            // Clean up subscriptions
-            subscriptions.forEach(sub => {
-                try {
-                    sub.unsubscribe();
-                } catch (error) {
-                    console.warn('Error unsubscribing from WebSocket:', error);
-                }
-            });
-        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -549,69 +489,6 @@ const AdminDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Real-time Connection Status */}
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <div className="d-flex align-items-center gap-3">
-                    <CBadge color={isConnected ? 'success' : 'secondary'}>
-                        {isConnected ? '🟢 Live Updates' : '⚫ Offline'}
-                    </CBadge>
-                    {realtimeActivity.length > 0 && (
-                        <CButton
-                            color="outline-info"
-                            size="sm"
-                            onClick={() => setShowActivity(!showActivity)}
-                        >
-                            📡 {realtimeActivity.length} live events
-                        </CButton>
-                    )}
-                </div>
-                {notifications.length > 0 && (
-                    <CButton
-                        color="outline-warning"
-                        size="sm"
-                        onClick={clearNotifications}
-                    >
-                        Clear {notifications.length} notifications
-                    </CButton>
-                )}
-            </div>
-
-            {/* Real-time Activity Feed */}
-            {showActivity && realtimeActivity.length > 0 && (
-                <CRow className="mb-4">
-                    <CCol>
-                        <CCard>
-                            <CCardHeader>
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <h6 className="mb-0">📡 Live Activity Feed</h6>
-                                    <CButton
-                                        color="outline-secondary"
-                                        size="sm"
-                                        onClick={() => setRealtimeActivity([])}
-                                    >
-                                        Clear Activity
-                                    </CButton>
-                                </div>
-                            </CCardHeader>
-                            <CCardBody>
-                                <div className="activity-feed">
-                                    {realtimeActivity.slice(-10).reverse().map((activity, index) => (
-                                        <div key={index} className="d-flex align-items-center mb-2 p-2 bg-light rounded">
-                                            <span className="me-2">{activity.icon}</span>
-                                            <div className="flex-grow-1">
-                                                <div className="fw-semibold">{activity.title}</div>
-                                                <small className="text-muted">
-                                                    Event ID: {activity.eventId} • {new Date(activity.timestamp).toLocaleTimeString()}
-                                                </small>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CCardBody>
-                        </CCard>
-                    </CCol>
-                </CRow>
-            )}
 
             {/* Enhanced Stats Overview */}
             {stats && (
@@ -621,7 +498,7 @@ const AdminDashboard: React.FC = () => {
                             <CWidgetStatsF
                                 className="mb-3"
                                 icon={<FontAwesomeIcon icon={faCalendarAlt} size="xl" />}
-                                title={isConnected ? "Total Events 🔴" : "Total Events"}
+                                title="Total Events"
                                 value={stats.totalEvents.toString()}
                                 color="primary"
                             />
@@ -630,7 +507,7 @@ const AdminDashboard: React.FC = () => {
                             <CWidgetStatsF
                                 className="mb-3"
                                 icon={<FontAwesomeIcon icon={faUsers} size="xl" />}
-                                title={isConnected ? "Total Registrations 🔴" : "Total Registrations"}
+                                title="Total Registrations"
                                 value={stats.totalRegistrations.toLocaleString()}
                                 color="success"
                             />

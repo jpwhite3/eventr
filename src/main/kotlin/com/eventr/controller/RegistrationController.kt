@@ -8,11 +8,10 @@ import com.eventr.repository.EventInstanceRepository
 import com.eventr.repository.RegistrationRepository
 import com.eventr.repository.UserRepository
 import com.eventr.service.EmailNotificationService
-import com.eventr.service.WebSocketEventService
+import com.eventr.util.SecureLogger
 import org.springframework.beans.BeanUtils
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
-import com.eventr.util.SecureLogger
 
 @RestController
 @RequestMapping("/api/registrations")
@@ -20,8 +19,7 @@ class RegistrationController(
     private val registrationRepository: RegistrationRepository,
     private val eventInstanceRepository: EventInstanceRepository,
     private val userRepository: UserRepository,
-    private val emailNotificationService: EmailNotificationService,
-    private val webSocketEventService: WebSocketEventService
+    private val emailNotificationService: EmailNotificationService
 ) {
     
     private val secureLogger = SecureLogger(RegistrationController::class.java)
@@ -35,7 +33,6 @@ class RegistrationController(
         val registration = Registration().apply {
             this.eventInstance = eventInstance
             
-            // Handle user authentication approach
             if (registrationCreateDto.userId != null) {
                 user = userRepository.findById(registrationCreateDto.userId!!).orElseThrow {
                     IllegalArgumentException("User not found")
@@ -43,7 +40,6 @@ class RegistrationController(
                 userEmail = user?.email
                 userName = "${user?.firstName} ${user?.lastName}"
             } else {
-                // Backward compatibility with email/name approach
                 userEmail = registrationCreateDto.userEmail
                 userName = registrationCreateDto.userName
             }
@@ -57,21 +53,7 @@ class RegistrationController(
         try {
             emailNotificationService.sendRegistrationConfirmation(savedRegistration)
         } catch (e: Exception) {
-            // Log the exception, but don't block the registration process
             secureLogger.logErrorEvent("REGISTRATION_CONFIRMATION_EMAIL_FAILED", savedRegistration.user?.id, e, "Failed to send registration confirmation email")
-        }
-        
-        // Broadcast real-time registration update
-        eventInstance.event?.id?.let { eventId ->
-            webSocketEventService.broadcastRegistrationUpdate(
-                eventId, 
-                "NEW", 
-                mapOf(
-                    "registrationId" to savedRegistration.id.toString(),
-                    "userName" to (savedRegistration.userName ?: "Anonymous"),
-                    "userEmail" to (savedRegistration.userEmail ?: "")
-                )
-            )
         }
         
         return RegistrationDto().apply {
@@ -109,25 +91,10 @@ class RegistrationController(
         registration.status = RegistrationStatus.CANCELLED
         val cancelledRegistration = registrationRepository.save(registration)
         
-        // Send cancellation email notification
         try {
             emailNotificationService.sendCancellationNotification(cancelledRegistration, reason)
         } catch (e: Exception) {
-            // Log the exception, but don't block the cancellation process
             secureLogger.logErrorEvent("REGISTRATION_CANCELLATION_EMAIL_FAILED", cancelledRegistration.user?.id, e, "Failed to send registration cancellation email")
-        }
-        
-        // Broadcast real-time cancellation update
-        cancelledRegistration.eventInstance?.event?.id?.let { eventId ->
-            webSocketEventService.broadcastRegistrationUpdate(
-                eventId, 
-                "CANCELLED", 
-                mapOf(
-                    "registrationId" to cancelledRegistration.id.toString(),
-                    "userName" to (cancelledRegistration.userName ?: "Anonymous"),
-                    "reason" to reason
-                )
-            )
         }
         
         return RegistrationDto().apply {
