@@ -19,23 +19,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome,
   faCalendarAlt,
-  faCalendar,
-  faUsers,
-  faChartBar,
-  faBuilding,
   faClipboardCheck,
-  faUserCheck,
   faBars,
   faUser,
   faSignOutAlt,
   faSignInAlt,
   faUserPlus,
-  faCog
+  faCog,
+  faShield
 } from '@fortawesome/free-solid-svg-icons';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import AuthModal from '../auth/AuthModal';
-import NotificationCenter from '../NotificationCenter';
 
 interface CoreUILayoutProps {
   children: React.ReactNode;
@@ -85,33 +80,9 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
   const navigation = [
     {
       component: CNavItem,
-      name: 'Homepage',
+      name: 'Home',
       to: '/',
       icon: <FontAwesomeIcon icon={faHome} className="nav-icon" />,
-    },
-    ...(isAuthenticated ? [
-      {
-        component: CNavItem,
-        name: 'My Dashboard',
-        to: '/dashboard',
-        icon: <FontAwesomeIcon icon={faUser} className="nav-icon" />,
-      },
-      {
-        component: CNavItem,
-        name: 'My Registrations',
-        to: '/my-registrations',
-        icon: <FontAwesomeIcon icon={faClipboardCheck} className="nav-icon" />,
-      },
-      {
-        component: CNavItem,
-        name: 'My Calendar',
-        to: '/calendar',
-        icon: <FontAwesomeIcon icon={faCalendar} className="nav-icon" />,
-      }
-    ] : []),
-    {
-      component: CNavTitle,
-      name: 'Event Management',
     },
     {
       component: CNavItem,
@@ -119,56 +90,24 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
       to: '/events',
       icon: <FontAwesomeIcon icon={faCalendarAlt} className="nav-icon" />,
     },
-    {
-      component: CNavItem,
-      name: 'Registrations',
-      to: '/registrations',
-      icon: <FontAwesomeIcon icon={faUsers} className="nav-icon" />,
-    },
-    {
-      component: CNavItem,
-      name: 'Check-In',
-      to: '/checkin',
-      icon: <FontAwesomeIcon icon={faUserCheck} className="nav-icon" />,
-    },
-    {
-      component: CNavTitle,
-      name: 'Analytics & Reports',
-    },
-    {
-      component: CNavItem,
-      name: 'Executive Dashboard',
-      to: '/analytics/executive',
-      icon: <FontAwesomeIcon icon={faChartBar} className="nav-icon" />,
-    },
-    {
-      component: CNavItem,
-      name: 'Registration Trends',
-      to: '/analytics/registrations',
-      icon: <FontAwesomeIcon icon={faUsers} className="nav-icon" />,
-    },
-    {
-      component: CNavItem,
-      name: 'Event Analytics',
-      to: '/analytics/events',
-      icon: <FontAwesomeIcon icon={faCalendarAlt} className="nav-icon" />,
-    },
-    {
-      component: CNavItem,
-      name: 'Attendance Reports',
-      to: '/analytics/attendance',
-      icon: <FontAwesomeIcon icon={faClipboardCheck} className="nav-icon" />,
-    },
-    {
-      component: CNavTitle,
-      name: 'Tools',
-    },
-    {
-      component: CNavItem,
-      name: 'Resource Management',
-      to: '/resources',
-      icon: <FontAwesomeIcon icon={faBuilding} className="nav-icon" />,
-    },
+    ...(isAuthenticated ? [
+      {
+        component: CNavItem,
+        name: 'My Registrations',
+        to: '/my-registrations',
+        icon: <FontAwesomeIcon icon={faClipboardCheck} className="nav-icon" />,
+      },
+      {
+        component: CNavTitle,
+        name: 'Admin',
+      },
+      {
+        component: CNavItem,
+        name: 'Admin Dashboard',
+        to: '/admin',
+        icon: <FontAwesomeIcon icon={faShield} className="nav-icon" />,
+      },
+    ] : []),
   ];
 
   return (
@@ -261,14 +200,6 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
           
           <CHeaderNav className="ms-auto">
             <div className="d-flex align-items-center gap-3">
-              {isAuthenticated && (
-                <NotificationCenter 
-                  position="bottom-right" 
-                  maxNotifications={20}
-                  showBadge={true}
-                />
-              )}
-              
               {isAuthenticated ? (
                 <CDropdown variant="nav-item">
                   <CDropdownToggle className="d-flex align-items-center text-decoration-none">
