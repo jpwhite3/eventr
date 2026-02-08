@@ -10,7 +10,6 @@ Welcome to the Eventr documentation! This directory contains comprehensive guide
 - **[Architecture Guide](architecture.md)** - System design and technical architecture
 
 ### For Integrators  
-- **[Webhook Integration Guide](webhooks.md)** - Event-driven integrations with external systems
 - **[Security Best Practices](security.md)** *(Coming Soon)* - Authentication, authorization, and security guidelines
 
 ### For Contributors
@@ -25,20 +24,17 @@ Welcome to the Eventr documentation! This directory contains comprehensive guide
 3. **[Architecture Guide](architecture.md)** - Understand the system design
 
 ### Integration
-1. **[Webhook Guide](webhooks.md)** - Implement event-driven integrations
-2. **[API Reference](api.md#api-endpoints)** - Complete endpoint documentation
+1. **[API Reference](api.md#api-endpoints)** - Complete endpoint documentation
 
 ## 🛠️ Tools and Resources
 
 ### Development Tools
-- **Webhook Test Client** - Located in `/webhook-client` for local webhook testing
 - **API Documentation** - Interactive docs at http://localhost:8080/swagger-ui.html
 - **Database Console** - H2 console for development at http://localhost:8080/h2-console
 
 ### Architecture Diagrams
 Our documentation includes comprehensive Mermaid diagrams showing:
 - System architecture and service relationships
-- Event-driven workflows and webhook flows  
 - Database schema and relationships
 - Authentication and security flows
 - Testing strategies and deployment pipelines
@@ -52,13 +48,6 @@ Complete REST API reference including:
 - Error handling and status codes
 - Pagination and filtering
 - Rate limiting and quotas
-
-### Webhook System
-Event-driven integration capabilities:
-- Supported event types and payloads
-- Security with HMAC-SHA256 signatures
-- Retry logic and failure handling
-- Real-time webhook testing tools
 
 ### Architecture
 Technical design documentation:
@@ -93,14 +82,13 @@ Complete development environment setup:
 ### Common Resources
 1. **Start with the [API Documentation](api.md)** for endpoint usage
 2. **Check [Local Development Setup](local-development.md)** for environment issues
-3. **Review [Webhook Guide](webhooks.md)** for integration questions
-4. **Browse [GitHub Issues](https://github.com/jpwhite3/eventr/issues)** for known problems
+3. **Browse [GitHub Issues](https://github.com/jpwhite3/eventr/issues)** for known problems
 
 ### Support Channels
 - **Documentation Issues**: Open an issue to improve these docs
 - **Bug Reports**: Use the issue tracker for bugs
 - **Feature Requests**: Discuss in GitHub Discussions first
-- **Integration Help**: Check the webhook guide and API docs
+- **Integration Help**: Check the API documentation
 
 ### Contributing to Documentation
 We welcome documentation improvements! To contribute:
@@ -128,7 +116,7 @@ We welcome documentation improvements! To contribute:
 - **API Client SDKs** - Generated client libraries for popular languages
 
 ### Recent Updates
-- ✅ **Webhook Integration Guide** - Complete webhook system documentation
+- ✅ **Modular Architecture** - Complete modular architecture refactoring
 - ✅ **Architecture Documentation** - System design with Mermaid diagrams  
 - ✅ **Local Development Setup** - Comprehensive development environment guide
 - ✅ **API Documentation** - Complete REST API reference
@@ -141,13 +129,12 @@ We welcome documentation improvements! To contribute:
 |----------|-------------|----------|
 | [api.md](api.md) | Complete REST API documentation with examples | Developers, Integrators |
 | [architecture.md](architecture.md) | System architecture and design patterns | Developers, Architects |
-| [webhooks.md](webhooks.md) | Event-driven integration guide | Integrators, Partners |
 | [local-development.md](local-development.md) | Development environment setup | Contributors, Developers |
 
 ---
 
-**Last Updated**: August 24, 2024  
-**Version**: 1.0.0  
+**Last Updated**: February 8, 2026  
+**Version**: 2.0.0  
 **Maintainers**: Eventr Development Team
 
 For the most up-to-date information, always refer to the online documentation and repository.

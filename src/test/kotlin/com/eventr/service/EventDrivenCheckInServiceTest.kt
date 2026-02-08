@@ -1,7 +1,6 @@
 package com.eventr.service
 
 import com.eventr.dto.*
-import com.eventr.events.*
 import com.eventr.model.*
 import com.eventr.repository.*
 import com.eventr.service.impl.EventDrivenCheckInService
@@ -30,12 +29,6 @@ class EventDrivenCheckInServiceTest {
     @Mock
     private lateinit var eventRepository: EventRepository
 
-    @Mock
-    private lateinit var qrCodeService: QRCodeService
-
-    @Mock
-    private lateinit var eventPublisher: EventPublisher
-
     private lateinit var checkInService: CheckInServiceInterface
 
     private val testRegistrationId = UUID.randomUUID()
@@ -50,14 +43,12 @@ class EventDrivenCheckInServiceTest {
             checkInRepository,
             registrationRepository,
             sessionRepository,
-            eventRepository,
-            qrCodeService,
-            eventPublisher
+            eventRepository
         )
     }
 
     @Test
-    fun `manualCheckIn should create check-in and publish event`() {
+    fun `manualCheckIn should create check-in`() {
         // Arrange
         val registration = createTestRegistration()
         val session = createTestSession()
@@ -91,11 +82,10 @@ class EventDrivenCheckInServiceTest {
         assertEquals(CheckInType.SESSION, result.type)
         assertEquals(CheckInMethod.MANUAL, result.method)
 
-        verify(registrationRepository, times(2)).findById(testRegistrationId) // Once for check-in, once for event publishing
+        verify(registrationRepository).findById(testRegistrationId)
         verify(sessionRepository).findById(testSessionId)
         verify(checkInRepository).findByRegistrationIdAndSessionId(testRegistrationId, testSessionId)
         verify(checkInRepository).save(any<CheckIn>())
-        verify(eventPublisher).publish(any<UserCheckedInEvent>())
     }
 
     @Test
@@ -113,7 +103,6 @@ class EventDrivenCheckInServiceTest {
 
         verify(registrationRepository).findById(testRegistrationId) // Only one call since exception is thrown early
         verify(checkInRepository, never()).save(any<CheckIn>())
-        verify(eventPublisher, never()).publish(any<DomainEvent>())
     }
 
     @Test
@@ -140,7 +129,6 @@ class EventDrivenCheckInServiceTest {
         verify(registrationRepository).findById(testRegistrationId) // Only one call since exception is thrown early
         verify(checkInRepository).findByRegistrationIdAndSessionId(testRegistrationId, testSessionId)
         verify(checkInRepository, never()).save(any<CheckIn>())
-        verify(eventPublisher, never()).publish(any<DomainEvent>())
     }
 
     @Test
@@ -169,9 +157,8 @@ class EventDrivenCheckInServiceTest {
 
         // Assert
         assertEquals(2, results.size)
-        verify(registrationRepository, times(4)).findById(any()) // 2 registrations × 2 calls each (check-in + event publishing)
+        verify(registrationRepository, times(2)).findById(any()) // 2 registrations
         verify(checkInRepository, times(2)).save(any<CheckIn>())
-        verify(eventPublisher, times(2)).publish(any<UserCheckedInEvent>())
     }
 
     @Test
@@ -200,9 +187,8 @@ class EventDrivenCheckInServiceTest {
 
         // Assert
         assertEquals(1, results.size) // Only one successful check-in
-        verify(registrationRepository, times(3)).findById(any()) // 2 registrations attempted + 1 for event publishing
+        verify(registrationRepository, times(2)).findById(any()) // 2 registrations attempted
         verify(checkInRepository, times(1)).save(any<CheckIn>()) // Only one save
-        verify(eventPublisher, times(1)).publish(any<UserCheckedInEvent>()) // Only one event
     }
 
     @Test

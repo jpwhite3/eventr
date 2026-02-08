@@ -5,24 +5,41 @@ EventR is a full-stack enterprise event management platform built with **Spring 
 
 ## Essential Architecture Patterns
 
-### Backend Structure (Kotlin + Spring Boot)
+### Backend Structure (Kotlin + Spring Boot 3.4) - Modular Architecture
 ```
 com.eventr/
-├── controller/     # 19 REST controllers (@RestController)
-├── service/        # 20 business services (some need interface extraction)  
-├── repository/     # 14 JPA repositories (extends JpaRepository)
-├── model/          # 14 JPA entities (@Entity with relationships)
-├── dto/            # 16 data transfer objects (request/response)
-├── config/         # Spring configuration (@Configuration)
-└── events/         # Domain events & event handlers
+├── controller/         # 8 REST controllers (@RestController)
+├── service/
+│   ├── interfaces/     # Service interfaces
+│   └── impl/           # 8 service implementations
+├── repository/         # 7 JPA repositories (extends JpaRepository)
+├── model/              # 9 JPA entities (@Entity with relationships)
+├── dto/                # 14 data transfer objects (request/response)
+├── modules/            # Domain modules (DDD-style)
+│   ├── checkin/        # Check-in bounded context
+│   ├── event/          # Event management (api/, internal/, events/)
+│   ├── identity/       # User identity bounded context
+│   ├── notification/   # Notification bounded context
+│   └── registration/   # Registration bounded context
+├── infrastructure/     # Infrastructure layer
+│   ├── config/         # Configuration classes
+│   ├── persistence/    # Database utilities
+│   └── storage/        # File storage (S3)
+├── shared/             # Shared kernel
+│   ├── event/          # Domain event infrastructure
+│   ├── exception/      # Custom exceptions
+│   └── types/          # Shared value types
+├── config/             # Spring configuration (@Configuration)
+└── util/               # Helper utilities
 ```
 
-**Critical Pattern**: Services should follow interface-implementation pattern but many don't yet. When modifying services, extract interfaces first (`ResourceManagementService` → `ResourceService` interface + `ResourceServiceImpl`).
+**Critical Pattern**: Services follow interface-implementation pattern in `service/interfaces/` and `service/impl/`. Domain logic is organized into bounded contexts under `modules/`.
 
-### Service Layer Anti-Patterns to Avoid
-- **Large services**: `ResourceManagementService` (608 lines) needs splitting into `ResourceService`, `ResourceBookingService`, `ResourceAnalyticsService`
-- **Missing interfaces**: Most services are concrete classes - always create interface when adding new services
-- **Cross-domain dependencies**: Services should depend on their own domain repos, not cross-cutting
+### Architectural Patterns
+- **Modular Architecture**: Domain logic organized into bounded contexts under `modules/`
+- **Interface Segregation**: Services follow interface + impl pattern
+- **Domain Events**: Cross-module communication via Spring events in `shared/event/`
+- **Infrastructure Separation**: External concerns isolated in `infrastructure/`
 
 ### Database & Testing Architecture
 - **Production**: PostgreSQL with JPA/Hibernate
@@ -110,7 +127,7 @@ interface EventRepository : JpaRepository<Event, UUID> {
 ### Event-Driven Architecture
 The system uses domain events for cross-cutting concerns:
 ```kotlin
-// Domain events trigger webhooks, emails, analytics
+// Domain events trigger emails, analytics
 applicationEventPublisher.publishEvent(UserRegisteredEvent(registration))
 applicationEventPublisher.publishEvent(UserCheckedInEvent(checkIn))
 ```
@@ -135,18 +152,6 @@ src/
 ```
 
 ## Critical Integration Points
-
-### Webhook System Architecture
-EventR has sophisticated webhook delivery system with retry logic:
-```kotlin
-// Webhook events automatically fire on domain events
-@EventListener
-fun handleUserRegistered(event: UserRegisteredEvent) {
-    webhookDeliveryService.deliverWebhooksForEvent("USER_REGISTERED", event.payload)
-}
-```
-
-**Webhook Development**: Use `webhook-client/` test client (port 3002) to test webhook deliveries locally.
 
 ### File Upload (S3 Integration)
 - **Development**: LocalStack simulates S3 (port 4566)
@@ -218,6 +223,5 @@ class Event(
 **Entry Points**:
 - `src/main/kotlin/com/eventr/EventrApplication.kt` - Spring Boot main  
 - `frontend/src/App.tsx` - React application root
-- `webhook-client/server.js` - Webhook test client for local development
 
 When modifying this codebase, prioritize maintaining the layered architecture, creating service interfaces, and following the established event-driven patterns for cross-cutting concerns.

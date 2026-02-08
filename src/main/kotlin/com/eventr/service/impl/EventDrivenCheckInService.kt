@@ -1,28 +1,23 @@
 package com.eventr.service.impl
 
 import com.eventr.dto.*
-import com.eventr.events.*
 import com.eventr.model.*
 import com.eventr.repository.*
-import com.eventr.service.QRCodeService
 import com.eventr.service.interfaces.CheckInServiceInterface
 import com.eventr.service.interfaces.CheckInStatistics
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeanUtils
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.net.URLDecoder
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 
 /**
- * Event-driven implementation of CheckInService following SOLID principles
- * - Single Responsibility: Handles only check-in operations
- * - Open/Closed: Extensible via interfaces
- * - Liskov Substitution: Implements CheckInServiceInterface
- * - Interface Segregation: Uses focused interfaces
- * - Dependency Inversion: Depends on abstractions (EventPublisher, repositories)
+ * Check-in service implementation.
+ * 
+ * TODO: Add QR code validation when QRCodeService is created
+ * TODO: Add domain events when CheckIn module is created
  */
 @Service("eventDrivenCheckInService")
 @Transactional
@@ -30,9 +25,7 @@ class EventDrivenCheckInService(
     private val checkInRepository: CheckInRepository,
     private val registrationRepository: RegistrationRepository,
     private val sessionRepository: SessionRepository,
-    private val eventRepository: EventRepository,
-    private val qrCodeService: QRCodeService,
-    private val eventPublisher: EventPublisher
+    private val eventRepository: EventRepository
 ) : CheckInServiceInterface {
     
     private val logger = LoggerFactory.getLogger(EventDrivenCheckInService::class.java)
@@ -40,31 +33,9 @@ class EventDrivenCheckInService(
     override fun checkInWithQR(qrCheckInDto: QRCheckInDto): CheckInDto {
         logger.info("Processing QR check-in")
         
-        val qrContent = URLDecoder.decode(qrCheckInDto.qrCode, "UTF-8")
-        val qrData = parseQRCode(qrContent)
-        
-        // Validate QR code signature
-        if (!qrCodeService.validateQRSignature(
-                qrData.type, 
-                qrData.identifier, 
-                qrData.userId, 
-                qrData.timestamp, 
-                qrData.signature
-            )) {
-            throw IllegalArgumentException("Invalid or expired QR code")
-        }
-        
-        val checkInDto = when (qrData.type) {
-            "event" -> checkInToEvent(qrData, qrCheckInDto)
-            "session" -> checkInToSession(qrData, qrCheckInDto)
-            else -> throw IllegalArgumentException("Invalid QR code type: ${qrData.type}")
-        }
-        
-        // Publish domain event after successful check-in
-        publishCheckInEvent(checkInDto, CheckInMethod.QR_CODE)
-        
-        logger.info("Successfully processed QR check-in")
-        return checkInDto
+        // TODO: Implement QR code validation when QRCodeService is created
+        // For now, just throw not implemented
+        throw NotImplementedError("QR check-in not yet implemented - QRCodeService needed")
     }
     
     override fun manualCheckIn(createDto: CheckInCreateDto): CheckInDto {
@@ -80,8 +51,7 @@ class EventDrivenCheckInService(
         val saved = checkInRepository.save(checkIn)
         val checkInDto = saved.toDto()
         
-        // Publish domain event
-        publishCheckInEvent(checkInDto, createDto.method)
+        // TODO: Publish domain event when CheckIn module is created
         
         logger.info("Successfully processed manual check-in for registration: {}", createDto.registrationId)
         return checkInDto
@@ -120,8 +90,7 @@ class EventDrivenCheckInService(
                 
                 results.add(checkInDto)
                 
-                // Publish domain event
-                publishCheckInEvent(checkInDto, CheckInMethod.BULK)
+                // TODO: Publish domain event when CheckIn module is created
                 
             } catch (e: Exception) {
                 logger.error("Failed to check in registration: {}", registrationId, e)
@@ -221,33 +190,6 @@ class EventDrivenCheckInService(
             this.createdAt = LocalDateTime.now()
             this.updatedAt = LocalDateTime.now()
         }
-    }
-    
-    private fun publishCheckInEvent(checkInDto: CheckInDto, method: CheckInMethod) {
-        try {
-            val event = UserCheckedInEvent(
-                aggregateId = checkInDto.id!!,
-                registrationId = checkInDto.registrationId!!,
-                relatedEventId = getEventIdFromRegistration(checkInDto.registrationId!!),
-                sessionId = checkInDto.sessionId,
-                userEmail = checkInDto.userEmail ?: "",
-                checkInMethod = method.toString(),
-                location = checkInDto.location
-            )
-            
-            eventPublisher.publish(event)
-            logger.debug("Published UserCheckedInEvent for check-in: {}", checkInDto.id)
-            
-        } catch (e: Exception) {
-            logger.error("Failed to publish check-in event for: {}", checkInDto.id, e)
-            // Don't fail the check-in if event publishing fails
-        }
-    }
-    
-    private fun getEventIdFromRegistration(registrationId: UUID): UUID {
-        val registration = registrationRepository.findById(registrationId).orElse(null)
-        return registration?.eventInstance?.event?.id 
-            ?: throw IllegalStateException("Cannot determine event ID for registration: $registrationId")
     }
     
     private fun calculateAverageCheckInTime(checkIns: List<CheckIn>): Double? {

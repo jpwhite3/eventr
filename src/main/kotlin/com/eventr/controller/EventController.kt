@@ -5,14 +5,16 @@ import com.eventr.dto.EventDto
 import com.eventr.dto.EventInstanceDto
 import com.eventr.dto.EventUpdateDto
 import com.eventr.dto.RegistrationDto
-import com.eventr.model.Event
-import com.eventr.model.EventStatus
 import com.eventr.model.RegistrationStatus
-import com.eventr.repository.EventRepository
+import com.eventr.modules.event.api.EventModuleApi
+import com.eventr.model.EventType
+import com.eventr.modules.event.api.dto.CreateEventRequest
+import com.eventr.modules.event.api.dto.EventFilterCriteria
+import com.eventr.modules.event.api.dto.EventResponse
+import com.eventr.modules.event.api.dto.UpdateEventRequest
 import com.eventr.repository.RegistrationRepository
 import java.util.UUID
 import org.springframework.beans.BeanUtils
-import org.springframework.data.domain.Sort
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import io.swagger.v3.oas.annotations.Operation
@@ -23,30 +25,136 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 
+/**
+ * REST controller for event operations.
+ * 
+ * This is a THIN controller - all business logic is delegated to EventModuleApi.
+ * The controller only handles HTTP concerns (request/response mapping, status codes).
+ */
 @RestController
 @RequestMapping("/api/events")
 @Tag(name = "Events", description = "Event management operations")
 class EventController(
-        private val eventRepository: EventRepository,
-        private val registrationRepository: RegistrationRepository
+    private val eventModule: EventModuleApi,
+    private val registrationRepository: RegistrationRepository  // TODO: Move to RegistrationModuleApi
 ) {
 
-    private fun convertToDto(event: Event): EventDto {
-        val eventDto = EventDto()
-        BeanUtils.copyProperties(event, eventDto)
-        event.instances?.let { instances ->
-            eventDto.instances =
-                    instances.map { instance ->
-                        EventInstanceDto().apply { BeanUtils.copyProperties(instance, this) }
-                    }
+    // ==================== Mapping Helpers ====================
+    
+    private fun toDto(response: EventResponse): EventDto {
+        return EventDto().apply {
+            id = response.id
+            name = response.name
+            description = response.description
+            status = response.status
+            eventType = response.eventType
+            category = response.category
+            bannerImageUrl = response.bannerImageUrl
+            thumbnailImageUrl = response.thumbnailImageUrl
+            tags = response.tags.toMutableList()
+            capacity = response.capacity
+            waitlistEnabled = response.waitlistEnabled
+            venueName = response.venueName
+            address = response.address
+            city = response.city
+            state = response.state
+            zipCode = response.zipCode
+            country = response.country
+            virtualUrl = response.virtualUrl
+            dialInNumber = response.dialInNumber
+            accessCode = response.accessCode
+            requiresApproval = response.requiresApproval
+            maxRegistrations = response.maxRegistrations
+            organizerName = response.organizerName
+            organizerEmail = response.organizerEmail
+            organizerPhone = response.organizerPhone
+            organizerWebsite = response.organizerWebsite
+            startDateTime = response.startDateTime
+            endDateTime = response.endDateTime
+            timezone = response.timezone
+            agenda = response.agenda
+            instances = response.instances.map { inst ->
+                EventInstanceDto().apply {
+                    id = inst.id
+                    dateTime = inst.startDateTime
+                    location = inst.location
+                }
+            }
         }
-        return eventDto
     }
+    
+    private fun toCreateRequest(dto: EventCreateDto): CreateEventRequest {
+        return CreateEventRequest(
+            name = dto.name ?: "",
+            description = dto.description,
+            eventType = dto.eventType ?: EventType.IN_PERSON,
+            category = dto.category,
+            bannerImageUrl = dto.bannerImageUrl,
+            thumbnailImageUrl = dto.thumbnailImageUrl,
+            tags = dto.tags,
+            capacity = dto.capacity,
+            waitlistEnabled = dto.waitlistEnabled ?: false,
+            venueName = dto.venueName,
+            address = dto.address,
+            city = dto.city,
+            state = dto.state,
+            zipCode = dto.zipCode,
+            country = dto.country,
+            virtualUrl = dto.virtualUrl,
+            dialInNumber = dto.dialInNumber,
+            accessCode = dto.accessCode,
+            requiresApproval = dto.requiresApproval ?: false,
+            maxRegistrations = dto.maxRegistrations,
+            organizerName = dto.organizerName,
+            organizerEmail = dto.organizerEmail,
+            organizerPhone = dto.organizerPhone,
+            organizerWebsite = dto.organizerWebsite,
+            startDateTime = dto.startDateTime,
+            endDateTime = dto.endDateTime,
+            timezone = dto.timezone ?: "UTC",
+            agenda = dto.agenda
+        )
+    }
+    
+    private fun toUpdateRequest(dto: EventUpdateDto): UpdateEventRequest {
+        return UpdateEventRequest(
+            name = dto.name,
+            description = dto.description,
+            eventType = dto.eventType,
+            category = dto.category,
+            bannerImageUrl = dto.bannerImageUrl,
+            thumbnailImageUrl = dto.thumbnailImageUrl,
+            tags = dto.tags,
+            capacity = dto.capacity,
+            waitlistEnabled = dto.waitlistEnabled,
+            venueName = dto.venueName,
+            address = dto.address,
+            city = dto.city,
+            state = dto.state,
+            zipCode = dto.zipCode,
+            country = dto.country,
+            virtualUrl = dto.virtualUrl,
+            dialInNumber = dto.dialInNumber,
+            accessCode = dto.accessCode,
+            requiresApproval = dto.requiresApproval,
+            maxRegistrations = dto.maxRegistrations,
+            organizerName = dto.organizerName,
+            organizerEmail = dto.organizerEmail,
+            organizerPhone = dto.organizerPhone,
+            organizerWebsite = dto.organizerWebsite,
+            startDateTime = dto.startDateTime,
+            endDateTime = dto.endDateTime,
+            timezone = dto.timezone,
+            agenda = dto.agenda
+        )
+    }
+
+    // ==================== Endpoints ====================
 
     @PostMapping
     @Operation(
         summary = "Create a new event",
-        description = "Creates a new event in draft status with the provided details."
+        description = "Creates a new event in draft status. Automatically creates a default EventInstance."
     )
     @ApiResponses(value = [
         ApiResponse(responseCode = "200", description = "Event created successfully",
@@ -57,12 +165,8 @@ class EventController(
         @Parameter(description = "Event creation details")
         @RequestBody eventCreateDto: EventCreateDto
     ): EventDto {
-        val event = Event().apply {
-            BeanUtils.copyProperties(eventCreateDto, this)
-            status = EventStatus.DRAFT
-        }
-        val savedEvent = eventRepository.save(event)
-        return convertToDto(savedEvent)
+        val response = eventModule.createEvent(toCreateRequest(eventCreateDto))
+        return toDto(response)
     }
 
     @GetMapping
@@ -75,38 +179,18 @@ class EventController(
             content = [Content(mediaType = "application/json", schema = Schema(implementation = Array<EventDto>::class))])
     ])
     fun getAllEvents(
-            @Parameter(description = "Text search query") @RequestParam(required = false) q: String?,
-            @Parameter(description = "Sort field") @RequestParam(required = false) sortBy: String?,
-            @Parameter(description = "Sort order (asc, desc)") @RequestParam(required = false) sortOrder: String?,
-            @Parameter(description = "Show only published events") @RequestParam(defaultValue = "true") publishedOnly: Boolean
+        @Parameter(description = "Text search query") @RequestParam(required = false) q: String?,
+        @Parameter(description = "Sort field") @RequestParam(required = false) sortBy: String?,
+        @Parameter(description = "Sort order (asc, desc)") @RequestParam(required = false) sortOrder: String?,
+        @Parameter(description = "Show only published events") @RequestParam(defaultValue = "true") publishedOnly: Boolean
     ): List<EventDto> {
-        val sortDirection = if (sortOrder?.lowercase() == "desc") Sort.Direction.DESC else Sort.Direction.ASC
-        val sortProperty = when (sortBy?.lowercase()) {
-            "name" -> "name"
-            "city" -> "city"
-            "category" -> "category"
-            "startdatetime", "date" -> "startDateTime"
-            else -> "startDateTime"
-        }
-        val sort = Sort.by(sortDirection, sortProperty)
-        
-        var events = if (publishedOnly) {
-            eventRepository.findByStatus(EventStatus.PUBLISHED, sort)
-        } else {
-            eventRepository.findAll(sort)
-        }
-        
-        // Simple text search filtering
-        q?.let { query ->
-            val lowerQuery = query.lowercase()
-            events = events.filter { event ->
-                event.name?.lowercase()?.contains(lowerQuery) == true ||
-                event.description?.lowercase()?.contains(lowerQuery) == true ||
-                event.city?.lowercase()?.contains(lowerQuery) == true
-            }
-        }
-        
-        return events.map { convertToDto(it) }
+        val criteria = EventFilterCriteria(
+            search = q,
+            sortBy = sortBy ?: "startDateTime",
+            sortDirection = sortOrder ?: "asc",
+            publishedOnly = publishedOnly
+        )
+        return eventModule.findEvents(criteria).map { toDto(it) }
     }
 
     @GetMapping("/{eventId}")
@@ -122,56 +206,70 @@ class EventController(
     fun getEventById(
         @Parameter(description = "Unique identifier of the event") @PathVariable eventId: UUID
     ): ResponseEntity<EventDto> {
-        val optionalEvent = eventRepository.findById(eventId)
-        return if (optionalEvent.isPresent) {
-            ResponseEntity.ok(convertToDto(optionalEvent.get()))
+        val event = eventModule.getEvent(eventId)
+        return if (event != null) {
+            ResponseEntity.ok(toDto(event))
         } else {
             ResponseEntity.notFound().build()
         }
     }
 
     @PutMapping("/{eventId}")
+    @Operation(summary = "Update an event")
     fun updateEvent(
-            @PathVariable eventId: UUID,
-            @RequestBody eventUpdateDto: EventUpdateDto
+        @PathVariable eventId: UUID,
+        @RequestBody eventUpdateDto: EventUpdateDto
     ): EventDto {
-        val event = eventRepository.findById(eventId).orElseThrow()
-        BeanUtils.copyProperties(eventUpdateDto, event)
-        val updatedEvent = eventRepository.save(event)
-        return convertToDto(updatedEvent)
+        val response = eventModule.updateEvent(eventId, toUpdateRequest(eventUpdateDto))
+        return toDto(response)
     }
 
     @DeleteMapping("/{eventId}")
+    @Operation(summary = "Delete an event")
     fun deleteEvent(@PathVariable eventId: UUID): ResponseEntity<Void> {
-        eventRepository.deleteById(eventId)
+        eventModule.deleteEvent(eventId)
         return ResponseEntity.noContent().build()
     }
 
     @PostMapping("/{eventId}/publish")
+    @Operation(summary = "Publish an event", description = "Makes the event visible to attendees")
     fun publishEvent(@PathVariable eventId: UUID): EventDto {
-        val event = eventRepository.findById(eventId).orElseThrow()
-        event.status = EventStatus.PUBLISHED
-        val publishedEvent = eventRepository.save(event)
-        return convertToDto(publishedEvent)
+        val response = eventModule.publishEvent(eventId)
+        return toDto(response)
     }
 
     @PostMapping("/{eventId}/clone")
+    @Operation(summary = "Clone an event", description = "Creates a copy of the event in draft status")
     fun cloneEvent(@PathVariable eventId: UUID): EventDto {
-        val originalEvent = eventRepository.findById(eventId).orElseThrow()
-        val newEvent = Event().apply {
-            BeanUtils.copyProperties(originalEvent, this, "id")
-            status = EventStatus.DRAFT
+        val response = eventModule.cloneEvent(eventId)
+        return toDto(response)
+    }
+    
+    @GetMapping("/{eventId}/instances")
+    @Operation(summary = "Get event instances")
+    fun getEventInstances(@PathVariable eventId: UUID): List<EventInstanceDto> {
+        return eventModule.getEventInstances(eventId).map { inst ->
+            EventInstanceDto().apply {
+                id = inst.id
+                dateTime = inst.startDateTime
+                location = inst.location
+            }
         }
-        val clonedEvent = eventRepository.save(newEvent)
-        return convertToDto(clonedEvent)
     }
 
+    // ==================== Registration Operations (TODO: Move to RegistrationModuleApi) ====================
+
     @GetMapping("/{eventId}/registrations")
+    @Operation(summary = "Get registrations for an event")
     fun getEventRegistrations(@PathVariable eventId: UUID): List<RegistrationDto> {
-        val event = eventRepository.findById(eventId).orElseThrow()
-        val registrations = event.instances?.flatMap { instance ->
-            registrationRepository.findByEventInstance(instance)
-        } ?: emptyList()
+        // TODO: This should call RegistrationModuleApi when that module is created
+        val instances = eventModule.getEventInstances(eventId)
+        val instanceIds = instances.map { it.id }
+        
+        // For now, still using repository directly - will migrate when Registration module is created
+        val registrations = registrationRepository.findAll().filter { reg ->
+            reg.eventInstance?.id in instanceIds
+        }
         
         return registrations.map { registration ->
             RegistrationDto().apply {
@@ -187,10 +285,12 @@ class EventController(
     )
 
     @PostMapping("/{eventId}/registrations/bulk")
+    @Operation(summary = "Perform bulk action on registrations")
     fun performBulkAction(
         @PathVariable eventId: UUID,
         @RequestBody request: BulkActionRequest
     ): ResponseEntity<Map<String, Any>> {
+        // TODO: Move to RegistrationModuleApi
         val registrations = registrationRepository.findAllById(request.registrationIds)
         val results = mutableMapOf<String, Int>()
         

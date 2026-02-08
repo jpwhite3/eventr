@@ -30,7 +30,6 @@ graph TB
         ES[Event Service]
         RS[Registration Service]
         CS[Check-in Service]
-        WS[Webhook Service]
         AS[Analytics Service]
     end
     
@@ -41,7 +40,6 @@ graph TB
     
     subgraph "External Systems"
         EMAIL[Email Service]
-        HOOKS[Webhook<br/>Endpoints]
     end
     
     WEB --> REST
@@ -51,26 +49,23 @@ graph TB
     REST --> ES
     REST --> RS
     REST --> CS
-    REST --> WS
     REST --> AS
     
     ES --> DB
     RS --> DB
     CS --> DB
-    WS --> DB
     AS --> DB
     
     ES --> S3
     REST --> EMAIL
-    WS --> HOOKS
     
     classDef service fill:#e1f5fe
     classDef data fill:#f3e5f5
     classDef external fill:#e8f5e8
     
-    class ES,RS,CS,WS,AS service
+    class ES,RS,CS,AS service
     class DB,S3 data
-    class EMAIL,HOOKS external
+    class EMAIL external
 ```
 
 ## Core Concepts
@@ -86,9 +81,6 @@ User registrations for events, tracking attendance intent and user information.
 
 ### Check-ins
 Actual attendance tracking when users arrive at events or sessions.
-
-### Webhooks
-Event-driven notifications sent to external systems when important events occur.
 
 ## Event Management API
 
@@ -414,5 +406,4 @@ Visit http://localhost:8080/swagger-ui.html for interactive API documentation wi
 
 For API support and questions:
 - Check the [GitHub Issues](https://github.com/jpwhite3/eventr/issues)
-- Review the [Webhook Documentation](webhooks.md) for integration help
 - See [Architecture Documentation](architecture.md) for system design details

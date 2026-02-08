@@ -3,7 +3,7 @@
 [![CI/CD Pipeline](https://github.com/jpwhite3/eventr/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/jpwhite3/eventr/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.java.net/projects/jdk/21/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.2-green.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-green.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue.svg)](https://www.typescriptlang.org/)
 
@@ -34,7 +34,6 @@ A comprehensive, full-stack event management platform designed for corporate env
 - **File Storage**: AWS S3 integration for image and document storage
 - **Email Integration**: Automated email notifications
 - **Security**: Role-based access control and secure authentication
-- **Webhook System**: Event-driven integrations with external systems
 - **SOLID Architecture**: Clean, testable code following SOLID principles
 
 ## 🚀 Quick Start
@@ -67,40 +66,30 @@ chmod +x localstack-init/init-aws.sh
 cd frontend
 npm install
 npm start
-
-# Optional: Start webhook test client for local development
-cd webhook-client
-npm install
-npm start
 ```
 
 ### 🛠️ Local Development Setup
 
 ```bash
-# Option 1: Full development environment with webhook testing (Recommended)
-chmod +x start-dev-with-webhooks.sh
-./start-dev-with-webhooks.sh
-
-# Option 2: Basic development script (Unix/Mac)
+# Option 1: Development script (Unix/Mac)
 chmod +x start-dev.sh
 ./start-dev.sh
 
-# Option 3: Use development script (Windows)
+# Option 2: Development script (Windows)
 start-dev.bat
 
-# Option 4: Manual setup with Maven profiles
+# Option 3: Manual setup with Maven profiles
 ./mvnw spring-boot:run -Pdev  # Starts both backend and frontend
 ```
 
 ### 📱 Access the Application
 
-- **Frontend**: http://localhost:3001
+- **Frontend**: http://localhost:3002
 - **Backend API**: http://localhost:8080/api
 - **API Documentation**: http://localhost:8080/swagger-ui.html
 - **H2 Console** (dev): http://localhost:8080/h2-console
 - **MailHog UI**: http://localhost:8025
 - **LocalStack Dashboard**: http://localhost:4566
-- **Webhook Test Client**: http://localhost:3002
 
 ## 📚 Documentation
 
@@ -108,7 +97,6 @@ start-dev.bat
 
 ### Quick Links
 - **[API Documentation](docs/api.md)** - Complete REST API reference
-- **[Webhook Integration](docs/webhooks.md)** - Event-driven integration guide  
 - **[Local Development](docs/local-development.md)** - Development environment setup
 - **[Architecture Guide](docs/architecture.md)** - System design and patterns
 
@@ -117,25 +105,44 @@ start-dev.bat
 ```
 eventr/
 ├── src/main/kotlin/com/eventr/     # Backend (Spring Boot + Kotlin)
-│   ├── controller/                 # REST API controllers
-│   ├── service/                   # Business logic layer
-│   ├── model/                     # Data models
-│   ├── repository/                # Data access layer
-│   └── config/                    # Configuration classes
-├── frontend/                      # Frontend (React + TypeScript)
-│   ├── src/components/           # Reusable UI components
-│   ├── src/pages/               # Page components
-│   ├── src/api/                 # API client
-│   └── public/                  # Static assets
-├── src/test/                     # Backend tests
-└── docker-compose.yml           # Local development services
+│   ├── controller/                 # REST API controllers (8)
+│   ├── service/                    # Business logic layer
+│   │   ├── interfaces/             # Service interfaces
+│   │   └── impl/                   # Service implementations (8)
+│   ├── model/                      # JPA entities (9)
+│   ├── repository/                 # Data access layer (7)
+│   ├── dto/                        # Data transfer objects (14)
+│   ├── modules/                    # Domain modules
+│   │   ├── checkin/                # Check-in module
+│   │   ├── event/                  # Event management module
+│   │   ├── identity/               # User identity module
+│   │   ├── notification/           # Notification module
+│   │   └── registration/           # Registration module
+│   ├── infrastructure/             # Infrastructure concerns
+│   │   ├── config/                 # Configuration
+│   │   ├── persistence/            # Database utilities
+│   │   └── storage/                # File storage
+│   ├── shared/                     # Shared kernel
+│   │   ├── event/                  # Domain events
+│   │   ├── exception/              # Custom exceptions
+│   │   └── types/                  # Shared types
+│   └── config/                     # Spring configuration
+├── frontend/                       # Frontend (React + TypeScript)
+│   ├── src/components/             # Reusable UI components (10)
+│   ├── src/pages/                  # Page components (14)
+│   ├── src/api/                    # API client
+│   ├── src/hooks/                  # Custom React hooks
+│   ├── src/services/               # Frontend services
+│   └── src/utils/                  # Helper functions
+├── src/test/                       # Backend tests
+└── docker-compose.yml              # Local development services
 ```
 
 ### 🔧 Key Technologies
 
 **Backend:**
 
-- Spring Boot 3.3.2
+- Spring Boot 3.4
 - Kotlin
 - JPA/Hibernate
 - PostgreSQL
@@ -189,17 +196,6 @@ GET    /api/attendance/{id}     # Get attendance data
 
 GET    /api/sessions            # List sessions
 POST   /api/sessions            # Create session
-```
-
-**Webhooks:**
-```
-GET    /api/webhooks            # List webhooks
-POST   /api/webhooks            # Create webhook
-GET    /api/webhooks/{id}       # Get webhook details
-PUT    /api/webhooks/{id}       # Update webhook
-DELETE /api/webhooks/{id}       # Delete webhook
-POST   /api/webhooks/{id}/test  # Test webhook delivery
-PUT    /api/webhooks/{id}/secret # Regenerate webhook secret
 ```
 
 See our [API Documentation](docs/api.md) for complete endpoint details.

@@ -3,12 +3,9 @@ package com.eventr.service.impl
 import com.eventr.model.*
 import com.eventr.service.EmailNotificationService
 import com.eventr.service.EmailTemplateService
-import com.eventr.service.CalendarAttachmentService
 import com.eventr.service.EmailBulkResult
 import com.eventr.util.SecureLogger
-import jakarta.mail.MessagingException
 import jakarta.mail.internet.MimeMessage
-import org.springframework.core.io.ByteArrayResource
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.stereotype.Service
@@ -16,17 +13,12 @@ import org.springframework.stereotype.Service
 /**
  * Implementation of EmailNotificationService focused on email delivery operations.
  * 
- * Responsibilities:
- * - Email sending operations
- * - Email delivery error handling
- * - Bulk email operations
- * - Email attachment handling
+ * TODO: Re-add calendar attachments when CalendarAttachmentService is created
  */
 @Service
 class EmailNotificationServiceImpl(
     private val mailSender: JavaMailSender,
-    private val templateService: EmailTemplateService,
-    private val calendarService: CalendarAttachmentService
+    private val templateService: EmailTemplateService
 ) : EmailNotificationService {
     
     private val secureLogger = SecureLogger(EmailNotificationServiceImpl::class.java)
@@ -48,10 +40,7 @@ class EmailNotificationServiceImpl(
             helper.setSubject("✅ Registration Confirmed: ${event.name}")
             helper.setText(templateService.generateRegistrationTemplate(registration, event), true)
             
-            // Add calendar attachment
-            val icsFile = calendarService.createIcsFile(eventInstance)
-            val filename = calendarService.generateCalendarFilename(event)
-            helper.addAttachment(filename, ByteArrayResource(icsFile))
+            // TODO: Add calendar attachment when CalendarAttachmentService is created
             
             mailSender.send(message)
             

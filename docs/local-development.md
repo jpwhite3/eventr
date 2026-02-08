@@ -1,6 +1,6 @@
 # Local Development Setup Guide
 
-This guide will help you set up Eventr for local development with all services including the webhook test client.
+This guide will help you set up Eventr for local development.
 
 ## Prerequisites
 
@@ -15,7 +15,6 @@ This guide will help you set up Eventr for local development with all services i
 ### Optional Tools
 - **IntelliJ IDEA** or **VS Code** for development
 - **Postman** or **curl** for API testing
-- **ngrok** for webhook testing with external services
 
 ## Quick Start (Recommended)
 
@@ -62,11 +61,6 @@ docker-compose ps
 cd frontend
 npm install
 npm start
-
-# Terminal 3: Webhook Test Client
-cd webhook-client
-npm install
-npm start
 ```
 
 ### 4. Access the Applications
@@ -75,10 +69,9 @@ Once all services are running, you can access:
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| **Frontend** | http://localhost:3001 | React web application |
+| **Frontend** | http://localhost:3002 | React web application |
 | **Backend API** | http://localhost:8080/api | REST API endpoints |
 | **API Docs** | http://localhost:8080/swagger-ui.html | Interactive API documentation |
-| **Webhook Client** | http://localhost:3002 | Webhook testing interface |
 | **H2 Console** | http://localhost:8080/h2-console | Database console (dev profile) |
 | **MailHog** | http://localhost:8025 | Email testing interface |
 | **LocalStack** | http://localhost:4566 | AWS services simulation |
@@ -144,7 +137,7 @@ logging:
 ./mvnw test jacoco:report
 
 # Run specific test class
-./mvnw test -Dtest=WebhookServiceTest
+./mvnw test -Dtest=EventServiceTest
 
 # Run tests with specific profile
 ./mvnw test -Ptest
@@ -182,50 +175,6 @@ npm test -- --coverage
 #### Frontend Configuration
 
 The frontend automatically proxies API requests to `http://localhost:8080` during development via the `proxy` setting in `package.json`.
-
-### Webhook Test Client Development
-
-#### Setup
-
-```bash
-cd webhook-client
-npm install
-
-# Set webhook secret (should match Eventr webhook secret)
-export EVENTR_WEBHOOK_SECRET="dev-secret-key"
-
-# Start the webhook client
-npm start
-```
-
-#### Testing Webhooks Locally
-
-1. **Configure a webhook in Eventr:**
-   ```bash
-   curl -X POST http://localhost:8080/api/webhooks \
-     -H "Content-Type: application/json" \
-     -d '{
-       "url": "http://localhost:3002/webhook",
-       "eventTypes": ["USER_REGISTERED", "USER_CHECKED_IN"],
-       "active": true,
-       "description": "Local development webhook"
-     }'
-   ```
-
-2. **Trigger an event (e.g., user registration):**
-   ```bash
-   curl -X POST http://localhost:8080/api/registrations \
-     -H "Content-Type: application/json" \
-     -d '{
-       "eventId": "your-event-id",
-       "userEmail": "test@example.com",
-       "userName": "Test User"
-     }'
-   ```
-
-3. **View the webhook in the test client:**
-   - Open http://localhost:3002
-   - You should see the webhook appear in the dashboard
 
 ## Development Workflows
 
@@ -400,13 +349,6 @@ curl -X POST http://localhost:8080/api/events \
     "endDate": "2024-12-01T15:00:00Z"
   }'
 
-# Test webhook creation
-curl -X POST http://localhost:8080/api/webhooks \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "http://localhost:3002/webhook",
-    "eventTypes": ["USER_REGISTERED"]
-  }'
 ```
 
 ## Debugging
@@ -451,31 +393,9 @@ curl -X POST http://localhost:8080/api/webhooks \
      "type": "chrome",
      "request": "launch",
      "name": "Debug React App",
-     "url": "http://localhost:3001",
+     "url": "http://localhost:3002",
      "webRoot": "${workspaceFolder}/frontend/src"
    }
-   ```
-
-### Webhook Debugging
-
-1. **Check webhook client logs:**
-   ```bash
-   cd webhook-client
-   npm start
-   # Watch console output for webhook deliveries
-   ```
-
-2. **View webhook client dashboard:**
-   - Open http://localhost:3002
-   - Monitor real-time webhook deliveries
-   - Check signature verification status
-
-3. **Test webhook delivery manually:**
-   ```bash
-   curl -X POST http://localhost:3002/webhook \
-     -H "Content-Type: application/json" \
-     -H "X-Eventr-Signature: sha256=$(echo -n '{"test":"data"}' | openssl dgst -sha256 -hmac 'dev-secret-key' -binary | xxd -p)" \
-     -d '{"eventType":"TEST","data":{"test":"data"}}'
    ```
 
 ## Docker Development
@@ -504,7 +424,7 @@ docker run -p 8080:8080 --env-file .env eventr-backend
 # Build and run the frontend
 cd frontend
 docker build -t eventr-frontend .
-docker run -p 3001:3000 eventr-frontend
+docker run -p 3002:3000 eventr-frontend
 ```
 
 ## Environment Variables
@@ -528,16 +448,6 @@ SMTP_HOST=localhost
 SMTP_PORT=1025
 SMTP_USERNAME=
 SMTP_PASSWORD=
-
-# Webhook
-WEBHOOK_SECRET_KEY=dev-secret-key
-```
-
-### Webhook Client (.env)
-
-```bash
-PORT=3002
-EVENTR_WEBHOOK_SECRET=dev-secret-key
 ```
 
 ## Performance Optimization
@@ -629,17 +539,6 @@ EVENTR_WEBHOOK_SECRET=dev-secret-key
    curl http://localhost:8080/api/health
    ```
 
-### Webhook Client Issues
-
-1. **Webhooks not received:**
-   - Check webhook URL configuration in Eventr
-   - Verify webhook client is running on port 3002
-   - Check network connectivity
-
-2. **Signature verification fails:**
-   - Ensure `EVENTR_WEBHOOK_SECRET` matches
-   - Check webhook secret in Eventr configuration
-
 ## Next Steps
 
 Once your development environment is set up:
@@ -647,7 +546,6 @@ Once your development environment is set up:
 1. **Explore the codebase:**
    - Review [Architecture Documentation](architecture.md)
    - Study [API Documentation](api.md)
-   - Read [Webhook Integration Guide](webhooks.md)
 
 2. **Run the test suite:**
    ```bash
@@ -655,11 +553,7 @@ Once your development environment is set up:
    cd frontend && npm test
    ```
 
-3. **Try creating a webhook integration:**
-   - Configure a webhook pointing to your test client
-   - Register for an event and watch the webhook fire
-
-4. **Start developing:**
+3. **Start developing:**
    - Create a feature branch
    - Make your changes
    - Write tests

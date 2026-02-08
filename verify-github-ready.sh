@@ -73,13 +73,11 @@ print_status "Checking documentation files..."
 docs_missing=false
 required_docs=(
     "README.md"
+    "AGENTS.md"
     "docs/README.md"
     "docs/api.md"
-    "docs/webhooks.md"
     "docs/architecture.md"
     "docs/local-development.md"
-    "webhook-client/README.md"
-    "GITHUB_PREP.md"
 )
 
 for doc in "${required_docs[@]}"; do
@@ -95,25 +93,25 @@ else
     errors=$((errors + 1))
 fi
 
-# Check 5: Webhook client files exist
-print_status "Checking webhook client files..."
-webhook_missing=false
-webhook_files=(
-    "webhook-client/package.json"
-    "webhook-client/server.js"
-    "webhook-client/public/index.html"
-    "webhook-client/Dockerfile"
+# Check 5: Modular architecture structure exists
+print_status "Checking modular architecture structure..."
+arch_missing=false
+required_dirs=(
+    "src/main/kotlin/com/eventr/modules/event/api"
+    "src/main/kotlin/com/eventr/modules/event/internal"
+    "src/main/kotlin/com/eventr/modules/event/events"
+    "src/main/kotlin/com/eventr/shared/event"
 )
 
-for file in "${webhook_files[@]}"; do
-    if [ ! -f "$file" ]; then
-        print_error "Missing webhook client file: $file"
-        webhook_missing=true
+for dir in "${required_dirs[@]}"; do
+    if [ ! -d "$dir" ]; then
+        print_error "Missing module directory: $dir"
+        arch_missing=true
     fi
 done
 
-if [ "$webhook_missing" = false ]; then
-    print_success "All webhook client files exist"
+if [ "$arch_missing" = false ]; then
+    print_success "Modular architecture structure exists"
 else
     errors=$((errors + 1))
 fi
@@ -122,9 +120,11 @@ fi
 print_status "Checking script permissions..."
 scripts_not_executable=false
 script_files=(
-    "cleanup-for-git.sh"
-    "start-dev-with-webhooks.sh"
     "start-dev.sh"
+    "cleanup-dev.sh"
+    "cleanup-for-git.sh"
+    "test-startup.sh"
+    "verify-github-ready.sh"
 )
 
 for script in "${script_files[@]}"; do
@@ -217,15 +217,15 @@ if [ $errors -eq 0 ]; then
     print_status "✨ Next steps:"
     echo "1. Review git status: git status"
     echo "2. Add files: git add ."
-    echo "3. Commit: git commit -m 'Add comprehensive documentation and webhook test client'"
+    echo "3. Commit: git commit -m 'Your commit message'"
     echo "4. Push: git push origin main"
     echo ""
     echo "📋 Repository includes:"
+    echo "  🏗️ Modular monolith architecture (DDD-style bounded contexts)"
     echo "  📚 Comprehensive documentation with Mermaid diagrams"
-    echo "  🛠️ Webhook test client with web interface"
     echo "  🚀 Development scripts and Docker configurations"
-    echo "  🧹 Clean .gitignore for multi-language project"
-    echo "  ✅ All tests passing and properly organized"
+    echo "  🔄 CI/CD pipeline with GitHub Actions"
+    echo "  ✅ All tests passing (backend + frontend)"
     
 else
     print_error "❌ Found $errors issue(s) that should be fixed before pushing to GitHub"

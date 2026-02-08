@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Profile
 import org.springframework.core.io.ClassPathResource
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Component
-import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -25,7 +24,6 @@ class FixtureDataLoader(
     private val sessionRepository: SessionRepository,
     private val registrationRepository: RegistrationRepository,
     private val sessionRegistrationRepository: SessionRegistrationRepository,
-    private val resourceRepository: ResourceRepository,
     private val checkInRepository: CheckInRepository,
     private val userRepository: UserRepository,
     private val passwordEncoder: BCryptPasswordEncoder
@@ -57,7 +55,6 @@ class FixtureDataLoader(
             loadSessions()
             loadRegistrations()
             loadSessionRegistrations()
-            loadResources()
             loadCheckIns()
             
             // Display development login info
@@ -74,7 +71,6 @@ class FixtureDataLoader(
         checkInRepository.deleteAll()
         sessionRegistrationRepository.deleteAll()
         registrationRepository.deleteAll()
-        resourceRepository.deleteAll()
         sessionRepository.deleteAll()
         eventInstanceRepository.deleteAll()
         eventRepository.deleteAll()
@@ -256,53 +252,6 @@ class FixtureDataLoader(
             }
         }
         logger.info("Loaded ${sessionRegistrations.size()} session registrations")
-    }
-    
-    private fun loadResources() {
-        logger.info("Loading resources...")
-        val resource = ClassPathResource("fixtures/resources.json")
-        val resources = objectMapper.readTree(resource.inputStream)
-        
-        resources.forEach { resourceNode ->
-            val resourceEntity = Resource(
-                id = UUID.fromString(resourceNode["id"].asText()),
-                name = resourceNode["name"].asText(),
-                description = resourceNode["description"]?.asText(),
-                type = ResourceType.valueOf(resourceNode["type"].asText()),
-                status = ResourceStatus.valueOf(resourceNode["status"].asText()),
-                capacity = resourceNode["capacity"]?.asInt(),
-                location = resourceNode["location"]?.asText(),
-                floor = resourceNode["floor"]?.asText(),
-                building = resourceNode["building"]?.asText(),
-                specifications = resourceNode["specifications"]?.asText(),
-                serialNumber = resourceNode["serialNumber"]?.asText(),
-                model = resourceNode["model"]?.asText(),
-                manufacturer = resourceNode["manufacturer"]?.asText(),
-                isBookable = resourceNode["isBookable"]?.asBoolean() ?: true,
-                requiresApproval = resourceNode["requiresApproval"]?.asBoolean() ?: false,
-                bookingLeadTimeHours = resourceNode["bookingLeadTimeHours"]?.asInt() ?: 0,
-                maxBookingDurationHours = resourceNode["maxBookingDurationHours"]?.asInt(),
-                hourlyRate = resourceNode["hourlyRate"]?.asText()?.let { BigDecimal(it) },
-                dailyRate = resourceNode["dailyRate"]?.asText()?.let { BigDecimal(it) },
-                setupCost = resourceNode["setupCost"]?.asText()?.let { BigDecimal(it) },
-                cleanupCost = resourceNode["cleanupCost"]?.asText()?.let { BigDecimal(it) },
-                lastMaintenanceDate = resourceNode["lastMaintenanceDate"]?.asText()?.let { LocalDateTime.parse(it) },
-                nextMaintenanceDate = resourceNode["nextMaintenanceDate"]?.asText()?.let { LocalDateTime.parse(it) },
-                maintenanceNotes = resourceNode["maintenanceNotes"]?.asText(),
-                contactPerson = resourceNode["contactPerson"]?.asText(),
-                contactEmail = resourceNode["contactEmail"]?.asText(),
-                contactPhone = resourceNode["contactPhone"]?.asText(),
-                departmentOwner = resourceNode["departmentOwner"]?.asText(),
-                totalUsageHours = resourceNode["totalUsageHours"]?.asInt() ?: 0,
-                usageThisMonth = resourceNode["usageThisMonth"]?.asInt() ?: 0,
-                lastUsedAt = resourceNode["lastUsedAt"]?.asText()?.let { LocalDateTime.parse(it) },
-                tags = resourceNode["tags"]?.asText(),
-                category = resourceNode["category"]?.asText(),
-                isActive = resourceNode["isActive"]?.asBoolean() ?: true
-            )
-            resourceRepository.save(resourceEntity)
-        }
-        logger.info("Loaded ${resources.size()} resources")
     }
     
     private fun loadCheckIns() {

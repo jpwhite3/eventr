@@ -4,8 +4,8 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Project Overview
 
-EventR is a full-stack corporate event management platform with:
-- **Backend**: Spring Boot 3.4 + Kotlin (port 8080)
+EventR is a full-stack corporate event management platform with a modular architecture:
+- **Backend**: Spring Boot 3.5.9 + Kotlin 2.3.0 (port 8080)
 - **Frontend**: React 18 + TypeScript (port 3002)
 - **Infrastructure**: PostgreSQL, Redis, LocalStack (S3), MailHog
 
@@ -30,7 +30,7 @@ cd frontend && npm start              # Frontend only (runs on port 3002)
 ```bash
 # Backend tests
 ./mvnw test                           # All tests
-./mvnw test -Dtest=WebhookServiceTest # Single test class
+./mvnw test -Dtest=EventServiceTest   # Single test class
 ./mvnw test -Ptest                    # With test profile (Testcontainers)
 ./mvnw test jacoco:report             # With coverage report
 
@@ -52,27 +52,44 @@ docker build -t eventr:latest .       # Docker image
 
 ## Architecture
 
-### Backend Package Structure
+### Backend Package Structure (Modular Architecture)
 
 ```
 com.eventr/
-├── controller/     # 19 REST controllers
-├── service/        # 20+ business services (prefer interface + impl pattern)
-├── repository/     # 14 JPA repositories (extends JpaRepository)
-├── model/          # 14 JPA entities with UUID primary keys
-├── dto/            # 16 data transfer objects
-├── config/         # Spring configuration
-├── events/         # Domain events and handlers
-├── exception/      # Custom exceptions
-└── util/           # Helper utilities
+├── controller/         # 8 REST controllers
+├── service/
+│   ├── interfaces/     # Service interfaces
+│   └── impl/           # 8 service implementations
+├── repository/         # 7 JPA repositories (extends JpaRepository)
+├── model/              # 9 JPA entities with UUID primary keys
+├── dto/                # 14 data transfer objects
+├── modules/            # Domain modules (DDD-style)
+│   ├── checkin/        # Check-in bounded context
+│   ├── event/          # Event management bounded context
+│   │   ├── api/        # Public module API
+│   │   ├── internal/   # Internal implementation
+│   │   └── events/     # Domain events
+│   ├── identity/       # User identity bounded context
+│   ├── notification/   # Notification bounded context
+│   └── registration/   # Registration bounded context
+├── infrastructure/     # Infrastructure layer
+│   ├── config/         # Configuration classes
+│   ├── persistence/    # Database utilities
+│   └── storage/        # File storage (S3)
+├── shared/             # Shared kernel
+│   ├── event/          # Domain event infrastructure
+│   ├── exception/      # Custom exceptions
+│   └── types/          # Shared value types
+├── config/             # Spring configuration
+└── util/               # Helper utilities
 ```
 
 ### Frontend Structure
 
 ```
 frontend/src/
-├── components/     # 35 reusable UI components
-├── pages/          # 28 route-level pages
+├── components/     # 10 reusable UI components
+├── pages/          # 14 route-level pages
 ├── api/            # API client (proxies to localhost:8080)
 ├── hooks/          # Custom React hooks
 ├── services/       # Frontend services
@@ -84,7 +101,6 @@ frontend/src/
 ```
 Event (1) → (many) Session → (many) CheckIn
 Event (1) → (many) Registration → (many) CheckIn
-Webhook (1) → (many) WebhookDelivery
 ```
 
 All entities use **UUID primary keys** and have `createdAt`/`updatedAt` audit fields.
@@ -117,7 +133,7 @@ class EventServiceImpl(
 
 ### Event-Driven Architecture
 
-Domain events trigger webhooks, emails, and analytics. Use Spring's event publisher:
+Domain events trigger emails and analytics. Use Spring's event publisher:
 
 ```kotlin
 applicationEventPublisher.publishEvent(UserRegisteredEvent(registration))
@@ -129,10 +145,9 @@ applicationEventPublisher.publishEvent(UserCheckedInEvent(checkIn))
 ```kotlin
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestConfig::class)
 class ServiceNameTest {
-    // TestConfig provides mocked AWS/external dependencies
     // Tests use H2 in-memory database automatically
+    // Use @MockkBean for external dependencies
 }
 ```
 
@@ -152,17 +167,17 @@ Services expect these ports from `docker-compose up -d`:
 - `test` - Testing with Testcontainers
 - `frontend` - Frontend via Maven frontend plugin
 
-## Known Anti-Patterns to Avoid
+## Architectural Patterns
 
-- **Large services**: `ResourceManagementService` (608 lines) should be split into smaller services
-- **Missing interfaces**: Many services are concrete classes - always create interface for new services
-- **Cross-domain dependencies**: Services should depend on their own domain repositories
+- **Modular Architecture**: Domain logic organized into bounded contexts under `modules/`
+- **Interface Segregation**: Services follow interface + impl pattern in `service/interfaces/` and `service/impl/`
+- **Domain Events**: Cross-module communication via Spring events in `shared/event/`
+- **Infrastructure Separation**: External concerns isolated in `infrastructure/`
 
 ## Key Files
 
 - `src/main/kotlin/com/eventr/EventrApplication.kt` - Spring Boot entry point
 - `frontend/src/App.tsx` - React application root
-- `webhook-client/server.js` - Webhook test client (port 3002)
 - `docs/api.md` - Complete API endpoint reference
 - `docs/architecture.md` - System design diagrams
 
@@ -170,5 +185,4 @@ Services expect these ports from `docker-compose up -d`:
 
 - Backend API: **8080**
 - Frontend: **3002** (NOT 3001, configured in package.json)
-- Webhook test client: **3002**
 - Frontend proxies `/api/*` to `localhost:8080`

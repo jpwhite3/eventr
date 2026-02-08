@@ -98,7 +98,7 @@ docker-compose up -d
 start-dev.bat   # Windows
 
 # 5. Access the application
-# Frontend: http://localhost:3001
+# Frontend: http://localhost:3002
 # Backend: http://localhost:8080
 ```
 
@@ -107,18 +107,31 @@ start-dev.bat   # Windows
 ```
 eventr/
 ├── src/main/kotlin/com/eventr/     # Backend code
-│   ├── controller/                 # REST controllers
-│   ├── service/                   # Business logic
-│   ├── model/                     # Data models
-│   ├── repository/                # Data access
-│   └── config/                    # Configuration
-├── frontend/src/                  # Frontend code
-│   ├── components/               # React components
-│   ├── pages/                   # Page components
-│   ├── api/                     # API client
-│   └── __tests__/              # Frontend tests
-├── src/test/                     # Backend tests
-└── docs/                        # Documentation
+│   ├── controller/                 # REST controllers (8)
+│   ├── service/                    # Business logic
+│   │   ├── interfaces/             # Service interfaces
+│   │   └── impl/                   # Service implementations (8)
+│   ├── model/                      # JPA entities (9)
+│   ├── repository/                 # Data access (7)
+│   ├── dto/                        # Data transfer objects (14)
+│   ├── modules/                    # Domain modules
+│   │   ├── checkin/                # Check-in module
+│   │   ├── event/                  # Event module
+│   │   ├── identity/               # Identity module
+│   │   ├── notification/           # Notification module
+│   │   └── registration/           # Registration module
+│   ├── infrastructure/             # Infrastructure layer
+│   ├── shared/                     # Shared kernel
+│   └── config/                     # Configuration
+├── frontend/src/                   # Frontend code
+│   ├── components/                 # React components (10)
+│   ├── pages/                      # Page components (14)
+│   ├── api/                        # API client
+│   ├── hooks/                      # Custom React hooks
+│   ├── services/                   # Frontend services
+│   └── utils/                      # Helper functions
+├── src/test/                       # Backend tests
+└── docs/                           # Documentation
 ```
 
 ## Pull Request Process

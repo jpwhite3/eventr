@@ -2,7 +2,93 @@
 
 ## System Overview
 
-Eventr is a full-stack event management platform built with modern architectural principles including SOLID design patterns, event-driven architecture, and microservice-ready patterns.
+Eventr is a full-stack event management platform built with modern architectural principles including modular domain-driven design, SOLID principles, event-driven architecture, and microservice-ready patterns.
+
+## Modular Architecture
+
+The backend follows a modular architecture pattern with clear separation of concerns:
+
+```mermaid
+graph TB
+    subgraph "API Layer"
+        CTRL[Controllers - 8]
+    end
+    
+    subgraph "Domain Modules"
+        EVENT[event module]
+        CHECKIN[checkin module]
+        REG[registration module]
+        IDENTITY[identity module]
+        NOTIF[notification module]
+    end
+    
+    subgraph "Shared Kernel"
+        EVENTS[Domain Events]
+        EXCEPT[Exceptions]
+        TYPES[Shared Types]
+    end
+    
+    subgraph "Infrastructure"
+        CONFIG[Configuration]
+        PERSIST[Persistence]
+        STORAGE[File Storage]
+    end
+    
+    subgraph "Core Services"
+        SVC_INT[Service Interfaces]
+        SVC_IMPL[Service Implementations - 8]
+    end
+    
+    subgraph "Data Layer"
+        MODEL[JPA Entities - 9]
+        REPO[Repositories - 7]
+        DTO[DTOs - 14]
+    end
+    
+    CTRL --> SVC_INT
+    SVC_INT --> SVC_IMPL
+    SVC_IMPL --> REPO
+    SVC_IMPL --> MODEL
+    SVC_IMPL --> DTO
+    
+    SVC_IMPL --> EVENT
+    SVC_IMPL --> CHECKIN
+    SVC_IMPL --> REG
+    SVC_IMPL --> IDENTITY
+    SVC_IMPL --> NOTIF
+    
+    EVENT --> EVENTS
+    CHECKIN --> EVENTS
+    REG --> EVENTS
+    
+    SVC_IMPL --> CONFIG
+    SVC_IMPL --> PERSIST
+    SVC_IMPL --> STORAGE
+    
+    classDef module fill:#e8f5e8
+    classDef shared fill:#fff3e0
+    classDef infra fill:#e3f2fd
+    
+    class EVENT,CHECKIN,REG,IDENTITY,NOTIF module
+    class EVENTS,EXCEPT,TYPES shared
+    class CONFIG,PERSIST,STORAGE infra
+```
+
+### Module Structure
+
+Each domain module follows a consistent structure:
+
+```
+modules/{module-name}/
+├── api/           # Public module API (interfaces, DTOs)
+├── internal/      # Internal implementation
+└── events/        # Domain events published by this module
+```
+
+This structure ensures:
+- **Clear boundaries**: Modules communicate through well-defined APIs
+- **Encapsulation**: Internal implementation details are hidden
+- **Event-driven communication**: Cross-module communication via domain events
 
 ## High-Level Architecture
 
@@ -142,60 +228,45 @@ erDiagram
         string location
     }
     
-    Webhook ||--o{ WebhookDelivery : generates
-    Webhook {
-        uuid id PK
-        string url
-        string[] event_types
-        string secret
-        boolean active
-        enum status
-    }
-    
-    WebhookDelivery {
-        uuid id PK
-        uuid webhook_id FK
-        string event_type
-        json payload
-        enum status
-        int attempt_count
-        datetime next_retry_at
-    }
 ```
 
 ## Service Architecture (SOLID Principles)
 
 ### Single Responsibility Principle
 
-Each service has a single, well-defined responsibility:
+Each service has a single, well-defined responsibility. The current service implementations:
 
 ```mermaid
 graph TB
-    subgraph "Event Management Domain"
-        EVENT_SVC[Event Service<br/>- Event CRUD<br/>- Event validation<br/>- Event lifecycle]
-        SESSION_SVC[Session Service<br/>- Session management<br/>- Prerequisites<br/>- Capacity management]
+    subgraph "Service Layer (8 implementations)"
+        AUTH[UserAuthenticationServiceImpl]
+        REG[UserRegistrationServiceImpl]
+        PROFILE[UserProfileServiceImpl]
+        PWD[PasswordManagementServiceImpl]
+        EMAIL[EmailNotificationServiceImpl]
+        TEMPLATE[EmailTemplateServiceImpl]
+        CHECKIN[EventDrivenCheckInService]
+        ATTEND[AttendanceTrackingServiceImpl]
     end
     
-    subgraph "Registration Domain"
-        REG_SVC[Registration Service<br/>- User registration<br/>- Waitlist management<br/>- Registration validation]
+    subgraph "Service Interfaces"
+        CHECKIN_INT[CheckInServiceInterface]
     end
     
-    subgraph "Attendance Domain"
-        CHECKIN_SVC[Check-in Service<br/>- Manual check-in<br/>- QR code check-in<br/>- Bulk operations]
-        QR_SVC[QR Code Service<br/>- QR generation<br/>- QR validation<br/>- Signature verification]
+    CHECKIN --> CHECKIN_INT
+    
+    subgraph "Domain Modules"
+        EVENT_MOD[Event Module<br/>- EventModuleApi<br/>- EventModuleApiImpl<br/>- EventDomainEvents]
+        CHECKIN_MOD[Check-in Module]
+        REG_MOD[Registration Module]
+        IDENTITY_MOD[Identity Module]
+        NOTIF_MOD[Notification Module]
     end
     
-    subgraph "Integration Domain"
-        WEBHOOK_SVC[Webhook Service<br/>- Webhook management<br/>- Event subscription]
-        DELIVERY_SVC[Delivery Service<br/>- HTTP delivery<br/>- Retry logic<br/>- Failure handling]
-        SIG_SVC[Signature Service<br/>- HMAC generation<br/>- Signature validation]
-    end
-    
-    subgraph "Supporting Services"
-        FILE_SVC[File Service<br/>- Upload handling<br/>- Storage management]
-        ANALYTICS_SVC[Analytics Service<br/>- Statistics<br/>- Reporting]
-        EMAIL_SVC[Email Service<br/>- Notifications<br/>- Templates]
-    end
+    AUTH --> IDENTITY_MOD
+    REG --> REG_MOD
+    EMAIL --> NOTIF_MOD
+    CHECKIN --> CHECKIN_MOD
 ```
 
 ### Dependency Inversion Principle
@@ -206,33 +277,27 @@ Services depend on abstractions, not concretions:
 graph TB
     subgraph "Interfaces"
         CHECKIN_INT[CheckInServiceInterface]
-        WEBHOOK_INT[WebhookServiceInterface]
         HTTP_INT[HttpClientInterface]
         EMAIL_INT[EmailServiceInterface]
     end
     
     subgraph "Implementations"
         CHECKIN_IMPL[EventDrivenCheckInService]
-        WEBHOOK_IMPL[WebhookServiceImpl]
         HTTP_IMPL[SpringHttpClient]
         EMAIL_IMPL[SmtpEmailService]
     end
     
     subgraph "Controllers"
         CHECKIN_CTRL[CheckInController]
-        WEBHOOK_CTRL[WebhookController]
     end
     
     CHECKIN_CTRL --> CHECKIN_INT
-    WEBHOOK_CTRL --> WEBHOOK_INT
     
     CHECKIN_INT <|.. CHECKIN_IMPL
-    WEBHOOK_INT <|.. WEBHOOK_IMPL
     HTTP_INT <|.. HTTP_IMPL
     EMAIL_INT <|.. EMAIL_IMPL
     
     CHECKIN_IMPL --> HTTP_INT
-    WEBHOOK_IMPL --> HTTP_INT
     CHECKIN_IMPL --> EMAIL_INT
 ```
 
@@ -257,17 +322,8 @@ sequenceDiagram
     Service-->>Controller: RegistrationDto
     Controller-->>User: 201 Created
     
-    EventPublisher->>WebhookService: handle(UserRegisteredEvent)
-    WebhookService->>WebhookService: Find Active Webhooks
-    WebhookService->>External: POST webhook payload
-    
-    alt Success
-        External-->>WebhookService: 200 OK
-        WebhookService->>WebhookService: Mark Success
-    else Failure
-        External-->>WebhookService: 5xx Error
-        WebhookService->>WebhookService: Schedule Retry
-    end
+    EventPublisher->>EmailService: handle(UserRegisteredEvent)
+    EmailService->>EmailService: Send Confirmation Email
 ```
 
 ### Event Types and Handlers
@@ -284,24 +340,18 @@ graph TB
     end
     
     subgraph "Event Handlers"
-        WEBHOOK_HANDLER[WebhookEventHandler]
         EMAIL_HANDLER[EmailNotificationHandler]
         ANALYTICS_HANDLER[AnalyticsEventHandler]
         AUDIT_HANDLER[AuditLogHandler]
     end
     
-    USER_REG --> WEBHOOK_HANDLER
     USER_REG --> EMAIL_HANDLER
     USER_REG --> ANALYTICS_HANDLER
     USER_REG --> AUDIT_HANDLER
     
-    USER_CHECKIN --> WEBHOOK_HANDLER
     USER_CHECKIN --> ANALYTICS_HANDLER
     
-    EVENT_CREATE --> WEBHOOK_HANDLER
     EVENT_CREATE --> EMAIL_HANDLER
-    
-    SESSION_CREATE --> WEBHOOK_HANDLER
 ```
 
 ## Data Layer Architecture
@@ -314,14 +364,12 @@ graph TB
         EVENT_REPO_INT[EventRepository]
         REG_REPO_INT[RegistrationRepository]
         CHECKIN_REPO_INT[CheckInRepository]
-        WEBHOOK_REPO_INT[WebhookRepository]
     end
     
     subgraph "JPA Implementations"
         EVENT_REPO[EventRepository<br/>extends JpaRepository]
         REG_REPO[RegistrationRepository<br/>extends JpaRepository]
         CHECKIN_REPO[CheckInRepository<br/>extends JpaRepository]
-        WEBHOOK_REPO[WebhookRepository<br/>extends JpaRepository]
     end
     
     subgraph "Custom Queries"
@@ -332,7 +380,6 @@ graph TB
     EVENT_REPO_INT <|.. EVENT_REPO
     REG_REPO_INT <|.. REG_REPO
     CHECKIN_REPO_INT <|.. CHECKIN_REPO
-    WEBHOOK_REPO_INT <|.. WEBHOOK_REPO
     
     EVENT_REPO --> EVENT_CUSTOM
     CHECKIN_REPO --> CHECKIN_CUSTOM
@@ -350,9 +397,7 @@ graph TB
         CHECKINS[(check_ins)]
     end
     
-    subgraph "Integration Entities"
-        WEBHOOKS[(webhooks)]
-        WEBHOOK_DEL[(webhook_deliveries)]
+    subgraph "Supporting Entities"
         AUDIT_LOG[(audit_logs)]
     end
     
@@ -366,8 +411,6 @@ graph TB
     EVENT_INST --> SESSIONS
     REGISTRATIONS --> CHECKINS
     SESSIONS --> CHECKINS
-    
-    WEBHOOKS --> WEBHOOK_DEL
     
     EVENTS --> AUDIT_LOG
     REGISTRATIONS --> AUDIT_LOG
@@ -459,10 +502,6 @@ graph TB
         
         CHECKINS[/api/check-ins]
         CHECKIN_ID[/api/check-ins/{id}]
-        
-        WEBHOOKS[/api/webhooks]
-        WEBHOOK_ID[/api/webhooks/{id}]
-        WEBHOOK_TEST[/api/webhooks/{id}/test]
     end
     
     EVENTS --> EVENT_ID
@@ -472,8 +511,6 @@ graph TB
     
     REGISTRATIONS --> REG_ID
     CHECKINS --> CHECKIN_ID
-    WEBHOOKS --> WEBHOOK_ID
-    WEBHOOK_ID --> WEBHOOK_TEST
 ```
 
 ### Error Handling Strategy
@@ -728,4 +765,9 @@ graph TB
     STARTUP --> DB_HEALTH
 ```
 
-This architecture documentation provides a comprehensive view of Eventr's system design, following modern software engineering practices and architectural patterns. The system is designed for scalability, maintainability, and testability while providing robust event management capabilities with integrated webhook support.
+This architecture documentation provides a comprehensive view of Eventr's system design, following modern software engineering practices and architectural patterns. The system is designed for scalability, maintainability, and testability while providing robust event management capabilities.
+
+---
+
+**Last Updated**: February 8, 2026  
+**Architecture Version**: 2.0 (Modular Architecture)
