@@ -184,36 +184,46 @@ class WebSocketService {
       return;
     }
 
+    // Unsubscribe from previous event if switching events
+    if (this.eventId && this.eventId !== eventId) {
+      this.unsubscribeFromEvent();
+    }
+
+    // Check if already subscribed to this specific event
+    const eventTopicPrefix = `/topic/events/${eventId}/`;
+    const alreadySubscribed = Array.from(this.subscriptions.values()).some(sub =>
+      sub.destination.startsWith(eventTopicPrefix)
+    );
+
+    if (alreadySubscribed) {
+      console.log(`Already subscribed to event ${eventId}, skipping`);
+      return;
+    }
+
     this.eventId = eventId;
 
-    // Subscribe to event-specific topics
-    this.client.subscribe(`/topic/events/${eventId}/attendance`, (message) => {
-      const update = JSON.parse(message.body);
+    // Subscribe to event-specific topics using tracked subscriptions
+    this.subscribe(`/topic/events/${eventId}/attendance`, (update) => {
       this.callbacks.onAttendanceUpdate?.(update);
     });
 
-    this.client.subscribe(`/topic/events/${eventId}/capacity`, (message) => {
-      const update = JSON.parse(message.body);
+    this.subscribe(`/topic/events/${eventId}/capacity`, (update) => {
       this.callbacks.onCapacityUpdate?.(update);
     });
 
-    this.client.subscribe(`/topic/events/${eventId}/status`, (message) => {
-      const update = JSON.parse(message.body);
+    this.subscribe(`/topic/events/${eventId}/status`, (update) => {
       this.callbacks.onEventStatusChange?.(update);
     });
 
-    this.client.subscribe(`/topic/events/${eventId}/registrations`, (message) => {
-      const update = JSON.parse(message.body);
+    this.subscribe(`/topic/events/${eventId}/registrations`, (update) => {
       this.callbacks.onRegistrationUpdate?.(update);
     });
 
-    this.client.subscribe(`/topic/events/${eventId}/checkins`, (message) => {
-      const update = JSON.parse(message.body);
+    this.subscribe(`/topic/events/${eventId}/checkins`, (update) => {
       this.callbacks.onCheckInUpdate?.(update);
     });
 
-    this.client.subscribe(`/topic/events/${eventId}/updates`, (message) => {
-      const update = JSON.parse(message.body);
+    this.subscribe(`/topic/events/${eventId}/updates`, (update) => {
       this.callbacks.onEventUpdate?.(update);
     });
 
@@ -230,41 +240,43 @@ class WebSocketService {
       return;
     }
 
-    // Subscribe to global event topics
-    this.client.subscribe('/topic/events/attendance', (message) => {
-      const update = JSON.parse(message.body);
-      this.callbacks.onAttendanceUpdate?.(update);
-    });
+    // Check if already subscribed to global updates by checking destinations
+    const hasGlobalSubscriptions = Array.from(this.subscriptions.values()).some(sub => 
+      sub.destination === '/topic/events/registrations' || 
+      sub.destination === '/topic/events/updates' ||
+      sub.destination === '/topic/system/announcements'
+    );
 
-    this.client.subscribe('/topic/events/capacity', (message) => {
-      const update = JSON.parse(message.body);
-      this.callbacks.onCapacityUpdate?.(update);
-    });
+    if (hasGlobalSubscriptions) {
+      console.log('Already subscribed to global updates, skipping');
+      return;
+    }
 
-    this.client.subscribe('/topic/events/status', (message) => {
-      const update = JSON.parse(message.body);
-      this.callbacks.onEventStatusChange?.(update);
-    });
-
-    this.client.subscribe('/topic/events/registrations', (message) => {
-      const update = JSON.parse(message.body);
+    // Subscribe to global event topics using tracked subscriptions
+    this.subscribe('/topic/events/registrations', (update) => {
       this.callbacks.onRegistrationUpdate?.(update);
     });
 
-    this.client.subscribe('/topic/events/checkins', (message) => {
-      const update = JSON.parse(message.body);
-      this.callbacks.onCheckInUpdate?.(update);
+    this.subscribe('/topic/events/updates', (update) => {
+      this.callbacks.onEventUpdate?.(update);
     });
 
-    this.client.subscribe('/topic/system/announcements', (message) => {
-      const update = JSON.parse(message.body);
+    this.subscribe('/topic/system/announcements', (update) => {
       console.log('System announcement:', update);
     });
   }
 
   unsubscribeFromEvent() {
-    this.eventId = null;
-    // Note: STOMP subscriptions are automatically cleaned up on disconnect
+    if (this.eventId) {
+      // Unsubscribe from all event-specific subscriptions
+      const eventPrefix = `/topic/events/${this.eventId}/`;
+      Array.from(this.subscriptions.entries()).forEach(([id, sub]) => {
+        if (sub.destination.startsWith(eventPrefix)) {
+          sub.unsubscribe();
+        }
+      });
+      this.eventId = null;
+    }
   }
 
   sendPing() {

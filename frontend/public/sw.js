@@ -72,6 +72,14 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
+  // Skip WebSocket and EventSource connections
+  // Service Workers should not intercept these real-time connections
+  if (url.pathname.startsWith('/ws') || 
+      url.pathname.includes('/ws/') ||
+      request.headers.get('upgrade') === 'websocket') {
+    return; // Let the browser handle WebSocket connections directly
+  }
+  
   // Handle different types of requests with appropriate strategies
   
   // API requests - Network First with Cache Fallback
@@ -161,6 +169,15 @@ async function handleApiRequest(request) {
 // Handle static assets with Cache First strategy
 async function handleStaticAssets(request) {
   try {
+    // Don't cache external resources (e.g., placeholder images, CDNs)
+    const url = new URL(request.url);
+    const isExternal = url.origin !== location.origin;
+    
+    if (isExternal) {
+      // Just fetch external resources without caching
+      return fetch(request);
+    }
+    
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
       return cachedResponse;

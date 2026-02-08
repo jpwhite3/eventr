@@ -57,24 +57,31 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         try {
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('type', type);
 
-            const response = await fetch('/api/files/upload/event-image', {
+            const response = await fetch('/api/storage/upload', {
                 method: 'POST',
                 body: formData,
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Upload failed');
+                let errorMessage = 'Upload failed';
+                try {
+                    const errorText = await response.text();
+                    errorMessage = errorText || `Upload failed with status ${response.status}`;
+                } catch {
+                    // Response parsing failed
+                    errorMessage = `Upload failed: ${response.statusText} (${response.status})`;
+                }
+                throw new Error(errorMessage);
             }
 
-            const result = await response.json();
-            onImageUpload(result.url);
+            // Response is plain text containing the file URL
+            const fileUrl = await response.text();
+            onImageUpload(fileUrl);
             
             // Clean up the object URL since we have the real URL now
             URL.revokeObjectURL(objectUrl);
-            setPreviewUrl(result.url);
+            setPreviewUrl(fileUrl);
             
         } catch (err) {
             console.error('Upload failed:', err);
@@ -87,17 +94,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         }
     };
 
-    const handleRemoveImage = async () => {
-        if (currentImageUrl) {
-            try {
-                await fetch(`/api/files/delete?url=${encodeURIComponent(currentImageUrl)}`, {
-                    method: 'DELETE',
-                });
-            } catch (err) {
-                console.warn('Failed to delete old image:', err);
-            }
-        }
-        
+    const handleRemoveImage = () => {
+        // Note: Backend doesn't currently have a delete endpoint
+        // Files are stored in S3/LocalStack and managed by the backend
+        // Simply remove the reference from the UI
         setPreviewUrl(null);
         onImageUpload('');
         if (fileInputRef.current) {

@@ -66,6 +66,7 @@ const EventBuilder: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [showMarkdownPreview, setShowMarkdownPreview] = useState<boolean>(false);
+    const [validated, setValidated] = useState<boolean>(false);
     const [event, setEvent] = useState<EventData>({
         name: '',
         description: '',
@@ -142,6 +143,14 @@ const EventBuilder: React.FC = () => {
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
         e.preventDefault();
+        const form = e.currentTarget;
+        
+        // Trigger HTML5 validation
+        if (form.checkValidity() === false) {
+            e.stopPropagation();
+            setValidated(true);
+            return;
+        }
 
         // Validate JSON format for formData
         if (event.formData) {
@@ -149,14 +158,54 @@ const EventBuilder: React.FC = () => {
                 JSON.parse(event.formData);
             } catch (error) {
                 alert("Invalid JSON format in the form definition. Please check and try again.");
+                setValidated(true);
                 return;
             }
         }
 
+        setValidated(true);
+
+        // Convert datetime-local format to ISO-8601 format expected by backend
+        const convertToISO = (dateTimeString: string) => {
+            if (!dateTimeString) return null;
+            // datetime-local gives us "YYYY-MM-DDTHH:mm"
+            // We need to convert to ISO-8601: "YYYY-MM-DDTHH:mm:ss"
+            return dateTimeString + ':00';
+        };
+
         const payload = {
             ...event,
-            tags: event.tags.split(',').map(tag => tag.trim())
+            tags: event.tags ? event.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0) : [],
+            startDateTime: convertToISO(event.startDateTime),
+            endDateTime: convertToISO(event.endDateTime),
+            // Convert empty strings to null for optional fields
+            capacity: event.capacity || null,
+            maxRegistrations: event.maxRegistrations || null,
+            // Category should be null if empty string
+            category: event.category || null,
+            // Convert empty formData to null to prevent DynamoDB errors
+            formData: event.formData || null,
+            // Convert empty location fields to null
+            venueName: event.venueName || null,
+            address: event.address || null,
+            city: event.city || null,
+            state: event.state || null,
+            zipCode: event.zipCode || null,
+            country: event.country || null,
+            // Convert empty virtual fields to null
+            virtualUrl: event.virtualUrl || null,
+            dialInNumber: event.dialInNumber || null,
+            accessCode: event.accessCode || null,
+            // Convert empty organizer fields to null
+            organizerName: event.organizerName || null,
+            organizerEmail: event.organizerEmail || null,
+            organizerPhone: event.organizerPhone || null,
+            organizerWebsite: event.organizerWebsite || null,
+            // Convert empty agenda to null
+            agenda: event.agenda || null,
         };
+
+        console.log('Submitting event payload:', payload);
 
         const request = id ? apiClient.put(`/events/${id}`, payload) : apiClient.post('/events', payload);
 
@@ -164,14 +213,20 @@ const EventBuilder: React.FC = () => {
             navigate('/admin');
         }).catch(error => {
             console.error("Failed to save event", error);
-            alert("Error saving event. Check console for details.");
+            console.error("Error response:", error.response);
+            if (error.response) {
+                const errorMsg = error.response.data?.message || error.response.data || error.response.statusText;
+                alert(`Error saving event: ${errorMsg}. Check console for details.`);
+            } else {
+                alert("Error saving event. Check console for details.");
+            }
         });
     };
 
     return (
         <div className="container mt-5">
             <h1 className="mb-4">{id ? 'Edit' : 'Create'} Event</h1>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate className={validated ? 'was-validated' : ''}>
                 {/* Basic Event Information */}
                 <div className="card mb-4">
                     <div className="card-header">
@@ -182,6 +237,7 @@ const EventBuilder: React.FC = () => {
                             <div className="col-md-8 mb-3">
                                 <label className="form-label">Event Name *</label>
                                 <input type="text" className="form-control" name="name" value={event.name} onChange={handleChange} required />
+                                <div className="invalid-feedback">Please provide an event name.</div>
                             </div>
                             <div className="col-md-4 mb-3">
                                 <label className="form-label">Category</label>
@@ -283,12 +339,14 @@ You can use markdown formatting:
                     <div className="card-body">
                         <div className="row">
                             <div className="col-md-4 mb-3">
-                                <label className="form-label">Start Date & Time</label>
-                                <input type="datetime-local" className="form-control" name="startDateTime" value={event.startDateTime} onChange={handleChange} />
+                                <label className="form-label">Start Date & Time *</label>
+                                <input type="datetime-local" className="form-control" name="startDateTime" value={event.startDateTime} onChange={handleChange} required />
+                                <div className="invalid-feedback">Please provide a start date and time.</div>
                             </div>
                             <div className="col-md-4 mb-3">
-                                <label className="form-label">End Date & Time</label>
-                                <input type="datetime-local" className="form-control" name="endDateTime" value={event.endDateTime} onChange={handleChange} />
+                                <label className="form-label">End Date & Time *</label>
+                                <input type="datetime-local" className="form-control" name="endDateTime" value={event.endDateTime} onChange={handleChange} required />
+                                <div className="invalid-feedback">Please provide an end date and time.</div>
                             </div>
                             <div className="col-md-4 mb-3">
                                 <label className="form-label">Timezone</label>

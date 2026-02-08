@@ -99,6 +99,34 @@ if ! ps -p $BACKEND_PID > /dev/null 2>&1; then
     cleanup
 fi
 
+# Initialize LocalStack resources (DynamoDB table and S3 bucket)
+echo "Initializing LocalStack resources..."
+if docker ps -q --filter "name=eventr-localstack" | grep -q .; then
+    # Check if DynamoDB table exists, create if it doesn't
+    if ! docker exec eventr-localstack-1 awslocal dynamodb describe-table --table-name event-form-definitions >/dev/null 2>&1; then
+        echo "Creating DynamoDB table: event-form-definitions"
+        docker exec eventr-localstack-1 awslocal dynamodb create-table \
+            --table-name event-form-definitions \
+            --attribute-definitions AttributeName=eventId,AttributeType=S \
+            --key-schema AttributeName=eventId,KeyType=HASH \
+            --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 >/dev/null
+        echo "DynamoDB table created successfully"
+    else
+        echo "DynamoDB table already exists"
+    fi
+    
+    # Check if S3 bucket exists, create if it doesn't
+    if ! docker exec eventr-localstack-1 awslocal s3 ls s3://eventr-dev >/dev/null 2>&1; then
+        echo "Creating S3 bucket: eventr-dev"
+        docker exec eventr-localstack-1 awslocal s3 mb s3://eventr-dev >/dev/null
+        echo "S3 bucket created successfully"
+    else
+        echo "S3 bucket already exists"
+    fi
+else
+    echo "Warning: LocalStack container not found. AWS services may not be available."
+fi
+
 # Start frontend server
 echo "Starting frontend server..."
 cd frontend || {

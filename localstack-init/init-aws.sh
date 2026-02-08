@@ -7,12 +7,12 @@ echo "Initializing LocalStack AWS resources..."
 echo "Creating S3 bucket: eventr-dev"
 awslocal s3 mb s3://eventr-dev
 
-# Create DynamoDB table
-echo "Creating DynamoDB table: eventr-dev-table"
+# Create DynamoDB table for event form definitions
+echo "Creating DynamoDB table: event-form-definitions"
 awslocal dynamodb create-table \
-    --table-name eventr-dev-table \
-    --attribute-definitions AttributeName=id,AttributeType=S \
-    --key-schema AttributeName=id,KeyType=HASH \
+    --table-name event-form-definitions \
+    --attribute-definitions AttributeName=eventId,AttributeType=S \
+    --key-schema AttributeName=eventId,KeyType=HASH \
     --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
 
 echo "AWS resources initialized successfully!"

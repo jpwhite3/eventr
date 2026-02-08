@@ -23,8 +23,6 @@ import {
   CProgress,
 } from '@coreui/react';
 
-// Import Bootstrap modal components directly from react-bootstrap for compatibility
-import { Form, Alert, Toast } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCalendarAlt,
@@ -134,109 +132,14 @@ const AdminDashboard: React.FC = () => {
             .catch(error => console.error("Failed to fetch events", error));
     }, []);
 
-    const fetchStats = useCallback(async (): Promise<void> => {
+    const fetchStats = async (): Promise<void> => {
         try {
             const response = await apiClient.get('/analytics/executive');
-            setStats({
-                ...response.data,
-                pendingEvents: events.filter(e => e.status === 'DRAFT').length,
-                publishedEvents: events.filter(e => e.status === 'PUBLISHED').length,
-                averageCapacityUtilization: 75, // TODO: Calculate from actual data
-                totalUsers: 0, // TODO: Add endpoint for user count
-            });
+            setStats(response.data);
         } catch (error) {
             console.error("Failed to fetch admin stats", error);
         }
-    }, [events]);
-
-    // Enhanced filtering functionality
-    const applyFilters = useCallback(() => {
-        let filtered = [...events];
-
-        // Search filter
-        if (filters.search) {
-            const searchLower = filters.search.toLowerCase();
-            filtered = filtered.filter(event =>
-                event.name.toLowerCase().includes(searchLower) ||
-                event.eventType.toLowerCase().includes(searchLower) ||
-                event.venueName?.toLowerCase().includes(searchLower) ||
-                event.organizerName?.toLowerCase().includes(searchLower)
-            );
-        }
-
-        // Status filter
-        if (filters.status !== 'ALL') {
-            filtered = filtered.filter(event => event.status === filters.status);
-        }
-
-        // Event type filter
-        if (filters.eventType !== 'ALL') {
-            filtered = filtered.filter(event => event.eventType === filters.eventType);
-        }
-
-        // Date range filter
-        if (filters.dateRange !== 'ALL') {
-            const now = new Date();
-            const filterDate = new Date();
-            
-            switch (filters.dateRange) {
-                case 'TODAY':
-                    filterDate.setDate(now.getDate() + 1);
-                    filtered = filtered.filter(event => 
-                        new Date(event.startDateTime) >= now && 
-                        new Date(event.startDateTime) < filterDate
-                    );
-                    break;
-                case 'WEEK':
-                    filterDate.setDate(now.getDate() + 7);
-                    filtered = filtered.filter(event => 
-                        new Date(event.startDateTime) >= now && 
-                        new Date(event.startDateTime) < filterDate
-                    );
-                    break;
-                case 'MONTH':
-                    filterDate.setMonth(now.getMonth() + 1);
-                    filtered = filtered.filter(event => 
-                        new Date(event.startDateTime) >= now && 
-                        new Date(event.startDateTime) < filterDate
-                    );
-                    break;
-            }
-        }
-
-        // Sort events
-        filtered.sort((a, b) => {
-            let aValue, bValue;
-            
-            switch (filters.sortBy) {
-                case 'name':
-                    aValue = a.name.toLowerCase();
-                    bValue = b.name.toLowerCase();
-                    break;
-                case 'status':
-                    aValue = a.status;
-                    bValue = b.status;
-                    break;
-                case 'eventType':
-                    aValue = a.eventType;
-                    bValue = b.eventType;
-                    break;
-                case 'capacity':
-                    aValue = a.capacity || 0;
-                    bValue = b.capacity || 0;
-                    break;
-                default:
-                    aValue = new Date(a.startDateTime || 0);
-                    bValue = new Date(b.startDateTime || 0);
-            }
-
-            if (aValue < bValue) return filters.sortOrder === 'asc' ? -1 : 1;
-            if (aValue > bValue) return filters.sortOrder === 'asc' ? 1 : -1;
-            return 0;
-        });
-
-        setFilteredEvents(filtered);
-    }, [events, filters]);
+    };
 
     // Bulk action handlers
     const handleBulkAction = async (action: BulkAction['action']) => {
@@ -324,51 +227,163 @@ const AdminDashboard: React.FC = () => {
         };
         loadData();
 
-        // Subscribe to global real-time updates
-        const subscriptions = [
-            webSocketService.subscribeToAllRegistrations((message) => {
-                setRealtimeActivity(prev => [...prev.slice(-9), {
-                    ...message,
-                    icon: '👥',
-                    title: 'New Registration'
-                }]);
+        // Subscribe to global real-time updates (gracefully handle if WebSocket is unavailable)
+        const subscriptions: Array<{ unsubscribe: () => void }> = [];
+        
+        try {
+            subscriptions.push(
+                webSocketService.subscribeToAllRegistrations((message) => {
+                    setRealtimeActivity(prev => [...prev.slice(-9), {
+                        ...message,
+                        icon: '👥',
+                        title: 'New Registration'
+                    }]);
+                    
+                    // Refresh stats when registrations change
+                    fetchStats();
+                }),
                 
-                // Refresh stats when registrations change
-                fetchStats();
-            }),
-            
-            webSocketService.subscribeToAllCheckIns((message) => {
-                setRealtimeActivity(prev => [...prev.slice(-9), {
-                    ...message,
-                    icon: '✅',
-                    title: 'Check-in Activity'
-                }]);
-            }),
-            
-            webSocketService.subscribeToAllEvents((message) => {
-                setRealtimeActivity(prev => [...prev.slice(-9), {
-                    ...message,
-                    icon: '🔄',
-                    title: 'Event Updated'
-                }]);
+                webSocketService.subscribeToAllCheckIns((message) => {
+                    setRealtimeActivity(prev => [...prev.slice(-9), {
+                        ...message,
+                        icon: '✅',
+                        title: 'Check-in Activity'
+                    }]);
+                }),
                 
-                // Refresh events list when events are updated
-                if (message.updateType === 'DETAILS_CHANGED' || message.updateType === 'STATUS_CHANGE') {
-                    fetchEvents();
-                }
-            })
-        ];
+                webSocketService.subscribeToAllEvents((message) => {
+                    setRealtimeActivity(prev => [...prev.slice(-9), {
+                        ...message,
+                        icon: '🔄',
+                        title: 'Event Updated'
+                    }]);
+                    
+                    // Refresh events list when events are updated
+                    if (message.updateType === 'DETAILS_CHANGED' || message.updateType === 'STATUS_CHANGE') {
+                        fetchEvents();
+                    }
+                })
+            );
+        } catch (error) {
+            console.warn('WebSocket connection not available:', error);
+            // Dashboard will work fine without real-time updates
+        }
 
         return () => {
             // Clean up subscriptions
-            subscriptions.forEach(sub => sub.unsubscribe());
+            subscriptions.forEach(sub => {
+                try {
+                    sub.unsubscribe();
+                } catch (error) {
+                    console.warn('Error unsubscribing from WebSocket:', error);
+                }
+            });
         };
-    }, [fetchEvents, fetchStats]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Update derived stats when events change
+    useEffect(() => {
+        setStats(prev => {
+            if (!prev || events.length === 0) return prev;
+            return {
+                ...prev,
+                pendingEvents: events.filter(e => e.status === 'DRAFT').length,
+                publishedEvents: events.filter(e => e.status === 'PUBLISHED').length,
+                averageCapacityUtilization: 75, // TODO: Calculate from actual data  
+                totalUsers: prev.totalUsers || 0,
+            };
+        });
+    }, [events]);
 
     // Apply filters whenever events or filter options change
     useEffect(() => {
-        applyFilters();
-    }, [applyFilters]);
+        let filtered = [...events];
+
+        // Search filter
+        if (filters.search) {
+            const searchLower = filters.search.toLowerCase();
+            filtered = filtered.filter(event =>
+                event.name.toLowerCase().includes(searchLower) ||
+                event.eventType.toLowerCase().includes(searchLower) ||
+                event.venueName?.toLowerCase().includes(searchLower) ||
+                event.organizerName?.toLowerCase().includes(searchLower)
+            );
+        }
+
+        // Status filter
+        if (filters.status !== 'ALL') {
+            filtered = filtered.filter(event => event.status === filters.status);
+        }
+
+        // Event type filter
+        if (filters.eventType !== 'ALL') {
+            filtered = filtered.filter(event => event.eventType === filters.eventType);
+        }
+
+        // Date range filter
+        if (filters.dateRange !== 'ALL') {
+            const now = new Date();
+            const filterDate = new Date();
+            
+            switch (filters.dateRange) {
+                case 'TODAY':
+                    filterDate.setDate(now.getDate() + 1);
+                    filtered = filtered.filter(event => 
+                        new Date(event.startDateTime) >= now && 
+                        new Date(event.startDateTime) < filterDate
+                    );
+                    break;
+                case 'WEEK':
+                    filterDate.setDate(now.getDate() + 7);
+                    filtered = filtered.filter(event => 
+                        new Date(event.startDateTime) >= now && 
+                        new Date(event.startDateTime) < filterDate
+                    );
+                    break;
+                case 'MONTH':
+                    filterDate.setMonth(now.getMonth() + 1);
+                    filtered = filtered.filter(event => 
+                        new Date(event.startDateTime) >= now && 
+                        new Date(event.startDateTime) < filterDate
+                    );
+                    break;
+            }
+        }
+
+        // Sort events
+        filtered.sort((a, b) => {
+            let aValue, bValue;
+            
+            switch (filters.sortBy) {
+                case 'name':
+                    aValue = a.name.toLowerCase();
+                    bValue = b.name.toLowerCase();
+                    break;
+                case 'status':
+                    aValue = a.status;
+                    bValue = b.status;
+                    break;
+                case 'eventType':
+                    aValue = a.eventType;
+                    bValue = b.eventType;
+                    break;
+                case 'capacity':
+                    aValue = a.capacity || 0;
+                    bValue = b.capacity || 0;
+                    break;
+                default:
+                    aValue = new Date(a.startDateTime || 0);
+                    bValue = new Date(b.startDateTime || 0);
+            }
+
+            if (aValue < bValue) return filters.sortOrder === 'asc' ? -1 : 1;
+            if (aValue > bValue) return filters.sortOrder === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        setFilteredEvents(filtered);
+    }, [events, filters]);
 
     const handlePublish = (eventId: string): void => {
         apiClient.post(`/events/${eventId}/publish`)
@@ -442,11 +457,24 @@ const AdminDashboard: React.FC = () => {
     return (
         <div className="animated fadeIn">
             {/* Toast Notifications */}
-            <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 1050 }}>
-                <Toast show={toast.visible} onClose={() => setToast(prev => ({ ...prev, visible: false }))} bg={toast.color}>
-                    <Toast.Body>{toast.message}</Toast.Body>
-                </Toast>
-            </div>
+            {toast.visible && (
+                <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 1050 }}>
+                    <div className={`toast show bg-${toast.color}`} role="alert" aria-live="assertive" aria-atomic="true">
+                        <div className="toast-header">
+                            <strong className="me-auto">Notification</strong>
+                            <button 
+                                type="button" 
+                                className="btn-close" 
+                                onClick={() => setToast(prev => ({ ...prev, visible: false }))}
+                                aria-label="Close"
+                            ></button>
+                        </div>
+                        <div className="toast-body text-white">
+                            {toast.message}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -736,7 +764,8 @@ const AdminDashboard: React.FC = () => {
                             {showFilters && (
                                 <CRow className="mb-3">
                                     <CCol md={3}>
-                                        <Form.Select
+                                        <select
+                                            className="form-select"
                                             value={filters.status}
                                             onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                                         >
@@ -745,10 +774,11 @@ const AdminDashboard: React.FC = () => {
                                             <option value="PUBLISHED">Published</option>
                                             <option value="ACTIVE">Active</option>
                                             <option value="CANCELLED">Cancelled</option>
-                                        </Form.Select>
+                                        </select>
                                     </CCol>
                                     <CCol md={3}>
-                                        <Form.Select
+                                        <select
+                                            className="form-select"
                                             value={filters.eventType}
                                             onChange={(e) => setFilters(prev => ({ ...prev, eventType: e.target.value }))}
                                         >
@@ -757,10 +787,11 @@ const AdminDashboard: React.FC = () => {
                                             <option value="WORKSHOP">Workshop</option>
                                             <option value="SEMINAR">Seminar</option>
                                             <option value="WEBINAR">Webinar</option>
-                                        </Form.Select>
+                                        </select>
                                     </CCol>
                                     <CCol md={3}>
-                                        <Form.Select
+                                        <select
+                                            className="form-select"
                                             value={filters.dateRange}
                                             onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
                                         >
@@ -768,21 +799,21 @@ const AdminDashboard: React.FC = () => {
                                             <option value="TODAY">Today</option>
                                             <option value="WEEK">This Week</option>
                                             <option value="MONTH">This Month</option>
-                                        </Form.Select>
+                                        </select>
                                     </CCol>
                                     <CCol md={3}>
                                         <div className="d-flex">
-                                            <Form.Select
+                                            <select
+                                                className="form-select me-1"
                                                 value={filters.sortBy}
                                                 onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
-                                                className="me-1"
                                             >
                                                 <option value="startDateTime">Date</option>
                                                 <option value="name">Name</option>
                                                 <option value="status">Status</option>
                                                 <option value="eventType">Type</option>
                                                 <option value="capacity">Capacity</option>
-                                            </Form.Select>
+                                            </select>
                                             <CButton
                                                 color="outline-secondary"
                                                 onClick={() => setFilters(prev => ({ 
@@ -802,7 +833,7 @@ const AdminDashboard: React.FC = () => {
 
                             {/* Bulk Actions Bar */}
                             {showBulkActions && (
-                                <Alert color="info" className="d-flex justify-content-between align-items-center">
+                                <div className="alert alert-info d-flex justify-content-between align-items-center" role="alert">
                                     <div>
                                         <FontAwesomeIcon icon={faCheckSquare} className="me-2" />
                                         {selectedEvents.size} event{selectedEvents.size !== 1 ? 's' : ''} selected
@@ -845,7 +876,7 @@ const AdminDashboard: React.FC = () => {
                                             Delete
                                         </CButton>
                                     </CButtonGroup>
-                                </Alert>
+                                </div>
                             )}
                         </CCardBody>
                     </CCard>

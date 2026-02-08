@@ -40,6 +40,13 @@ class FixtureDataLoader(
         logger.info("Loading fixture data for development environment...")
         
         try {
+            // Skip if data already exists to avoid conflicts
+            if (eventRepository.count() > 0) {
+                logger.info("Fixture data already loaded, skipping...")
+                displayDevelopmentLoginInfo()
+                return
+            }
+            
             // Clear existing data
             clearExistingData()
             
@@ -346,29 +353,40 @@ class FixtureDataLoader(
         val users = objectMapper.readTree(resource.inputStream)
         
         users.forEach { userNode ->
-            val user = User().apply {
-                id = UUID.fromString(userNode["id"].asText())
-                email = userNode["email"].asText()
-                firstName = userNode["firstName"].asText()
-                lastName = userNode["lastName"].asText()
-                passwordHash = passwordEncoder.encode(userNode["password"].asText())
-                phone = userNode["phone"]?.asText()
-                company = userNode["company"]?.asText()
-                jobTitle = userNode["jobTitle"]?.asText()
-                bio = userNode["bio"]?.asText()
-                profileImageUrl = userNode["profileImageUrl"]?.asText()
-                role = UserRole.valueOf(userNode["role"].asText())
-                status = UserStatus.valueOf(userNode["status"].asText())
-                emailVerified = userNode["emailVerified"]?.asBoolean() ?: true
-                timezone = userNode["timezone"]?.asText() ?: "UTC"
-                language = userNode["language"]?.asText() ?: "en"
-                marketingEmails = userNode["marketingEmails"]?.asBoolean() ?: true
-                eventReminders = userNode["eventReminders"]?.asBoolean() ?: true
-                weeklyDigest = userNode["weeklyDigest"]?.asBoolean() ?: true
-                createdAt = userNode["createdAt"]?.asText()?.let { LocalDateTime.parse(it) } ?: LocalDateTime.now()
-                lastLoginAt = userNode["lastLoginAt"]?.asText()?.let { LocalDateTime.parse(it) }
+            val userId = UUID.fromString(userNode["id"].asText())
+            val email = userNode["email"].asText()
+            
+            // Check if user already exists by email
+            val existingUser = userRepository.findByEmail(email)
+            
+            if (existingUser == null) {
+                // Create new user without setting ID (let JPA generate it)
+                val user = User().apply {
+                    this.email = email
+                    firstName = userNode["firstName"].asText()
+                    lastName = userNode["lastName"].asText()
+                    passwordHash = passwordEncoder.encode(userNode["password"].asText())
+                    phone = userNode["phone"]?.asText()
+                    company = userNode["company"]?.asText()
+                    jobTitle = userNode["jobTitle"]?.asText()
+                    bio = userNode["bio"]?.asText()
+                    profileImageUrl = userNode["profileImageUrl"]?.asText()
+                    role = UserRole.valueOf(userNode["role"].asText())
+                    status = UserStatus.valueOf(userNode["status"].asText())
+                    emailVerified = userNode["emailVerified"]?.asBoolean() ?: true
+                    timezone = userNode["timezone"]?.asText() ?: "UTC"
+                    language = userNode["language"]?.asText() ?: "en"
+                    marketingEmails = userNode["marketingEmails"]?.asBoolean() ?: true
+                    eventReminders = userNode["eventReminders"]?.asBoolean() ?: true
+                    weeklyDigest = userNode["weeklyDigest"]?.asBoolean() ?: true
+                    createdAt = userNode["createdAt"]?.asText()?.let { LocalDateTime.parse(it) } ?: LocalDateTime.now()
+                    lastLoginAt = userNode["lastLoginAt"]?.asText()?.let { LocalDateTime.parse(it) }
+                }
+                userRepository.save(user)
+                logger.debug("Created new user: ${email}")
+            } else {
+                logger.debug("User already exists: ${email}")
             }
-            userRepository.save(user)
         }
         logger.info("Loaded ${users.size()} users")
     }

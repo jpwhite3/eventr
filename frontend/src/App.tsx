@@ -43,7 +43,12 @@ const LoadingFallback = () => (
 
 function App(): React.JSX.Element {
   return (
-    <Router>
+    <Router
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
       <CoreUILayout>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>

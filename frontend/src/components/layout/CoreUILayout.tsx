@@ -286,7 +286,7 @@ const CoreUILayout: React.FC<CoreUILayoutProps> = ({ children }) => {
                       <FontAwesomeIcon icon={faCog} className="me-2" />
                       Settings
                     </CDropdownItem>
-                    <CDropdownItem divider />
+                    <hr className="dropdown-divider" />
                     <CDropdownItem onClick={handleLogout} disabled={isLoading}>
                       <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
                       {isLoading ? 'Signing out...' : 'Sign Out'}

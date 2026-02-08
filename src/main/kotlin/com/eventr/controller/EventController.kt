@@ -166,11 +166,18 @@ class EventController(
 
     @GetMapping("/{eventId}/form")
     fun getFormDefinition(@PathVariable eventId: UUID): ResponseEntity<String> {
-        val formDefinition = dynamoDbService.getFormDefinition(eventId.toString())
-        return if (formDefinition != null) {
-            ResponseEntity.ok(formDefinition)
-        } else {
-            ResponseEntity.notFound().build()
+        return try {
+            val formDefinition = dynamoDbService.getFormDefinition(eventId.toString())
+            if (formDefinition != null) {
+                ResponseEntity.ok(formDefinition)
+            } else {
+                // Return empty JSON object if no form definition exists
+                ResponseEntity.ok("{\"fields\":[]}")
+            }
+        } catch (e: Exception) {
+            secureLogger.error("Failed to retrieve form definition for event $eventId: ${e.message}", e)
+            // Return empty form definition instead of 500 error
+            ResponseEntity.ok("{\"fields\":[]}")
         }
     }
 

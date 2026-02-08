@@ -21,8 +21,6 @@ import {
   CWidgetStatsF,
 } from '@coreui/react';
 
-// Import Bootstrap components for compatibility
-import { Modal, Form, Nav, Tab } from 'react-bootstrap';
 import ReportScheduler from '../components/ReportScheduler';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -330,11 +328,11 @@ const SystemReports: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <Nav variant="tabs" className="mb-4">
-        <Nav.Item>
-          <Nav.Link
+      <ul className="nav nav-tabs mb-4">
+        <li className="nav-item">
+          <a
+            className={`nav-link ${activeTab === 'reports' ? 'active' : ''}`}
             href="#"
-            active={activeTab === 'reports'}
             onClick={(e) => {
               e.preventDefault();
               setActiveTab('reports');
@@ -342,12 +340,12 @@ const SystemReports: React.FC = () => {
           >
             <FontAwesomeIcon icon={faChartBar} className="me-2" />
             Report Templates
-          </Nav.Link>
-        </Nav.Item>
-        <Nav.Item>
-          <Nav.Link
+          </a>
+        </li>
+        <li className="nav-item">
+          <a
+            className={`nav-link ${activeTab === 'scheduler' ? 'active' : ''}`}
             href="#"
-            active={activeTab === 'scheduler'}
             onClick={(e) => {
               e.preventDefault();
               setActiveTab('scheduler');
@@ -355,14 +353,15 @@ const SystemReports: React.FC = () => {
           >
             <FontAwesomeIcon icon={faClock} className="me-2" />
             Automated Scheduling
-          </Nav.Link>
-        </Nav.Item>
-      </Nav>
+          </a>
+        </li>
+      </ul>
 
       {/* Tab Content */}
-      <Tab.Content>
+      <div className="tab-content">
         {activeTab === 'reports' && (
-        <Tab.Pane role="tabpanel">
+        <div className="tab-pane fade show active" role="tabpanel">
+```
           {/* System Overview */}
           {metrics && (
             <CRow className="mb-4">
@@ -487,7 +486,8 @@ const SystemReports: React.FC = () => {
             <CCardBody>
               <CRow>
                 <CCol md={4}>
-                  <Form.Select
+                  <select
+                    className="form-select"
                     value={filters.category}
                     onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
                   >
@@ -497,10 +497,11 @@ const SystemReports: React.FC = () => {
                     <option value="registrations">Registrations</option>
                     <option value="financial">Financial</option>
                     <option value="system">System</option>
-                  </Form.Select>
+                  </select>
                 </CCol>
                 <CCol md={4}>
-                  <Form.Select
+                  <select
+                    className="form-select"
                     value={filters.dateRange}
                     onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
                   >
@@ -509,10 +510,11 @@ const SystemReports: React.FC = () => {
                     <option value="90d">Last 90 Days</option>
                     <option value="1y">Last Year</option>
                     <option value="all">All Time</option>
-                  </Form.Select>
+                  </select>
                 </CCol>
                 <CCol md={4}>
-                  <Form.Select
+                  <select
+                    className="form-select"
                     value={filters.format}
                     onChange={(e) => setFilters(prev => ({ ...prev, format: e.target.value }))}
                   >
@@ -520,7 +522,7 @@ const SystemReports: React.FC = () => {
                     <option value="pdf">PDF</option>
                     <option value="excel">Excel</option>
                     <option value="csv">CSV</option>
-                  </Form.Select>
+                  </select>
                 </CCol>
               </CRow>
             </CCardBody>
@@ -658,69 +660,88 @@ const SystemReports: React.FC = () => {
           </CCard>
         </CCol>
       </CRow>
-        </Tab.Pane>
+        </div>
         )}
 
         {activeTab === 'scheduler' && (
-        <Tab.Pane role="tabpanel">
+        <div className="tab-pane fade show active" role="tabpanel">
           <ReportScheduler 
             onScheduleCreated={() => console.log('Schedule created')}
             onScheduleUpdated={() => console.log('Schedule updated')}
             onScheduleDeleted={() => console.log('Schedule deleted')}
           />
-        </Tab.Pane>
+        </div>
         )}
-      </Tab.Content>
+      </div>
 
       {/* Schedule Modal */}
-      <Modal show={showScheduleModal} onHide={() => setShowScheduleModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Schedule Report: {selectedReport?.name}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="mb-3">
-            <Form.Label>Frequency</Form.Label>
-            <Form.Select
-              value={scheduleSettings.frequency}
-              onChange={(e) => setScheduleSettings(prev => ({ ...prev, frequency: e.target.value }))}
-            >
-              <option value="none">Manual Only</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="quarterly">Quarterly</option>
-            </Form.Select>
+      {showScheduleModal && (
+        <div 
+          className="modal fade show d-block" 
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setShowScheduleModal(false)}
+        >
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Schedule Report: {selectedReport?.name}</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => setShowScheduleModal(false)}
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label className="form-label">Frequency</label>
+                  <select
+                    className="form-select"
+                    value={scheduleSettings.frequency}
+                    onChange={(e) => setScheduleSettings(prev => ({ ...prev, frequency: e.target.value }))}
+                  >
+                    <option value="none">Manual Only</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                  </select>
+                </div>
+                
+                <div className="mb-3">
+                  <label className="form-label">Email Recipients</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="Enter email addresses (comma-separated)"
+                    value={scheduleSettings.email}
+                    onChange={(e) => setScheduleSettings(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+                
+                <div className="mb-3">
+                  <label className="form-label">Notes</label>
+                  <textarea
+                    className="form-control"
+                    placeholder="Optional description or special instructions"
+                    value={scheduleSettings.description}
+                    onChange={(e) => setScheduleSettings(prev => ({ ...prev, description: e.target.value }))}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <CButton color="secondary" onClick={() => setShowScheduleModal(false)}>
+                  Cancel
+                </CButton>
+                <CButton color="primary" onClick={saveScheduleSettings}>
+                  Save Schedule
+                </CButton>
+              </div>
+            </div>
           </div>
-          
-          <div className="mb-3">
-            <Form.Label>Email Recipients</Form.Label>
-            <Form.Control
-              type="email"
-              placeholder="Enter email addresses (comma-separated)"
-              value={scheduleSettings.email}
-              onChange={(e) => setScheduleSettings(prev => ({ ...prev, email: e.target.value }))}
-            />
-          </div>
-          
-          <div className="mb-3">
-            <Form.Label>Notes</Form.Label>
-            <Form.Control as="textarea"
-              placeholder="Optional description or special instructions"
-              value={scheduleSettings.description}
-              onChange={(e) => setScheduleSettings(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
-            />
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <CButton color="secondary" onClick={() => setShowScheduleModal(false)}>
-            Cancel
-          </CButton>
-          <CButton color="primary" onClick={saveScheduleSettings}>
-            Save Schedule
-          </CButton>
-        </Modal.Footer>
-      </Modal>
+        </div>
+      )}
     </div>
   );
 };

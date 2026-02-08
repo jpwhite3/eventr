@@ -43,6 +43,9 @@ class DevSecurityConfig {
             
             .authorizeHttpRequests { authz ->
                 authz
+                    // Allow WebSocket endpoints
+                    .requestMatchers("/ws/**").permitAll()
+                    
                     // Allow all GET requests for development
                     .requestMatchers("GET", "/api/events/**").permitAll()
                     .requestMatchers("GET", "/api/sessions/**").permitAll()
@@ -52,12 +55,18 @@ class DevSecurityConfig {
                     .requestMatchers("GET", "/api/mock/**").permitAll()
                     .requestMatchers("GET", "/api/capacity/**").permitAll()
                     .requestMatchers("GET", "/api/checkin/stats/**").permitAll()
+                    .requestMatchers("GET", "/api/calendar/**").permitAll()
+                    .requestMatchers("POST", "/api/calendar/**").permitAll()
                     
                     // Allow specific working POST endpoints for development
                     .requestMatchers("POST", "/api/events/*/publish").permitAll()
                     .requestMatchers("POST", "/api/events").permitAll()
                     .requestMatchers("PUT", "/api/events/**").permitAll()
                     .requestMatchers("DELETE", "/api/events/**").permitAll()
+                    
+                    // Allow file storage endpoints
+                    .requestMatchers("POST", "/api/storage/**").permitAll()
+                    .requestMatchers("GET", "/api/storage/**").permitAll()
                     
                     // Allow auth endpoints
                     .requestMatchers("/api/auth/**").permitAll()

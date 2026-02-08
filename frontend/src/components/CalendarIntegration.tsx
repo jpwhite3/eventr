@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import apiClient from '../api/apiClient';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -56,23 +56,32 @@ const CalendarIntegration: React.FC<CalendarIntegrationProps> = ({
     }
   }, [userTimezone]);
 
-  const loadCalendarSubscription = useCallback(async () => {
-    if (!userId) return;
-    
-    try {
-      const response = await apiClient.get(`/calendar/user/${userId}/subscription`);
-      setSubscription(response.data);
-    } catch (error) {
-      console.log('No existing calendar subscription found');
-    }
-  }, [userId]);
-
   useEffect(() => {
-    // Load user's calendar subscription if available
-    if (userId && options.includes('subscribe')) {
-      loadCalendarSubscription();
-    }
-  }, [userId, options, loadCalendarSubscription]);
+    // Load user's calendar subscription if available (only once on mount)
+    if (!userId || !options.includes('subscribe')) return;
+    
+    let isMounted = true; // Prevent state updates after unmount
+    
+    const loadCalendarSubscription = async () => {
+      try {
+        const response = await apiClient.get(`/calendar/user/${userId}/subscription`);
+        if (isMounted) {
+          setSubscription(response.data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.log('No existing calendar subscription found');
+        }
+      }
+    };
+    
+    loadCalendarSubscription();
+    
+    return () => {
+      isMounted = false; // Cleanup flag
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]); // Only re-run when userId changes, ignore options
 
   const generateSubscriptionUrl = async () => {
     if (!userId) {
